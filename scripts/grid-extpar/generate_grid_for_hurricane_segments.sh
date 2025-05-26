@@ -28,8 +28,6 @@
 #=============================================================================
 
 ORIGINAL_SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
-# Get script directory - use a hardcoded path since SLURM changes the working directory
-# ORIGINAL_SCRIPT_DIR="/home/b/b380352/proj/2025-05_hurricane-centric-setup-tools/scripts/grid-extpar"
 echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
 
 # Load TOML reader and configuration
@@ -67,7 +65,6 @@ export UCX_HANDLE_ERRORS=bt
 export START="srun -l --cpu_bind=verbose --distribution=block:cyclic --ntasks-per-node=8 --cpus-per-task=${OMP_NUM_THREADS}"
 
 
-# LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 # INPUT ARGUMENT
 iseg=$1
 
@@ -78,23 +75,23 @@ module load python3
 #         boundary zone.
 #-----------------------------------------------------------------------------
 
-# Use configuration values
-DOMNAME="${NAME}/seg${iseg}_${WIDTH_CONFIG}"
-maskdir=${OUTPUT_BASE}/${DOMNAME}
-maskname=${maskdir}/'paulette_segment_mask_${EXPNAME}_seg${iseg}_dom${idom}.nc'  # care for the quotes, single quotes are needed to avoid variable expansion
+# Use configuration values with new variable names
+DOMNAME="${PROJECT_NAME}/seg${iseg}_${PROJECT_WIDTH_CONFIG}"
+maskdir=${PATHS_OUTPUT_BASE}/${DOMNAME}
+maskname=${maskdir}/'paulette_segment_mask_${SIMULATION_EXPNAME}_seg${iseg}_dom${idom}.nc'
 
 if [ ! -d ${maskdir} ]; then
     mkdir -p ${maskdir}
 fi
 
-outputdir="${OUTPUT_BASE}/${DOMNAME}"
-outfile=${outputdir}/'paulette-seg${iseg}_dom${idom}' # care for the quotes, single quotes are needed to avoid variable expansion
+outputdir="${PATHS_OUTPUT_BASE}/${DOMNAME}"
+outfile=${outputdir}/'paulette-seg${iseg}_dom${idom}'
 
 idom=0
 fname=`eval echo $outfile`"_DOM01.nc"
-ln -s $BASE_GRID $fname
+ln -s $PATHS_BASE_GRID $fname
 
-for ((idom = 1 ; idom <= $NESTS ; idom++)); do
+for ((idom = 1 ; idom <= $SIMULATION_NESTS ; idom++)); do
 
     # (1) Create the Mask based on the new Grid
     # =========================================

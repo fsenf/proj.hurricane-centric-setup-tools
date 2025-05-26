@@ -1,5 +1,20 @@
 #!/usr/bin/bash
 #=============================================================================
+# DESCRIPTION:
+#   External parameter processing for hurricane segments using ICON ExtPar tools.
+#   Processes topography, land use, soil properties, and other surface parameters
+#   for hurricane-centric grids.
+#
+# USAGE:
+#   ./run_extpar_levante.bash [segment_number]
+#
+# DEPENDENCIES:
+#   This script calls:
+#   - ../../utilities/toml_reader.sh
+#   - ../../config/hurricane_config.toml
+#   - ExtPar Fortran binaries and Python scripts
+#
+#=============================================================================
 ####### EXECUTE SCRIPT FROM ENVIRONMENT THAT LOADS PYTHON AND CDO ######
 
 # Levante cpu batch job parameters
@@ -20,18 +35,24 @@
 set -eu
 ulimit -s unlimited
 ulimit -c 0
+
+# Get script directory
+ORIGINAL_SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
+echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
+
+# Load TOML reader and configuration
+source "${ORIGINAL_SCRIPT_DIR}/../../utilities/toml_reader.sh"
+CONFIG_FILE="${ORIGINAL_SCRIPT_DIR}/../../config/hurricane_config.toml"
+read_toml_config "$CONFIG_FILE"
+
 #=============================================================================
-#
 # OpenMP environment variables
-#
+#=============================================================================
 export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
 export KMP_AFFINITY=verbose,granularity=fine,scatter
 export OMP_STACKSIZE=128M
 
-# #=============================================================================
-# #
-# # Environment variables for the experiment and the target system
-# #
+# Environment variables for the experiment and the target system
 export OMPI_MCA_pml="ucx"
 export OMPI_MCA_btl=self
 export OMPI_MCA_osc="pt2pt"
@@ -47,34 +68,30 @@ export HDF5_USE_FILE_LOCKING=FALSE
 export OMPI_MCA_io="romio321"
 export UCX_HANDLE_ERRORS=bt
 
-
-# LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 # INPUT ARGUMENT
-
 iseg=$1
-
-# TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
-
 
 module purge
 module load python3 
-#module load cdo/2.0.6-gcc-11.2.0
 
-##### Set some variables need to run the ExtPar software
+# Set variables from TOML config instead of sourcing extpar_config.sh
+DOMNAME="${PROJECT_NAME}/seg${iseg}_${PROJECT_WIDTH_CONFIG}"
+grid_dir="${PATHS_OUTPUT_BASE}/${DOMNAME}"
 
-SCRIPT_DIR=/work/bb1376/user/fabian/tools/pre-processing/grid-extpar
-
-source ${SCRIPT_DIR}/extpar_config.sh $iseg
+# Create icon_grid_files array based on TOML config
+declare -a icon_grid_files
+for ((idom = 1; idom <= SIMULATION_NESTS; idom++)); do
+    icon_grid_files+=("paulette-seg${iseg}_dom${idom}_DOM01.nc")
+done
 
 # Directory with input data for generation of external parameters
-extpar_input_dir=/work/pd1167/extpar-input-data
+extpar_input_dir="$PATHS_EXTPAR_INPUT_DIR"
 
 # Directory of ExtPar
-extpar_dir=/work/bb1376/tools/extpar
+extpar_dir="$PATHS_EXTPAR_DIR"
 
 # Output directory
 out_dir=${grid_dir}
-
 
 # Set PYTHONPATH to point to ExtPar libraries and namelist.py, which is located in out_dir
 export PYTHONPATH=${extpar_dir}/python/lib:${out_dir}
@@ -134,7 +151,6 @@ input_tclim = {
 
 NAMELIST_PYTHON
 
-
 ##### Input files and namelist for AOT 
 cat > INPUT_AOT << EOF
 &aerosol_raw_data
@@ -146,7 +162,6 @@ cat > INPUT_AOT << EOF
   aot_buffer_file='aot_buffer.nc',
 /
 EOF
-
 
 ### OROGRAPHY ###
 cat > INPUT_ORO << EOF
@@ -167,6 +182,7 @@ cat > INPUT_ORO << EOF
  topo_files = 'GLOBE_A10.nc' 'GLOBE_B10.nc'  'GLOBE_C10.nc'  'GLOBE_D10.nc'  'GLOBE_E10.nc'  'GLOBE_F10.nc'  'GLOBE_G10.nc'  'GLOBE_H10.nc'  'GLOBE_I10.nc'  'GLOBE_J10.nc'  'GLOBE_K10.nc'  'GLOBE_L10.nc'  'GLOBE_M10.nc'  'GLOBE_N10.nc'  'GLOBE_O10.nc'  'GLOBE_P10.nc'
 /
 EOF
+
 cat > INPUT_OROSMOOTH << EOF
 &orography_smoothing
   lfilter_oro=.FALSE.
@@ -182,6 +198,7 @@ cat > INPUT_OROSMOOTH << EOF
   rxso_mask=   0.0
 /
 EOF
+
 cat > INPUT_RADTOPO << EOF
 &radtopo
   lradtopo=.FALSE.,
@@ -234,7 +251,6 @@ cat > INPUT_SOIL << EOF
 /
 EOF
 
-
 ##### Loop over all gridfiles for which external parameters should be produced 
 for icon_grid_file in ${icon_grid_files[@]}
 do
@@ -256,7 +272,6 @@ EOF
 /
 EOF
 
-
     # OUTPUT
     netcdf_output_filename="extpar_${icon_grid_file%.*}_tiles.nc"
     
@@ -270,32 +285,27 @@ EOF
 /
 EOF
 
-
     ##### Run set of Fortran binaries for extpar preprocessing
     for script_name_specifier in topo landuse flake soil aot
     do
-	    script_name=extpar_${script_name_specifier}_to_buffer.exe
-	    echo 'Running '${script_name}
+        script_name=extpar_${script_name_specifier}_to_buffer.exe
+        echo 'Running '${script_name}
         ${extpar_dir}/bin/${script_name}
         cat ${script_name%.*}.log >> ${icon_grid_file%.*}.log
     done
 
-
     ##### Run set of python scripts for extpar preprocessing
     for script_name_specifier in era alb ndvi emiss cru
     do
-	    script_name=extpar_${script_name_specifier}_to_buffer.py
-	    echo 'Running '${script_name}
-	    python ${extpar_dir}/python/${script_name}
+        script_name=extpar_${script_name_specifier}_to_buffer.py
+        echo 'Running '${script_name}
+        python ${extpar_dir}/python/${script_name}
         cat ${script_name%.*}.log >> ${icon_grid_file%.*}.log
     done
-
 
     ##### Run consistency check
     echo 'Running 'extpar_consistency_check.exe
     ${extpar_dir}/bin/extpar_consistency_check.exe
-
-
 
 done
 exit
