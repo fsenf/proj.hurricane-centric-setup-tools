@@ -130,7 +130,7 @@ EOF_1
 
     # (3) Grid Creation
     # =================
-    ${START} ${ICONTOOLS_DIR}/icongridgen -vv --nml NAMELIST_ICONGRIDGEN
+    ${START} ${PATHS_ICONTOOLS_DIR}/icongridgen -vv --nml NAMELIST_ICONGRIDGEN
     
 
     # (4) Set the New Basefile
