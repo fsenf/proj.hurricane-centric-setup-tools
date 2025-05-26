@@ -81,14 +81,14 @@ module load python3
 # Use configuration values
 DOMNAME="${NAME}/seg${iseg}_${WIDTH_CONFIG}"
 maskdir=${OUTPUT_BASE}/${DOMNAME}
-maskname=${maskdir}/"paulette_segment_mask_${EXPNAME}_seg${iseg}_dom${idom}.nc"
+maskname=${maskdir}/'paulette_segment_mask_${EXPNAME}_seg${iseg}_dom${idom}.nc'  # care for the quotes, single quotes are needed to avoid variable expansion
 
 if [ ! -d ${maskdir} ]; then
     mkdir -p ${maskdir}
 fi
 
 outputdir="${OUTPUT_BASE}/${DOMNAME}"
-outfile=${outputdir}/"paulette-seg${iseg}_dom${idom}"
+outfile=${outputdir}/'paulette-seg${iseg}_dom${idom}' # care for the quotes, single quotes are needed to avoid variable expansion
 
 idom=0
 fname=`eval echo $outfile`"_DOM01.nc"

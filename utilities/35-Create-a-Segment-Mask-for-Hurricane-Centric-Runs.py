@@ -137,7 +137,7 @@ def main():
 
     # Write output file
     outname = f'{data_path}/paulette_segment_mask_{expname}_seg{isegment}_dom{idom}.nc'
-    print(f'...writing {outname}')
+    print(f'...writing segment mask to {outname}')
     segment.to_netcdf(outname)
 
 
