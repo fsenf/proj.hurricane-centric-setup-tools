@@ -5,20 +5,13 @@ import pylab as plt
 import numpy as np
 import scipy.ndimage
 
-#import seaborn as sns
-#sns.set_context('paper')
-
 import datetime
 import xarray as xr
 xr.set_options(keep_attrs=True)
 
-from matplotlib.patches import Rectangle, Circle
-
-
 from scipy.spatial import KDTree
 
-sys.path.append('../tools')
-import timetools
+
 
 
 if 'launcher' in sys.argv[0]:
@@ -37,15 +30,15 @@ init_str = expname.split('-')[2]
 init_time = datetime.datetime.strptime( init_str, '%Y%m%d')
 
 # dom_width = [1.4e3, 1.2e3, 1e3] # in km
-dom_width = [300., 200., 100.] # in km
-width_config = 'width100km'
+dom_width = [60., 40., 20.] # in km
+width_config = 'width20km'
+project_subpath = 'paulette-segments' 
 
+segment_reinit_hours = 6.
+segment_length_added = 3.
+segment_length_hours = segment_reinit_hours + 2*segment_length_added
 
-segment_length_hours = 36.
-segment_reinit_hours = 24.
-
-
-segment_start_time = init_time + datetime.timedelta( hours = isegment * segment_reinit_hours )
+segment_start_time = init_time + datetime.timedelta( hours = isegment * segment_reinit_hours - segment_length_added )
 segment_end_time = segment_start_time + datetime.timedelta( hours = segment_length_hours )
 
 ndom = len( dom_width )
@@ -53,9 +46,9 @@ ndom = len( dom_width )
 if idom == 1:
     geofile = '/work/bb1376/data/icon/grids-extpar/atlanXL/atlanXL_R02B10_DOM02.nc'
 elif idom == 2:
-    geofile = f'/work/bb1376/data/icon/grids-extpar/paulette-segments/seg{isegment}_{width_config}/paulette-seg{isegment}_dom1_DOM01.nc'
+    geofile = f'/work/bb1376/data/icon/grids-extpar/{project_subpath}/seg{isegment}_{width_config}/paulette-seg{isegment}_dom1_DOM01.nc'
 elif idom == 3:
-    geofile = f'/work/bb1376/data/icon/grids-extpar/paulette-segments/seg{isegment}_{width_config}/paulette-seg{isegment}_dom2_DOM01.nc'
+    geofile = f'/work/bb1376/data/icon/grids-extpar/{project_subpath}/seg{isegment}_{width_config}/paulette-seg{isegment}_dom2_DOM01.nc'
     
 geo = xr.open_dataset(geofile)
 
@@ -109,7 +102,7 @@ segment = xr.Dataset()
 w = dom_width[idom-1]
 segment[f'mask'] = xr.where( distance < w, 1, 0)
 
-data_path = f'/work/bb1376/data/icon/grids-extpar/paulette-segments/seg{isegment}_{width_config}'
+data_path = f'/work/bb1376/data/icon/grids-extpar/{project_subpath}/seg{isegment}_{width_config}'
 
 if not os.path.exists(data_path):
     os.makedirs(data_path)

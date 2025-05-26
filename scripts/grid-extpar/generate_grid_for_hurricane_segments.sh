@@ -1,5 +1,17 @@
 #!/bin/bash
 #=============================================================================
+# DESCRIPTION:
+#   Grid generation script for hurricane segments. Creates nested grids
+#   centered on hurricane trajectories using ICON tools and segment masks.
+#
+# USAGE:
+#   ./generate_grid_for_hurricane_segments.sh [segment_number]
+#
+# DEPENDENCIES:
+#   This script calls:
+#   - ../../utilities/35-Create-a-Segment-Mask-for-Hurricane-Centric-Runs.py
+#
+#=============================================================================
 #
 # Levante cpu batch job parameters
 #
@@ -7,11 +19,16 @@
 #SBATCH --job-name=gridgen
 #SBATCH --partition=compute
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=32
+#SBATCH --cpus-per-task=16
 #SBATCH --exclusive
 #SBATCH --chdir=/scratch/b/b380352/icontools
 #SBATCH --time=02:30:00
 #=============================================================================
+
+# Use SLURM_SUBMIT_DIR to get the directory where sbatch was called from
+SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
+echo "Script submit directory: ${SCRIPT_DIR}"
+
 set +x
 ulimit -s unlimited
 ulimit -c 0
@@ -42,7 +59,7 @@ export HDF5_USE_FILE_LOCKING=FALSE
 export OMPI_MCA_io="romio321"
 export UCX_HANDLE_ERRORS=bt
 
-export START="srun -l --cpu_bind=verbose --hint=nomultithread --distribution=block:cyclic"
+export START="srun -l --cpu_bind=verbose --distribution=block:cyclic --ntasks-per-node=8 --cpus-per-task=${OMP_NUM_THREADS}"
 
 
 # LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
@@ -63,17 +80,17 @@ module load python3
 
 # Directory containing dwd_icon_tool binaries
 ICONTOOLS_DIR=/work/bb1174/models/icon/dwd_icon_tools/icontools
-#ICONTOOLS_DIR=/work/bb1174/user/jason/icon/dwd_icon_tools/icontools
 
+width_config = 'width20km'
+project_subpath = 'paulette-segments' 
 
-SCRIPT_DIR='.'
-DOMNAME="paulette-segments/seg${iseg}_width100km"
+DOMNAME="${project_subpath}/seg${iseg}_${width_config}"
 
-mdir=/work/bb1376/data/icon/grids-extpar/${DOMNAME}
-maskname=${mdir}/'paulette_segment_mask_ifces2-atlanXL-20200907-exp021_seg${iseg}_dom${idom}.nc'
+maskdir=/work/bb1376/data/icon/grids-extpar/${DOMNAME}
+maskname=${maskdir}/'paulette_segment_mask_ifces2-atlanXL-20200907-exp021_seg${iseg}_dom${idom}.nc'
 
-if [ ! -d ${mdir} ]; then
-    mkdir -p ${mdir}
+if [ ! -d ${maskdir} ]; then
+    mkdir -p ${maskdir}
 fi
 
 outputdir="/work/bb1376/data/icon/grids-extpar/"${DOMNAME}
@@ -91,7 +108,7 @@ for ((idom = 1 ; idom <= $nests  ; idom++)); do
 
     # (1) Create the Mask based on the new Grid
     # =========================================
-    cd ../utilities
+    cd "${SCRIPT_DIR}/../../utilities"
     python 35-Create-a-Segment-Mask-for-Hurricane-Centric-Runs.py $iseg $idom 
     cd -
 
