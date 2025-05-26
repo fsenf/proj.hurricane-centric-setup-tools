@@ -1,0 +1,315 @@
+#!/bin/bash
+#=============================================================================
+#
+# Levante cpu batch job parameters
+#
+#SBATCH --account=bb1376
+#SBATCH --job-name=ifs2icon_ini
+#SBATCH --partition=compute
+#SBATCH --nodes=1
+#SBATCH --cpus-per-task=16
+#SBATCH --exclusive
+#SBATCH --time=02:00:00
+#SBATCH --chdir=/scratch/b/b380352/icontools
+#SBATCH --mem=0
+#=============================================================================
+set -eu
+ulimit -s unlimited
+ulimit -c 0
+#=============================================================================
+#
+# OpenMP environment variables
+#
+export OMP_NUM_THREADS=16 # ${SLURM_CPUS_PER_TASK}
+export KMP_AFFINITY=verbose,granularity=fine,scatter
+export OMP_STACKSIZE=128M
+
+# #=============================================================================
+# #
+# # Environment variables for the experiment and the target system
+# #
+export OMPI_MCA_pml="ucx"
+export OMPI_MCA_btl=self
+export OMPI_MCA_osc="pt2pt"
+export UCX_IB_ADDR_TYPE=ib_global
+export OMPI_MCA_coll="^ml,hcoll"
+export OMPI_MCA_coll_hcoll_enable="0"
+export HCOLL_ENABLE_MCAST_ALL="0"
+export HCOLL_MAIN_IB=mlx5_0:1
+export UCX_NET_DEVICES=mlx5_0:1
+export UCX_TLS=mm,knem,cma,dc_mlx5,dc_x,self
+export UCX_UNIFIED_MODE=y
+export HDF5_USE_FILE_LOCKING=FALSE
+export OMPI_MCA_io="romio321"
+export UCX_HANDLE_ERRORS=bt
+
+export START="srun -l --cpu_bind=verbose --distribution=block:cyclic --ntasks=8"
+# export START="srun -l --cpu_bind=verbose --hint=nomultithread --distribution=block:cyclic"
+
+
+# LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
+# INPUT ARGUMENT
+
+args=("$@")
+config_name=${args[0]}
+add_args=("${args[@]:1}")
+
+# TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+
+
+#=============================================================================
+#
+# Define path to binaries and for input/output 
+#
+
+# Directory containing dwd_icon_tool binaries
+ICONTOOLS_DIR=/work/bb1174/models/icon/dwd_icon_tools/icontools
+
+
+SCRIPT_DIR=/work/bb1376/user/fabian/tools/pre-processing/ic-bc
+source ${SCRIPT_DIR}/${config_name} ${add_args[@]}
+# source ${SCRIPT_DIR}/ic_config.sh ${iseg}
+
+
+# File name of input grid/file to be remapped without path
+DATAFILE="${INFILE##*/}"
+
+
+
+
+# Create directory for weights
+WEIGHTDIR=`mktemp -d -p /scratch/b/b380352/icontools`
+NAMELIST_FILE=${WEIGHTDIR}/NAMELIST_ICONREMAP_INI
+
+[ ! -d ${WEIGHTDIR} ] && mkdir -p ${WEIGHTDIR}
+
+
+cat > ${NAMELIST_FILE} << REMAP_NML_EOF
+! REMAPPING NAMELIST FILE
+!
+&remap_nml
+ in_grid_filename   = "${INGRID}"                           ! file containing grid information of input data
+ in_filename        = "${INFILE}"                           ! input data file name
+ in_type            = 2                                     ! type of input grid (2(vorher stand hier 1): triangular)
+ out_grid_filename  = "${OUTGRID}"                          !containing output grid
+ out_filename       = "${OUTNAME}"                          ! output file name
+ out_type           = 2                                     ! type of output grid (2: triangular)
+ out_filetype       = 4                                     ! output filetype (4: NetCDF)
+ lsynthetic_grid    = .FALSE.                               !.TRUE. if output grid shall be created from scratch
+ ncstorage_file    = "${WEIGHTDIR}/ncstorage_ini.tmp"
+/
+! DEFINITION FOR INPUT DATA FIELD
+&input_field_nml
+inputname = "rho"
+outputname = "rho"
+intp_method = 3
+/
+&input_field_nml
+inputname = "pres"
+outputname = "pres"
+intp_method = 3
+/
+&input_field_nml
+inputname = "qc"
+outputname = "qc"
+intp_method = 3
+/
+&input_field_nml
+inputname = "qi"
+outputname = "qi"
+intp_method = 3
+/
+&input_field_nml
+inputname = "qr"
+outputname = "qr"
+intp_method = 3
+/
+&input_field_nml
+inputname = "qv"
+outputname = "qv"
+intp_method = 3
+/
+&input_field_nml
+inputname = "qs"
+outputname = "qs"
+intp_method = 3
+/
+&input_field_nml
+inputname = "temp"
+outputname = "temp"
+intp_method = 3
+/
+&input_field_nml
+inputname = "theta_v"
+outputname = "theta_v"
+intp_method = 3
+/
+&input_field_nml
+inputname = "tke" 
+outputname = "tke"
+intp_method = 3
+/
+&input_field_nml
+inputname = "u"
+outputname = "u"
+intp_method = 3
+/
+&input_field_nml
+inputname = "v"
+outputname = "v"
+intp_method = 3
+/
+&input_field_nml
+inputname = "w"
+outputname = "w"
+intp_method = 3
+/
+&input_field_nml
+inputname = "c_t_lk"
+outputname = "c_t_lk"
+intp_method = 3
+/
+&input_field_nml
+inputname = "freshsnow"
+outputname = "freshsnow"
+intp_method = 3
+/
+&input_field_nml
+inputname = "fr_seaice"
+outputname = "fr_seaice"
+intp_method = 3
+/
+&input_field_nml
+inputname = "h_ice"
+outputname = "h_ice"
+intp_method = 3
+/
+&input_field_nml
+inputname = "h_ml_lk"
+outputname = "h_ml_lk"
+intp_method = 3
+/
+&input_field_nml
+inputname = "h_snow"
+outputname = "h_snow"
+intp_method = 3
+/
+&input_field_nml
+inputname = "hsnow_max"
+outputname = "hsnow_max"
+intp_method = 3
+/
+&input_field_nml
+inputname = "qv_s"
+outputname = "qv_s"
+intp_method = 3
+/
+&input_field_nml
+inputname = "rho_snow"
+outputname = "rho_snow"
+intp_method = 3
+/
+&input_field_nml
+inputname = "t_sk"
+outputname = "t_sk"
+intp_method = 3
+/
+&input_field_nml
+inputname = "snowfrac"
+outputname = "snowfrac"
+intp_method = 3
+/
+&input_field_nml
+inputname = "t_bot_lk"
+outputname = "t_bot_lk"
+intp_method = 3
+/
+&input_field_nml
+inputname = "t_g"
+outputname = "t_g"
+intp_method = 3
+/
+&input_field_nml
+inputname = "t_ice"
+outputname = "t_ice"
+intp_method = 3
+/
+&input_field_nml
+inputname = "t_mnw_lk"
+outputname = "t_mnw_lk"
+intp_method = 3
+/
+&input_field_nml
+inputname = "t_seasfc"
+outputname = "t_seasfc"
+intp_method = 3
+/
+&input_field_nml
+inputname = "t_snow"
+outputname = "t_snow"
+intp_method = 3
+/
+&input_field_nml
+inputname = "t_wml_lk"
+outputname = "t_wml_lk"
+intp_method = 3
+/
+&input_field_nml
+inputname = "w_i"
+outputname = "w_i"
+intp_method = 3
+/
+&input_field_nml
+inputname = "gz0"
+outputname = "gz0"
+intp_method = 3
+/
+&input_field_nml
+inputname = "t_so"
+outputname = "t_so"
+intp_method = 3
+loptional = .TRUE.
+/
+&input_field_nml
+inputname = "t_2m"
+outputname = "t_2m"
+intp_method = 3
+/
+&input_field_nml
+inputname = "w_so"
+outputname = "w_so"
+intp_method = 3
+/
+&input_field_nml
+inputname = "w_so_ice"
+outputname = "w_so_ice"
+intp_method = 3
+/
+&input_field_nml
+inputname = "w_snow"
+outputname = "w_snow"
+intp_method = 3
+/
+&input_field_nml
+inputname = "z_ifc"
+outputname = "z_ifc"
+intp_method = 2
+loptional=.TRUE.
+/
+
+REMAP_NML_EOF
+
+
+#=============================================================================
+#
+# Start remapping
+#
+
+${START} ${ICONTOOLS_DIR}/iconremap --remap_nml ${NAMELIST_FILE}
+rm ${NAMELIST_FILE}
+
+#-----------------------------------------------------------------------------
+exit
+#-----------------------------------------------------------------------------
+
+
