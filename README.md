@@ -18,11 +18,11 @@ This toolset addresses the specific challenges of hurricane modeling by:
 ## Directory Structure
 
     hurricane-centric-setup-tools/
-    ├── tools/
+    ├── scripts/
     │   ├── processing-chains/   # Main workflow scripts
     │   ├── grid-extpar/         # Grid and external parameter tools
     │   ├── ic-bc/               # Initial and boundary condition tools
-    │   └── utilities/           # Helper scripts and utilities
+    ├── utilities/               # Helper scripts and utilities
     ├── docs/
     │   └── images/              # Documentation images
     └── test/                    # Test cases and validation scripts
