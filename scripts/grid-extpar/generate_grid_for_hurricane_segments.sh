@@ -66,7 +66,7 @@ ICONTOOLS_DIR=/work/bb1174/models/icon/dwd_icon_tools/icontools
 #ICONTOOLS_DIR=/work/bb1174/user/jason/icon/dwd_icon_tools/icontools
 
 
-SCRIPT_DIR=/work/bb1376/user/fabian/tools/pre-processing/grid-extpar
+SCRIPT_DIR='.'
 DOMNAME="paulette-segments/seg${iseg}_width100km"
 
 mdir=/work/bb1376/data/icon/grids-extpar/${DOMNAME}
@@ -91,7 +91,7 @@ for ((idom = 1 ; idom <= $nests  ; idom++)); do
 
     # (1) Create the Mask based on the new Grid
     # =========================================
-    cd /home/b/b380352/proj/2023-03_ifces2-scalexa/scripts
+    cd ../utilities
     python 35-Create-a-Segment-Mask-for-Hurricane-Centric-Runs.py $iseg $idom 
     cd -
 
