@@ -10,6 +10,8 @@
 # DEPENDENCIES:
 #   This script calls:
 #   - ../../utilities/35-Create-a-Segment-Mask-for-Hurricane-Centric-Runs.py
+#   - ../../utilities/toml_reader.sh
+#   - ../../config/hurricane_config.toml
 #
 #=============================================================================
 #
@@ -25,25 +27,28 @@
 #SBATCH --time=02:30:00
 #=============================================================================
 
-# Use SLURM_SUBMIT_DIR to get the directory where sbatch was called from
-SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
-echo "Script submit directory: ${SCRIPT_DIR}"
+ORIGINAL_SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
+# Get script directory - use a hardcoded path since SLURM changes the working directory
+# ORIGINAL_SCRIPT_DIR="/home/b/b380352/proj/2025-05_hurricane-centric-setup-tools/scripts/grid-extpar"
+echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
+
+# Load TOML reader and configuration
+source "${ORIGINAL_SCRIPT_DIR}/../../utilities/toml_reader.sh"
+CONFIG_FILE="${ORIGINAL_SCRIPT_DIR}/../../config/hurricane_config.toml"
+read_toml_config "$CONFIG_FILE"
 
 set +x
 ulimit -s unlimited
 ulimit -c 0
+
 #=============================================================================
-#
 # OpenMP environment variables
-#
+#=============================================================================
 export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
 export KMP_AFFINITY=verbose,granularity=fine,scatter
 export OMP_STACKSIZE=128M
 
-# #=============================================================================
-# #
-# # Environment variables for the experiment and the target system
-# #
+# Environment variables for the experiment and the target system
 export OMPI_MCA_pml="ucx"
 export OMPI_MCA_btl=self
 export OMPI_MCA_osc="pt2pt"
@@ -64,12 +69,7 @@ export START="srun -l --cpu_bind=verbose --distribution=block:cyclic --ntasks-pe
 
 # LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
 # INPUT ARGUMENT
-
 iseg=$1
-
-# TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
-
-
 
 module load python3
 
@@ -78,40 +78,29 @@ module load python3
 #         boundary zone.
 #-----------------------------------------------------------------------------
 
-# Directory containing dwd_icon_tool binaries
-ICONTOOLS_DIR=/work/bb1174/models/icon/dwd_icon_tools/icontools
-
-width_config = 'width20km'
-project_subpath = 'paulette-segments' 
-
-DOMNAME="${project_subpath}/seg${iseg}_${width_config}"
-
-maskdir=/work/bb1376/data/icon/grids-extpar/${DOMNAME}
-maskname=${maskdir}/'paulette_segment_mask_ifces2-atlanXL-20200907-exp021_seg${iseg}_dom${idom}.nc'
+# Use configuration values
+DOMNAME="${NAME}/seg${iseg}_${WIDTH_CONFIG}"
+maskdir=${OUTPUT_BASE}/${DOMNAME}
+maskname=${maskdir}/"paulette_segment_mask_${EXPNAME}_seg${iseg}_dom${idom}.nc"
 
 if [ ! -d ${maskdir} ]; then
     mkdir -p ${maskdir}
 fi
 
-outputdir="/work/bb1376/data/icon/grids-extpar/"${DOMNAME}
-outfile=${outputdir}/'paulette-seg${iseg}_dom${idom}'
-
-basegrid="/work/bb1376/data/icon/grids-extpar/atlanXL/atlanXL_R02B10_DOM02.nc"
-
-nests=3
+outputdir="${OUTPUT_BASE}/${DOMNAME}"
+outfile=${outputdir}/"paulette-seg${iseg}_dom${idom}"
 
 idom=0
 fname=`eval echo $outfile`"_DOM01.nc"
-ln -s $basegrid $fname
+ln -s $BASE_GRID $fname
 
-for ((idom = 1 ; idom <= $nests  ; idom++)); do
+for ((idom = 1 ; idom <= $NESTS ; idom++)); do
 
     # (1) Create the Mask based on the new Grid
     # =========================================
-    cd "${SCRIPT_DIR}/../../utilities"
-    python 35-Create-a-Segment-Mask-for-Hurricane-Centric-Runs.py $iseg $idom 
+    cd "${ORIGINAL_SCRIPT_DIR}/../../utilities"
+    python 35-Create-a-Segment-Mask-for-Hurricane-Centric-Runs.py $iseg $idom "$CONFIG_FILE"
     cd -
-
 
     # (2) Prepare Grid Config
     # =======================
@@ -142,7 +131,6 @@ for ((idom = 1 ; idom <= $nests  ; idom++)); do
 /
 EOF_1
 
-
     # (3) Grid Creation
     # =================
     ${START} ${ICONTOOLS_DIR}/icongridgen -vv --nml NAMELIST_ICONGRIDGEN
@@ -152,13 +140,7 @@ EOF_1
     # ========================
     fname=`eval echo $outfile`"_DOM01.nc"
 
-
-    # Clean up
-    #rm ${OUTDIR}/NAMELIST*
-
 done
 
-#-----------------------------------------------------------------------------
 exit
-#-----------------------------------------------------------------------------
 

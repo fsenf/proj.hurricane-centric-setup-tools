@@ -1,0 +1,29 @@
+[project]
+name = "paulette-segments"
+width_config = "width20km"
+
+[paths]
+icontools_dir = "/work/bb1174/models/icon/dwd_icon_tools/icontools"
+base_grid = "/work/bb1376/data/icon/grids-extpar/atlanXL/atlanXL_R02B10_DOM02.nc"
+output_base = "/work/bb1376/data/icon/grids-extpar"
+track_dir = "/work/bb1376/user/fabian/data/icon/paulette-statistics"
+
+[simulation]
+expname = "ifces2-atlanXL-20200907-exp021"
+segment_reinit_hours = 6.0
+segment_length_added = 3.0
+nests = 3
+
+[domains]
+dom_width = [60.0, 40.0, 20.0]  # in km
+
+[grid]
+centre = 78
+subcentre = 255
+spring_dynamics = true
+maxit = 2000
+beta_spring = 0.9
+fixed_boundary = true
+initial_refinement = true
+max_ncells = -1
+bdy_indexing_depth = 21
