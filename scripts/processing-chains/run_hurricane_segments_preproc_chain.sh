@@ -58,8 +58,8 @@ ic_job=$(sbatch  --parsable --dependency=afterany:$grid_job ./icon2icon_offline_
 printf "... IC job submitted with ID: $ic_job\n\n"
 
 
-#-----------------------------------------------------------------------------
-# PART IV: BC for Hurricane Segments
-#-----------------------------------------------------------------------------
-bc_job=$(sbatch  --parsable --dependency=afterany:$ic_job ./icon2icon_offline_lam_lbc.bash  $iseg)
-printf "... BC job submitted with ID: $bc_job\n\n"
+# #-----------------------------------------------------------------------------
+# # PART IV: BC for Hurricane Segments
+# #-----------------------------------------------------------------------------
+# bc_job=$(sbatch  --parsable --dependency=afterany:$ic_job ./icon2icon_offline_lam_lbc.bash  $iseg)
+# printf "... BC job submitted with ID: $bc_job\n\n"

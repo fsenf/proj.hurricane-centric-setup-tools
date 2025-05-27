@@ -77,21 +77,21 @@ module load python3
 
 # Use configuration values with new variable names
 DOMNAME="${PROJECT_NAME}/seg${iseg}_${PROJECT_WIDTH_CONFIG}"
-maskdir=${PATHS_OUTPUT_BASE}/${DOMNAME}
-maskname=${maskdir}/'paulette_segment_mask_${SIMULATION_EXPNAME}_seg${iseg}_dom${idom}.nc'
+maskdir=${OUTPUT_GRID_BASEDIR}/${DOMNAME}
+maskname=${maskdir}/'paulette_segment_mask_${REFERENCE_EXPNAME}_seg${iseg}_dom${idom}.nc'
 
 if [ ! -d ${maskdir} ]; then
     mkdir -p ${maskdir}
 fi
 
-outputdir="${PATHS_OUTPUT_BASE}/${DOMNAME}"
+outputdir="${OUTPUT_GRID_BASEDIR}/${DOMNAME}"
 outfile=${outputdir}/'paulette-seg${iseg}_dom${idom}'
 
 idom=0
 fname=`eval echo $outfile`"_DOM01.nc"
-ln -s $PATHS_BASE_GRID $fname
+ln -s $REFERENCE_INPUT_GRID $fname
 
-for ((idom = 1 ; idom <= $SIMULATION_NESTS ; idom++)); do
+for ((idom = 1 ; idom <= $DOMAINS_NESTS ; idom++)); do
 
     # (1) Create the Mask based on the new Grid
     # =========================================
@@ -130,7 +130,7 @@ EOF_1
 
     # (3) Grid Creation
     # =================
-    ${START} ${PATHS_ICONTOOLS_DIR}/icongridgen -vv --nml NAMELIST_ICONGRIDGEN
+    ${START} ${TOOLS_ICONTOOLS_DIR}/icongridgen -vv --nml NAMELIST_ICONGRIDGEN
     
 
     # (4) Set the New Basefile

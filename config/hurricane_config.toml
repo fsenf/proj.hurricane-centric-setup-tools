@@ -1,59 +1,34 @@
+[tools]
+# Tool directories and executables
+icontools_dir = "/work/bb1174/models/icon/dwd_icon_tools/icontools"
+extpar_input_dir = "/work/pd1167/extpar-input-data"
+extpar_dir = "/work/bb1376/tools/extpar"
+
 [project]
 name = "paulette-segments"
 width_config = "width20km"
 
-[paths]
-# Core tool directories
-icontools_dir = "/work/bb1174/models/icon/dwd_icon_tools/icontools"
-extpar_input_dir = "/work/pd1167/extpar-input-data"
-extpar_dir = "/work/bb1376/tools/extpar"
-script_dir = "/work/bb1376/user/fabian/tools/pre-processing/grid-extpar"
-
-# Data directories
-base_grid = "/work/bb1376/data/icon/grids-extpar/atlanXL/atlanXL_R02B10_DOM02.nc"
-output_base = "/work/bb1376/data/icon/grids-extpar"
-track_dir = "/work/bb1376/user/fabian/data/icon/paulette-statistics"
-
-# IC/BC specific paths
-ic_bc_script_dir = "/work/bb1376/user/fabian/tools/pre-processing/ic-bc"
-ic_data_dir = "/work/bb1376/data/icon/atlantic-cases/paulette/ifces2-atlanXL-20200907-exp021/NESTING"
-bc_init_output_base = "/work/bb1376/data/icon/bc-init"
-
-[simulation]
+[reference]
+# Reference grids and datasets
+init_time = "20200907T000000Z"
 expname = "ifces2-atlanXL-20200907-exp021"
+input_grid = "/work/bb1376/data/icon/grids-extpar/atlanXL/atlanXL_R02B10_DOM02.nc"
+input_icbc_dir = "/work/bb1376/data/icon/atlantic-cases/paulette/ifces2-atlanXL-20200907-exp021"
+input_icbc_subdir = "NESTING"
+
+[track]
+# Hurricane track data
+track_dir = "/work/bb1376/data/icon/atlantic-cases/derived-data/tracks/"
+track_file = "ifces2-atlanXL-20200907-exp021-DOM02_paulette_best-fit.nc"
+
+[domains]
+# Domain configuration
 segment_reinit_hours = 6.0
 segment_length_added = 3.0
 nests = 3
-
-# Segment to date mapping
-segment_dates = [
-    "20200907",  # segment 0
-    "20200908",  # segment 1
-    "20200909",  # segment 2
-    "20200910",  # segment 3
-    "20200911",  # segment 4
-    "20200912",  # segment 5
-    "20200913",  # segment 6
-    "20200914"   # segment 7
-]
-
-[domains]
 dom_width = [60.0, 40.0, 20.0]  # in km
 
-[ic_bc]
-# Input grid for IC/BC processing
-input_grid = "/work/bb1376/data/icon/grids-extpar/atlanXL/atlanXL_R02B10_DOM02.nc"
-input_experiment_dir = "/work/bb1376/data/icon/atlantic-cases/paulette/ifces2-atlanXL-20200907-exp021"
-input_data_subdir = "NESTING"
-
-# File patterns for different segments (using shell glob patterns)
-file_patterns = [
-    "lam_input_BC_DOM02_ML_2020090[7-8]T??0000Z.nc",  # segment 0
-    "lam_input_BC_DOM02_ML_2020090[8-9]T??0000Z.nc",  # segment 1
-    "lam_input_BC_DOM02_ML_202009[01][09]T??0000Z.nc", # segment 2
-    "lam_input_BC_DOM02_ML_2020091[0-1]T??0000Z.nc",  # segment 3
-    "lam_input_BC_DOM02_ML_2020091[1-2]T??0000Z.nc",  # segment 4
-    "lam_input_BC_DOM02_ML_2020091[2-3]T??0000Z.nc",  # segment 5
-    "lam_input_BC_DOM02_ML_2020091[3-4]T??0000Z.nc",  # segment 6
-    "lam_input_BC_DOM02_ML_2020091[4-5]T??0000Z.nc"   # segment 7
-]
+[output]
+# Output directories
+grid_basedir = "/work/bb1376/data/icon/grids-extpar"
+icbc_basedir = "/work/bb1376/data/icon/bc-init"

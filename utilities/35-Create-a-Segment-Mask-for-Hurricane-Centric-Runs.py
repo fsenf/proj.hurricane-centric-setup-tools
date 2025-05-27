@@ -56,16 +56,17 @@ def main():
     # Load configuration
     config = load_config(config_file)
     
-    # Extract configuration values
+    # Extract configuration values - updated to match new TOML structure
     project_name = config['project']['name']
     width_config = config['project']['width_config']
-    expname = config['simulation']['expname']
-    segment_reinit_hours = config['simulation']['segment_reinit_hours']
-    segment_length_added = config['simulation']['segment_length_added']
+    expname = config['reference']['expname']
+    segment_reinit_hours = config['domains']['segment_reinit_hours']
+    segment_length_added = config['domains']['segment_length_added']
     dom_width = config['domains']['dom_width']
-    output_base = config['paths']['output_base']
-    track_dir = config['paths']['track_dir']
-    base_grid = config['paths']['base_grid']
+    output_base = config['output']['grid_basedir']
+    track_dir = config['track']['track_dir']
+    track_file = config['track']['track_file']
+    input_grid = config['reference']['input_grid']
 
     # Calculate segment timing
     init_str = expname.split('-')[2]
@@ -79,7 +80,7 @@ def main():
 
     # Determine grid file based on domain
     if idom == 1:
-        geofile = base_grid
+        geofile = input_grid  # Use input_grid instead of base_grid
     elif idom == 2:
         geofile = f'{output_base}/{project_name}/seg{isegment}_{width_config}/paulette-seg{isegment}_dom1_DOM01.nc'
     elif idom == 3:
@@ -90,9 +91,9 @@ def main():
     # Load geometry data
     geo = xr.open_dataset(geofile)
 
-    # Load track data
-    trackfile = f'{track_dir}/{expname}-DOM02_paulette_best-fit.nc'
-    paulette_full = xr.open_dataset(trackfile).swap_dims({'index': 'time'})
+    # Load track data - use track_file directly and rename local variable
+    full_track_filename = f'{track_dir}/{track_file}'
+    paulette_full = xr.open_dataset(full_track_filename).swap_dims({'index': 'time'})
     paulette = paulette_full.sel(time=slice(segment_start_time, segment_end_time))
 
     # Convert to radians

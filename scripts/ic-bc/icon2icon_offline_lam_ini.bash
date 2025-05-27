@@ -26,7 +26,7 @@
 #SBATCH --chdir=/scratch/b/b380352/icontools
 #SBATCH --mem=0
 #=============================================================================
-set -eu
+set -eux
 ulimit -s unlimited
 ulimit -c 0
 
@@ -91,7 +91,7 @@ fi
 #=============================================================================
 
 # Directory containing dwd_icon_tool binaries
-ICONTOOLS_DIR="$PATHS_ICONTOOLS_DIR"
+ICONTOOLS_DIR="$TOOLS_ICONTOOLS_DIR"
 
 # File name of input grid/file to be remapped without path
 DATAFILE="${INFILE##*/}"

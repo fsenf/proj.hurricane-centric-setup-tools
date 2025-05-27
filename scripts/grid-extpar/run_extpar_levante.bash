@@ -21,18 +21,16 @@
 #
 #SBATCH --account=bb1376
 #SBATCH --job-name=extpar
-#SBATCH --partition=compute
-#SBATCH --nodes=1
-#SBATCH --ntasks-per-node=4
-#SBATCH --cpus-per-task=32
+#SBATCH --partition=shared
+#SBATCH --ntasks=1
+#SBATCH --cpus-per-task=8
 #SBATCH --distribution=block:block
 #SBATCH --chdir=/scratch/b/b380352/icontools
-#SBATCH --mem=0
-#SBATCH --exclusive
+#SBATCH --mem=10G
 #SBATCH --time=00:20:00
 
 #=============================================================================
-set -eu
+set -eux
 ulimit -s unlimited
 ulimit -c 0
 
@@ -76,19 +74,19 @@ module load python3
 
 # Set variables from TOML config instead of sourcing extpar_config.sh
 DOMNAME="${PROJECT_NAME}/seg${iseg}_${PROJECT_WIDTH_CONFIG}"
-grid_dir="${PATHS_OUTPUT_BASE}/${DOMNAME}"
+grid_dir="${OUTPUT_GRID_BASEDIR}/${DOMNAME}"
 
 # Create icon_grid_files array based on TOML config
 declare -a icon_grid_files
-for ((idom = 1; idom <= SIMULATION_NESTS; idom++)); do
+for ((idom = 1; idom <= DOMAINS_NESTS; idom++)); do
     icon_grid_files+=("paulette-seg${iseg}_dom${idom}_DOM01.nc")
 done
 
 # Directory with input data for generation of external parameters
-extpar_input_dir="$PATHS_EXTPAR_INPUT_DIR"
+extpar_input_dir="$TOOLS_EXTPAR_INPUT_DIR"
 
 # Directory of ExtPar
-extpar_dir="$PATHS_EXTPAR_DIR"
+extpar_dir="$TOOLS_EXTPAR_DIR"
 
 # Output directory
 out_dir=${grid_dir}

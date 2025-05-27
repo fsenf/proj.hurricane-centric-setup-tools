@@ -77,3 +77,35 @@ get_config_path() {
     local script_dir="$1"
     echo "${script_dir}/../../config/hurricane_config.toml"
 }
+
+# Function to get initialization date based on segment number
+get_init_date_from_segment() {
+    local iseg="$1"
+    case $iseg in
+        0) echo '20200907' ;;
+        1) echo '20200908' ;;
+        2) echo '20200909' ;;
+        3) echo '20200910' ;;
+        4) echo '20200911' ;;
+        5) echo '20200912' ;;
+        6) echo '20200913' ;;
+        7) echo '20200914' ;;
+        *) echo 'Invalid segment' ;;
+    esac
+}
+
+# Function to get datafile list pattern based on segment number
+get_datafile_pattern_from_segment() {
+    local iseg="$1"
+    case $iseg in
+        0) echo "lam_input_BC_DOM02_ML_2020090[7-8]T??0000Z.nc" ;;
+        1) echo "lam_input_BC_DOM02_ML_2020090[8-9]T??0000Z.nc" ;;
+        2) echo "lam_input_BC_DOM02_ML_202009[01][09]T??0000Z.nc" ;;
+        3) echo "lam_input_BC_DOM02_ML_2020091[0-1]T??0000Z.nc" ;;
+        4) echo "lam_input_BC_DOM02_ML_2020091[1-2]T??0000Z.nc" ;;
+        5) echo "lam_input_BC_DOM02_ML_2020091[2-3]T??0000Z.nc" ;;
+        6) echo "lam_input_BC_DOM02_ML_2020091[3-4]T??0000Z.nc" ;;
+        7) echo "lam_input_BC_DOM02_ML_2020091[4-5]T??0000Z.nc" ;;
+        *) echo 'Invalid segment' ;;
+    esac
+}
