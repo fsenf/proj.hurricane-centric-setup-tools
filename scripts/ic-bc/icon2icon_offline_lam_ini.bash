@@ -1,5 +1,18 @@
 #!/bin/bash
 #=============================================================================
+# DESCRIPTION:
+#   Initial condition processing for hurricane segments using ICON tools.
+#   Converts initial conditions from coarse to nested hurricane-centric grids.
+#
+# USAGE:
+#   ./icon2icon_offline_lam_ini.bash [config_name] [additional_args...]
+#
+# DEPENDENCIES:
+#   - ../../utilities/toml_reader.sh
+#   - ../../utilities/ic_bc_utils.sh
+#   - ../../config/hurricane_config.toml
+#
+#=============================================================================
 #
 # Levante cpu batch job parameters
 #
@@ -16,18 +29,25 @@
 set -eu
 ulimit -s unlimited
 ulimit -c 0
+
+# Get script directory - use SLURM_SUBMIT_DIR when submitted via SLURM
+ORIGINAL_SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
+echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
+
+# Load TOML reader and configuration
+source "${ORIGINAL_SCRIPT_DIR}/../../utilities/toml_reader.sh"
+source "${ORIGINAL_SCRIPT_DIR}/../../utilities/ic_bc_utils.sh"
+CONFIG_FILE="${ORIGINAL_SCRIPT_DIR}/../../config/hurricane_config.toml"
+read_toml_config "$CONFIG_FILE"
+
 #=============================================================================
-#
 # OpenMP environment variables
-#
-export OMP_NUM_THREADS=16 # ${SLURM_CPUS_PER_TASK}
+#=============================================================================
+export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
 export KMP_AFFINITY=verbose,granularity=fine,scatter
 export OMP_STACKSIZE=128M
 
-# #=============================================================================
-# #
-# # Environment variables for the experiment and the target system
-# #
+# Environment variables for the experiment and the target system
 export OMPI_MCA_pml="ucx"
 export OMPI_MCA_btl=self
 export OMPI_MCA_osc="pt2pt"
@@ -43,39 +63,38 @@ export HDF5_USE_FILE_LOCKING=FALSE
 export OMPI_MCA_io="romio321"
 export UCX_HANDLE_ERRORS=bt
 
-export START="srun -l --cpu_bind=verbose --distribution=block:cyclic --ntasks=8"
-# export START="srun -l --cpu_bind=verbose --hint=nomultithread --distribution=block:cyclic"
+export START="srun -l --cpu_bind=verbose --distribution=block:cyclic --ntasks=8 --cpus-per-task=${OMP_NUM_THREADS}"
 
-
-# LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-# INPUT ARGUMENT
-
+# Parse arguments
 args=("$@")
 config_name=${args[0]}
 add_args=("${args[@]:1}")
 
-# TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
-
+# For backward compatibility: if config_name is a known config file, use legacy approach
+# Otherwise, extract segment number from arguments
+if [[ "$config_name" == "ic_config.sh" ]]; then
+    # Legacy mode: extract segment from add_args
+    iseg=${add_args[0]}
+    setup_ic_bc_config "$iseg"
+elif [[ "$config_name" == "warmstart-config.sh" ]]; then
+    # Warmstart mode: use different utility function (to be implemented)
+    echo "Warmstart mode not yet implemented with TOML config"
+    exit 1
+else
+    # Direct segment mode: config_name is actually the segment number
+    iseg="$config_name"
+    setup_ic_bc_config "$iseg"
+fi
 
 #=============================================================================
-#
 # Define path to binaries and for input/output 
-#
+#=============================================================================
 
 # Directory containing dwd_icon_tool binaries
-ICONTOOLS_DIR=/work/bb1174/models/icon/dwd_icon_tools/icontools
-
-
-SCRIPT_DIR=/work/bb1376/user/fabian/tools/pre-processing/ic-bc
-source ${SCRIPT_DIR}/${config_name} ${add_args[@]}
-# source ${SCRIPT_DIR}/ic_config.sh ${iseg}
-
+ICONTOOLS_DIR="$PATHS_ICONTOOLS_DIR"
 
 # File name of input grid/file to be remapped without path
 DATAFILE="${INFILE##*/}"
-
-
-
 
 # Create directory for weights
 WEIGHTDIR=`mktemp -d -p /scratch/b/b380352/icontools`
@@ -83,20 +102,19 @@ NAMELIST_FILE=${WEIGHTDIR}/NAMELIST_ICONREMAP_INI
 
 [ ! -d ${WEIGHTDIR} ] && mkdir -p ${WEIGHTDIR}
 
-
 cat > ${NAMELIST_FILE} << REMAP_NML_EOF
 ! REMAPPING NAMELIST FILE
 !
 &remap_nml
  in_grid_filename   = "${INGRID}"                           ! file containing grid information of input data
  in_filename        = "${INFILE}"                           ! input data file name
- in_type            = 2                                     ! type of input grid (2(vorher stand hier 1): triangular)
- out_grid_filename  = "${OUTGRID}"                          !containing output grid
+ in_type            = 2                                     ! type of input grid (2: triangular)
+ out_grid_filename  = "${OUTGRID}"                          ! containing output grid
  out_filename       = "${OUTNAME}"                          ! output file name
  out_type           = 2                                     ! type of output grid (2: triangular)
  out_filetype       = 4                                     ! output filetype (4: NetCDF)
- lsynthetic_grid    = .FALSE.                               !.TRUE. if output grid shall be created from scratch
- ncstorage_file    = "${WEIGHTDIR}/ncstorage_ini.tmp"
+ lsynthetic_grid    = .FALSE.                               ! .TRUE. if output grid shall be created from scratch
+ ncstorage_file     = "${WEIGHTDIR}/ncstorage_ini.tmp"
 /
 ! DEFINITION FOR INPUT DATA FIELD
 &input_field_nml
@@ -299,11 +317,9 @@ loptional=.TRUE.
 
 REMAP_NML_EOF
 
-
 #=============================================================================
-#
 # Start remapping
-#
+#=============================================================================
 
 ${START} ${ICONTOOLS_DIR}/iconremap --remap_nml ${NAMELIST_FILE}
 rm ${NAMELIST_FILE}

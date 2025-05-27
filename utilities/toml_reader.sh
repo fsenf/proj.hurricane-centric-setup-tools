@@ -2,13 +2,7 @@
 # filepath: /home/b/b380352/proj/2025-05_hurricane-centric-setup-tools/utilities/toml_reader.sh
 #=============================================================================
 # DESCRIPTION:
-#   Enhanced TOML reader for bash scripts with section prefix support.
-#
-# USAGE:
-#   source utilities/toml_reader.sh
-#   read_toml_config "path/to/config.toml"
-#   echo $PROJECT_NAME
-#   echo $PATHS_OUTPUT_BASE
+#   Enhanced TOML reader for bash scripts with improved array support.
 #=============================================================================
 
 read_toml_config() {
@@ -39,7 +33,6 @@ read_toml_config() {
             
             # Create variable name with section prefix
             if [[ -n "$current_section" ]]; then
-                # Replace dots with underscores for nested sections
                 section_prefix=$(echo "$current_section" | tr '.' '_' | tr '[:lower:]' '[:upper:]')
                 var_name="${section_prefix}_${key}"
             else
@@ -49,13 +42,22 @@ read_toml_config() {
             # Convert to uppercase
             var_name=$(echo "$var_name" | tr '[:lower:]' '[:upper:]')
             
-            # Remove quotes
-            value=$(echo "$value" | sed 's/^"//;s/"$//')
-            
-            # Handle arrays
+            # Remove quotes and handle arrays
             if [[ "$value" =~ ^\[.*\]$ ]]; then
-                # Convert array to space-separated string
-                value=$(echo "$value" | sed 's/\[//;s/\]//;s/,/ /g' | sed 's/"//g')
+                # Handle multi-line arrays
+                local array_content="$value"
+                
+                # If the array spans multiple lines, read them
+                while [[ ! "$array_content" =~ \]$ ]] && IFS= read -r next_line; do
+                    [[ "$next_line" =~ ^[[:space:]]*# ]] && continue
+                    array_content="$array_content $next_line"
+                done
+                
+                # Clean up array content
+                value=$(echo "$array_content" | sed 's/\[//g; s/\]//g; s/,/ /g; s/"//g' | tr -s ' ')
+            else
+                # Remove quotes from simple values
+                value=$(echo "$value" | sed 's/^"//;s/"$//')
             fi
             
             # Handle booleans
