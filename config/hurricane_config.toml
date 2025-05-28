@@ -5,8 +5,9 @@ extpar_input_dir = "/work/pd1167/extpar-input-data"
 extpar_dir = "/work/bb1376/tools/extpar"
 
 [project]
-name = "paulette-segments"
-width_config = "width20km"
+name = "hurricane-paulette2020-segments"
+width_config = "width20km_reinit6h"
+working_dir = "/scratch/b/b380352/icontools"
 
 [reference]
 # Reference grids and datasets

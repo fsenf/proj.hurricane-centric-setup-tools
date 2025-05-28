@@ -33,6 +33,16 @@
 iseg=$1
 ADDED_ARG=$2   # intended for additional slurm dependencies, e.g. --dependency=afterok: 
 
+#------------------------------------------------------------------------------
+# Prep
+#------------------------------------------------------------------------------
+if ! [[ "$iseg" =~ ^[0-9]+$ ]]; then
+    echo "Error: segment_number (iseg) must be a number."
+    exit 1
+fi
+
+
+
 pp_path=".."
 
 #-----------------------------------------------------------------------------
@@ -46,16 +56,16 @@ printf "... Grid job submitted with ID: $grid_job\n\n"
 #-----------------------------------------------------------------------------
 # PART II: Process Extpar
 #-----------------------------------------------------------------------------
-extpar_job=$(sbatch --parsable --dependency=afterany:$grid_job ./run_extpar_levante.bash $iseg)
+extpar_job=$(sbatch --parsable --dependency=afterok:$grid_job ./run_extpar_levante.bash $iseg)
 printf "... Extpar job submitted with ID: $extpar_job\n\n"
 
 
-#-----------------------------------------------------------------------------
-# PART III: IC for Hurricane Segments
-#-----------------------------------------------------------------------------
-cd ${pp_path}/ic-bc
-ic_job=$(sbatch  --parsable --dependency=afterany:$grid_job ./icon2icon_offline_lam_ini.bash  $iseg)
-printf "... IC job submitted with ID: $ic_job\n\n"
+# #-----------------------------------------------------------------------------
+# # PART III: IC for Hurricane Segments
+# #-----------------------------------------------------------------------------
+# cd ${pp_path}/ic-bc
+# ic_job=$(sbatch  --parsable --dependency=afterany:$grid_job ./icon2icon_offline_lam_ini.bash  $iseg)
+# printf "... IC job submitted with ID: $ic_job\n\n"
 
 
 # #-----------------------------------------------------------------------------

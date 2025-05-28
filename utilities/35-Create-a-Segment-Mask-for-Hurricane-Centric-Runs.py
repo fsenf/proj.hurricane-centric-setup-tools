@@ -59,6 +59,7 @@ def main():
     # Extract configuration values - updated to match new TOML structure
     project_name = config['project']['name']
     width_config = config['project']['width_config']
+    init_time_str = config['reference']['init_time']
     expname = config['reference']['expname']
     segment_reinit_hours = config['domains']['segment_reinit_hours']
     segment_length_added = config['domains']['segment_length_added']
@@ -69,8 +70,9 @@ def main():
     input_grid = config['reference']['input_grid']
 
     # Calculate segment timing
-    init_str = expname.split('-')[2]
-    init_time = datetime.datetime.strptime(init_str, '%Y%m%d')
+    # Remove the 'T000000Z' suffix if present and parse the date part
+    init_date_str = init_time_str.split('T')[0]
+    init_time = datetime.datetime.strptime(init_date_str, '%Y%m%d')
     
     segment_length_hours = segment_reinit_hours + 2 * segment_length_added
     segment_start_time = init_time + datetime.timedelta(
@@ -82,9 +84,9 @@ def main():
     if idom == 1:
         geofile = input_grid  # Use input_grid instead of base_grid
     elif idom == 2:
-        geofile = f'{output_base}/{project_name}/seg{isegment}_{width_config}/paulette-seg{isegment}_dom1_DOM01.nc'
+        geofile = f'{output_base}/{project_name}/seg{isegment}_{width_config}/{project_name}-seg{isegment}_dom1_DOM01.nc'
     elif idom == 3:
-        geofile = f'{output_base}/{project_name}/seg{isegment}_{width_config}/paulette-seg{isegment}_dom2_DOM01.nc'
+        geofile = f'{output_base}/{project_name}/seg{isegment}_{width_config}/{project_name}-seg{isegment}_dom2_DOM01.nc'
     else:
         raise ValueError(f"Invalid domain number: {idom}")
 
@@ -93,27 +95,27 @@ def main():
 
     # Load track data - use track_file directly and rename local variable
     full_track_filename = f'{track_dir}/{track_file}'
-    paulette_full = xr.open_dataset(full_track_filename).swap_dims({'index': 'time'})
-    paulette = paulette_full.sel(time=slice(segment_start_time, segment_end_time))
+    track_full = xr.open_dataset(full_track_filename).swap_dims({'index': 'time'})
+    track = track_full.sel(time=slice(segment_start_time, segment_end_time))
 
     # Convert to radians
-    paulette['phi'] = np.deg2rad(paulette['latitude'])
-    paulette['lam'] = np.deg2rad(paulette['longitude'])
+    track['phi'] = np.deg2rad(track['latitude'])
+    track['lam'] = np.deg2rad(track['longitude'])
 
     # Create diagnostic plots
     if interactive:
         fig, axs = plt.subplots(ncols=2, nrows=2, figsize=(14, 8))
         axs = axs.flatten()
-        paulette['longitude'].plot(ax=axs[0])
-        paulette['latitude'].plot(ax=axs[1])
-        paulette.plot.scatter(x='longitude', y='latitude', hue='time', 
+        track['longitude'].plot(ax=axs[0])
+        track['latitude'].plot(ax=axs[1])
+        track.plot.scatter(x='longitude', y='latitude', hue='time', 
                             add_colorbar=False, ax=axs[2], add_legend=False)
         plt.show()
     else:
         plt.ioff()
 
     # Setup search tree for nearest neighbor search
-    xyz = np.c_[lonlat2xyz(paulette.lam.data.ravel(), paulette.phi.data.ravel())]
+    xyz = np.c_[lonlat2xyz(track.lam.data.ravel(), track.phi.data.ravel())]
     tree = KDTree(xyz)
 
     # Find nearest neighbor indices and distances
@@ -137,7 +139,7 @@ def main():
         os.makedirs(data_path)
 
     # Write output file
-    outname = f'{data_path}/paulette_segment_mask_{expname}_seg{isegment}_dom{idom}.nc'
+    outname = f'{data_path}/{project_name}_mask_{expname}_seg{isegment}_dom{idom}.nc'
     print(f'...writing segment mask to {outname}')
     segment.to_netcdf(outname)
 

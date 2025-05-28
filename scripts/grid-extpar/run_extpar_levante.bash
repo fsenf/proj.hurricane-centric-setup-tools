@@ -25,23 +25,14 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --distribution=block:block
-#SBATCH --chdir=/scratch/b/b380352/icontools
 #SBATCH --mem=10G
 #SBATCH --time=00:20:00
-
 #=============================================================================
+
 set -eux
 ulimit -s unlimited
 ulimit -c 0
 
-# Get script directory
-ORIGINAL_SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
-echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
-
-# Load TOML reader and configuration
-source "${ORIGINAL_SCRIPT_DIR}/../../utilities/toml_reader.sh"
-CONFIG_FILE="${ORIGINAL_SCRIPT_DIR}/../../config/hurricane_config.toml"
-read_toml_config "$CONFIG_FILE"
 
 #=============================================================================
 # OpenMP environment variables
@@ -65,6 +56,21 @@ export UCX_UNIFIED_MODE=y
 export HDF5_USE_FILE_LOCKING=FALSE
 export OMPI_MCA_io="romio321"
 export UCX_HANDLE_ERRORS=bt
+
+#=============================================================================
+# Get Configuration and Script Directory
+#=============================================================================
+
+# Get script directory
+ORIGINAL_SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
+echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
+
+# Load TOML reader and configuration
+source "${ORIGINAL_SCRIPT_DIR}/../../utilities/toml_reader.sh"
+CONFIG_FILE="${ORIGINAL_SCRIPT_DIR}/../../config/hurricane_config.toml"
+read_toml_config "$CONFIG_FILE"
+
+cd $PROJECT_WORKING_DIR
 
 # INPUT ARGUMENT
 iseg=$1

@@ -23,19 +23,11 @@
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=16
 #SBATCH --exclusive
-#SBATCH --chdir=/scratch/b/b380352/icontools
 #SBATCH --time=02:30:00
 #=============================================================================
 
-ORIGINAL_SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
-echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
 
-# Load TOML reader and configuration
-source "${ORIGINAL_SCRIPT_DIR}/../../utilities/toml_reader.sh"
-CONFIG_FILE="${ORIGINAL_SCRIPT_DIR}/../../config/hurricane_config.toml"
-read_toml_config "$CONFIG_FILE"
-
-set +x
+set -eux
 ulimit -s unlimited
 ulimit -c 0
 
@@ -64,6 +56,18 @@ export UCX_HANDLE_ERRORS=bt
 
 export START="srun -l --cpu_bind=verbose --distribution=block:cyclic --ntasks-per-node=8 --cpus-per-task=${OMP_NUM_THREADS}"
 
+#=============================================================================
+# Get Configuration and Script Directory
+#=============================================================================
+ORIGINAL_SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
+echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
+
+# Load TOML reader and configuration
+source "${ORIGINAL_SCRIPT_DIR}/../../utilities/toml_reader.sh"
+CONFIG_FILE="${ORIGINAL_SCRIPT_DIR}/../../config/hurricane_config.toml"
+read_toml_config "$CONFIG_FILE"
+
+cd $PROJECT_WORKING_DIR
 
 # INPUT ARGUMENT
 iseg=$1
@@ -78,14 +82,14 @@ module load python3
 # Use configuration values with new variable names
 DOMNAME="${PROJECT_NAME}/seg${iseg}_${PROJECT_WIDTH_CONFIG}"
 maskdir=${OUTPUT_GRID_BASEDIR}/${DOMNAME}
-maskname=${maskdir}/'paulette_segment_mask_${REFERENCE_EXPNAME}_seg${iseg}_dom${idom}.nc'
+maskname=${maskdir}/'${PROJECT_NAME}_mask_${REFERENCE_EXPNAME}_seg${iseg}_dom${idom}.nc'
 
 if [ ! -d ${maskdir} ]; then
     mkdir -p ${maskdir}
 fi
 
 outputdir="${OUTPUT_GRID_BASEDIR}/${DOMNAME}"
-outfile=${outputdir}/'paulette-seg${iseg}_dom${idom}'
+outfile=${outputdir}/'${PROJECT_NAME}-seg${iseg}_dom${idom}'
 
 idom=0
 fname=`eval echo $outfile`"_DOM01.nc"
