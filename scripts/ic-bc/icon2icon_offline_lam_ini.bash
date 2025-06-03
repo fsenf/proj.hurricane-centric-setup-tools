@@ -5,11 +5,11 @@
 #   Converts initial conditions from coarse to nested hurricane-centric grids.
 #
 # USAGE:
-#   ./icon2icon_offline_lam_ini.bash [config_name] [additional_args...]
+#   ./icon2icon_offline_lam_ini.bash [segment_number]
 #
 # DEPENDENCIES:
 #   - ../../utilities/toml_reader.sh
-#   - ../../utilities/ic_bc_utils.sh
+#   - ../../utilities/find_icbc_file.py
 #   - ../../config/hurricane_config.toml
 #
 #=============================================================================
@@ -23,22 +23,13 @@
 #SBATCH --cpus-per-task=16
 #SBATCH --exclusive
 #SBATCH --time=02:00:00
-#SBATCH --chdir=/scratch/b/b380352/icontools
 #SBATCH --mem=0
+#SBATCH --output=../LOG/slurm-%j.out
 #=============================================================================
 set -eux
 ulimit -s unlimited
 ulimit -c 0
 
-# Get script directory - use SLURM_SUBMIT_DIR when submitted via SLURM
-ORIGINAL_SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
-echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
-
-# Load TOML reader and configuration
-source "${ORIGINAL_SCRIPT_DIR}/../../utilities/toml_reader.sh"
-source "${ORIGINAL_SCRIPT_DIR}/../../utilities/ic_bc_utils.sh"
-CONFIG_FILE="${ORIGINAL_SCRIPT_DIR}/../../config/hurricane_config.toml"
-read_toml_config "$CONFIG_FILE"
 
 #=============================================================================
 # OpenMP environment variables
@@ -63,28 +54,37 @@ export HDF5_USE_FILE_LOCKING=FALSE
 export OMPI_MCA_io="romio321"
 export UCX_HANDLE_ERRORS=bt
 
+#=============================================================================
+# Get Configuration and Script Directory
+#=============================================================================
+
+# Get script directory - use SLURM_SUBMIT_DIR when submitted via SLURM
+ORIGINAL_SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
+echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
+
+# Load TOML reader and configuration
+source "${ORIGINAL_SCRIPT_DIR}/../../utilities/toml_reader.sh"
+CONFIG_FILE="${ORIGINAL_SCRIPT_DIR}/../../config/hurricane_config.toml"
+read_toml_config "$CONFIG_FILE"
+
+cd $PROJECT_WORKING_DIR
+
+
 export START="srun -l --cpu_bind=verbose --distribution=block:cyclic --ntasks=8 --cpus-per-task=${OMP_NUM_THREADS}"
 
-# Parse arguments
-args=("$@")
-config_name=${args[0]}
-add_args=("${args[@]:1}")
+# Parse arguments - simplified to just take segment number
+iseg="$1"
 
-# For backward compatibility: if config_name is a known config file, use legacy approach
-# Otherwise, extract segment number from arguments
-if [[ "$config_name" == "ic_config.sh" ]]; then
-    # Legacy mode: extract segment from add_args
-    iseg=${add_args[0]}
-    setup_ic_bc_config "$iseg"
-elif [[ "$config_name" == "warmstart-config.sh" ]]; then
-    # Warmstart mode: use different utility function (to be implemented)
-    echo "Warmstart mode not yet implemented with TOML config"
+# Load python module
+module load python3
+
+# Find IC file using Python utility
+INFILE=$(python "${ORIGINAL_SCRIPT_DIR}/../../utilities/find_icbc_file.py" "$CONFIG_FILE" "$iseg" "IC")
+if [ $? -ne 0 ] || [ -z "$INFILE" ]; then
+    echo "Error: IC file not found for segment $iseg"
     exit 1
-else
-    # Direct segment mode: config_name is actually the segment number
-    iseg="$config_name"
-    setup_ic_bc_config "$iseg"
 fi
+echo "Found IC file: $INFILE"
 
 #=============================================================================
 # Define path to binaries and for input/output 
@@ -93,11 +93,27 @@ fi
 # Directory containing dwd_icon_tool binaries
 ICONTOOLS_DIR="$TOOLS_ICONTOOLS_DIR"
 
-# File name of input grid/file to be remapped without path
-DATAFILE="${INFILE##*/}"
+# Set up input grid
+INGRID="$REFERENCE_INPUT_GRID"
+
+# Set up domain name and output grid
+DOMNAME="${PROJECT_NAME}/seg${iseg}_${PROJECT_WIDTH_CONFIG}"
+OUTGRID="${OUTPUT_GRID_BASEDIR}/${DOMNAME}/${PROJECT_NAME}-seg${iseg}_dom1_DOM01.nc"
+
+# Set up output name for initial conditions
+OUTNAME="ifces2-atlanXL-$(basename ${INFILE} | cut -d'_' -f5 | cut -d'.' -f1)_${DOMNAME//\//_}_DOM01_ini.nc"
+
+OUT_IC_DIR="${OUTPUT_IC_BASEDIR}/${DOMNAME}"
+
+if [ ! -d "${OUT_IC_DIR}" ]; then
+    mkdir -p "${OUT_IC_DIR}"
+fi
+FULL_OUTNAME="${OUT_IC_DIR}/${OUTNAME}"
+
+
 
 # Create directory for weights
-WEIGHTDIR=`mktemp -d -p /scratch/b/b380352/icontools`
+WEIGHTDIR=`mktemp -d -p ${PROJECT_WORKING_DIR}`
 NAMELIST_FILE=${WEIGHTDIR}/NAMELIST_ICONREMAP_INI
 
 [ ! -d ${WEIGHTDIR} ] && mkdir -p ${WEIGHTDIR}
@@ -110,7 +126,7 @@ cat > ${NAMELIST_FILE} << REMAP_NML_EOF
  in_filename        = "${INFILE}"                           ! input data file name
  in_type            = 2                                     ! type of input grid (2: triangular)
  out_grid_filename  = "${OUTGRID}"                          ! containing output grid
- out_filename       = "${OUTNAME}"                          ! output file name
+ out_filename       = "${FULL_OUTNAME}"                          ! output file name
  out_type           = 2                                     ! type of output grid (2: triangular)
  out_filetype       = 4                                     ! output filetype (4: NetCDF)
  lsynthetic_grid    = .FALSE.                               ! .TRUE. if output grid shall be created from scratch

@@ -60,12 +60,12 @@ extpar_job=$(sbatch --parsable --dependency=afterok:$grid_job ./run_extpar_levan
 printf "... Extpar job submitted with ID: $extpar_job\n\n"
 
 
-# #-----------------------------------------------------------------------------
-# # PART III: IC for Hurricane Segments
-# #-----------------------------------------------------------------------------
-# cd ${pp_path}/ic-bc
-# ic_job=$(sbatch  --parsable --dependency=afterany:$grid_job ./icon2icon_offline_lam_ini.bash  $iseg)
-# printf "... IC job submitted with ID: $ic_job\n\n"
+#-----------------------------------------------------------------------------
+# PART III: IC for Hurricane Segments
+#-----------------------------------------------------------------------------
+cd ${pp_path}/ic-bc
+ic_job=$(sbatch  --parsable --dependency=afterok:$grid_job ./icon2icon_offline_lam_ini.bash  $iseg)
+printf "... IC job submitted with ID: $ic_job\n\n"
 
 
 # #-----------------------------------------------------------------------------
