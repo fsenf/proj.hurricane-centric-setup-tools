@@ -27,6 +27,7 @@
 #SBATCH --distribution=block:block
 #SBATCH --mem=10G
 #SBATCH --time=00:20:00
+#SBATCH --output=../LOG/slurm-%j.out
 #=============================================================================
 
 set -eux

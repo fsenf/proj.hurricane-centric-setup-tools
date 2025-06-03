@@ -24,6 +24,7 @@
 #SBATCH --cpus-per-task=16
 #SBATCH --exclusive
 #SBATCH --time=02:30:00
+#SBATCH --output=../LOG/slurm-%j.out
 #=============================================================================
 
 
@@ -93,7 +94,7 @@ outfile=${outputdir}/'${PROJECT_NAME}-seg${iseg}_dom${idom}'
 
 idom=0
 fname=`eval echo $outfile`"_DOM01.nc"
-ln -s $REFERENCE_INPUT_GRID $fname
+ln -sf $REFERENCE_INPUT_GRID $fname
 
 for ((idom = 1 ; idom <= $DOMAINS_NESTS ; idom++)); do
 
@@ -108,7 +109,10 @@ for ((idom = 1 ; idom <= $DOMAINS_NESTS ; idom++)); do
     mname=`eval echo $maskname`
     ofile=`eval echo $outfile`
 
-    cat > NAMELIST_ICONGRIDGEN << EOF_1
+    # Create temporary namelist file
+    TEMP_NAMELIST=$(mktemp --suffix=_NAMELIST_ICONGRIDGEN)
+
+    cat > ${TEMP_NAMELIST} << EOF_1
 &gridgen_nml
  filename="${fname}" 
   centre=78
@@ -134,8 +138,10 @@ EOF_1
 
     # (3) Grid Creation
     # =================
-    ${START} ${TOOLS_ICONTOOLS_DIR}/icongridgen -vv --nml NAMELIST_ICONGRIDGEN
+    ${START} ${TOOLS_ICONTOOLS_DIR}/icongridgen -vv --nml ${TEMP_NAMELIST}
     
+    # Clean up temporary file
+    rm ${TEMP_NAMELIST}
 
     # (4) Set the New Basefile
     # ========================
