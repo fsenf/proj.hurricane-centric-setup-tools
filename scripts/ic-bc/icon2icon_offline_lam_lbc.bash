@@ -1,4 +1,18 @@
 #!/bin/bash
+# filepath: /home/b/b380352/proj/2025-05_hurricane-centric-setup-tools/scripts/ic-bc/icon2icon_offline_lam_lbc.bash
+#=============================================================================
+# DESCRIPTION:
+#   Boundary condition processing for hurricane segments using ICON tools.
+#   Converts boundary conditions from coarse to nested hurricane-centric grids.
+#
+# USAGE:
+#   ./icon2icon_offline_lam_lbc.bash [segment_number]
+#
+# DEPENDENCIES:
+#   - ../../utilities/toml_reader.sh
+#   - ../../utilities/find_icbc_file.py
+#   - ../../config/hurricane_config.toml
+#
 #=============================================================================
 #
 # Levante cpu batch job parameters
@@ -9,24 +23,22 @@
 #SBATCH --nodes=1
 #SBATCH --cpus-per-task=8
 #SBATCH --exclusive
-#SBATCH --chdir=/scratch/b/b380352/icontools
 #SBATCH --time=04:00:00
+#SBATCH --mem=0
+#SBATCH --output=../LOG/slurm-%x-%j.out
 #=============================================================================
-set -eu
+set -eux
 ulimit -s unlimited
 ulimit -c 0
+
 #=============================================================================
-#
 # OpenMP environment variables
-#
+#=============================================================================
 export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
 export KMP_AFFINITY=verbose,granularity=fine,scatter
 export OMP_STACKSIZE=128M
 
-# #=============================================================================
-# #
-# # Environment variables for the experiment and the target system
-# #
+# Environment variables for the experiment and the target system
 export OMPI_MCA_pml="ucx"
 export OMPI_MCA_btl=self
 export OMPI_MCA_osc="pt2pt"
@@ -42,49 +54,71 @@ export HDF5_USE_FILE_LOCKING=FALSE
 export OMPI_MCA_io="romio321"
 export UCX_HANDLE_ERRORS=bt
 
-export START="srun -l --cpu_bind=verbose --distribution=block:cyclic"
+#=============================================================================
+# Get Configuration and Script Directory
+#=============================================================================
 
-# LLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLLL
-# INPUT ARGUMENT
+# Get script directory - use SLURM_SUBMIT_DIR when submitted via SLURM
+ORIGINAL_SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
+echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
 
-iseg=$1
+# Load TOML reader and configuration
+source "${ORIGINAL_SCRIPT_DIR}/../../utilities/toml_reader.sh"
+CONFIG_FILE="${ORIGINAL_SCRIPT_DIR}/../../config/hurricane_config.toml"
+read_toml_config "$CONFIG_FILE"
 
-# TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
+cd $PROJECT_WORKING_DIR
 
+export START="srun -l --cpu_bind=verbose --distribution=block:cyclic --ntasks=8 --cpus-per-task=${OMP_NUM_THREADS}"
 
-#-----------------------------------------------------------------------------
-# PART I: Create auxiliary grid file which contains only the cells of the 
-#         boundary zone.
-#-----------------------------------------------------------------------------
+# Parse arguments - simplified to just take segment number
+iseg="$1"
 
+# Load python and cdo modules
+module load python3
 module load cdo
 
+# Find BC files using Python utility
+DATAFILELIST=($(python "${ORIGINAL_SCRIPT_DIR}/../../utilities/find_icbc_file.py" "$CONFIG_FILE" "$iseg" "BC"))
+if [ $? -ne 0 ] || [ ${#DATAFILELIST[@]} -eq 0 ]; then
+    echo "Error: No BC files found for segment $iseg"
+    exit 1
+fi
+echo "Found ${#DATAFILELIST[@]} BC files for segment $iseg"
 
-# Directory containing dwd_icon_tool binaries
-ICONTOOLS_DIR=/work/bb1174/models/icon/dwd_icon_tools/icontools
+#=============================================================================
+# Define path to binaries and for input/output 
+#=============================================================================
 
+# Set up input grid
+INGRID="$REFERENCE_INPUT_GRID"
 
-SCRIPT_DIR=/work/bb1376/user/fabian/tools/pre-processing/ic-bc
-source ${SCRIPT_DIR}/ic_config.sh ${iseg}
+# Set up domain name and grids
+DOMNAME="${PROJECT_NAME}/seg${iseg}_${PROJECT_WIDTH_CONFIG}"
+OUTGRID="${OUTPUT_GRID_BASEDIR}/${DOMNAME}/${PROJECT_NAME}-seg${iseg}_dom1_DOM01.nc"
 
-
-# Output directory for initial data
-OUTDIR=/work/bb1376/data/icon/bc-init/${DOMNAME}
+# Output directory for boundary data
+OUTDIR="${OUTPUT_ICBC_BASEDIR}/${DOMNAME}"
+if [ ! -d "${OUTDIR}" ]; then
+    mkdir -p "${OUTDIR}"
+fi
 
 # Name of boundary grid
 BOUNDGRID=${OUTGRID%.*}'_lbc.nc'
 
+# Geometry file from reference dataset
+GEODIR="${REFERENCE_INPUT_ICBC_DIR}/${REFERENCE_INPUT_ICBC_SUBDIR}"
+GEOFILE="${GEODIR}/lam_input_geo_DOM02_ML.nc"
 
+#=============================================================================
+# PART I: Create auxiliary grid file which contains only the cells of the 
+#         boundary zone.
+#=============================================================================
 
-GEODIR=${DATADIR}
-GEOFILE=${GEODIR}/lam_input_geo_DOM02_ML.nc
+# Create temporary namelist file for iconsub
+TEMP_NAMELIST_SUB=$(mktemp --suffix=_NAMELIST_ICONSUB_LBC)
 
-
-
-
-## should be the same for all files in order to use the weights
-
-cat > ${OUTDIR}/NAMELIST_ICONSUB_LBC << EOF_1
+cat > ${TEMP_NAMELIST_SUB} << EOF_1
 &iconsub_nml
   grid_filename     = '${OUTGRID}',
   output_type       = 4,
@@ -97,21 +131,23 @@ cat > ${OUTDIR}/NAMELIST_ICONSUB_LBC << EOF_1
 /
 EOF_1
 
-${START} ${ICONTOOLS_DIR}/iconsub -vv --nml ${OUTDIR}/NAMELIST_ICONSUB_LBC
+${START} ${TOOLS_ICONTOOLS_DIR}/iconsub -vv --nml ${TEMP_NAMELIST_SUB}
 
-# Clean up
-rm ${OUTDIR}/NAMELIST*
+# Clean up temporary file
+rm ${TEMP_NAMELIST_SUB}
 
-#-----------------------------------------------------------------------------
+#=============================================================================
 # PART II: Extract boundary data
-#-----------------------------------------------------------------------------
+#=============================================================================
 
 # Create directory for weights
 WEIGHTDIR=${OUTDIR}/lbc_weights
 [ ! -d ${WEIGHTDIR} ] && mkdir -p ${WEIGHTDIR}
 
+# Create temporary namelist for field definitions
+TEMP_NAMELIST_FIELDS=$(mktemp --suffix=_NAMELIST_ICONREMAP_FIELDS)
 
-cat >  ${OUTDIR}/NAMELIST_ICONREMAP_FIELDS << EOF_2A
+cat > ${TEMP_NAMELIST_FIELDS} << EOF_2A
 &input_field_nml
 inputname = "rho"
 outputname = "rho"
@@ -164,9 +200,9 @@ intp_method = 3
 /
 EOF_2A
 
-
-# Loop over all IFS files
-for datafilename in ${DATAFILELIST} ; do
+# Loop over all BC files
+for datafilename in "${DATAFILELIST[@]}" ; do
+    echo "Processing BC file: $datafilename"
 
     # Get filename without path
     datafile="${datafilename##*/}"
@@ -175,36 +211,38 @@ for datafilename in ${DATAFILELIST} ; do
     outdatafile=${datafile%.*}
     outdatafile=${outdatafile#*ML_}
 
-    # add geo reference
-    temp_file=$(mktemp  --tmpdir=${HOME}/scratch/icon)
-    cdo merge ${datafilename} ${GEOFILE} ${temp_file} 
-
+    # Add geo reference - create temporary merged file
+    temp_file=$(mktemp --tmpdir=${PROJECT_WORKING_DIR})
+    cdo merge ${datafilename} ${GEOFILE} ${temp_file}
     
-    cat >  ${OUTDIR}/NAMELIST_ICONREMAP_LBC << EOF_2C
+    # Create temporary namelist for this file
+    TEMP_NAMELIST_LBC=$(mktemp --suffix=_NAMELIST_ICONREMAP_LBC)
+    
+    cat > ${TEMP_NAMELIST_LBC} << EOF_2C
 &remap_nml
- in_grid_filename  = '${INGRID}'                         ! '${INGRID}' for weights! ! file containing grid information of input data
- in_filename       = '${temp_file}'           ! input data file name
- in_type           = 2                                  ! type of input grid (1: triangular)
- out_grid_filename = '${BOUNDGRID}'                     ! output lateral boundary grid
- out_filename      = '${OUTDIR}/${outdatafile}_lbc.nc'  ! output file name
- out_type          = 2                                  ! type of output grid (2: triangular)
- out_filetype      = 4                                  ! output filetype (4: NetCDF)
- l_have3dbuffer    = .FALSE.                            !.TRUE. if output grid shall be created from scratch
- ncstorage_file   = "${WEIGHTDIR}/ncstorage_lbc.tmp"
+ in_grid_filename  = '${INGRID}'                         ! file containing grid information of input data
+ in_filename       = '${temp_file}'                      ! input data file name
+ in_type           = 2                                   ! type of input grid (2: triangular)
+ out_grid_filename = '${BOUNDGRID}'                      ! output lateral boundary grid
+ out_filename      = '${OUTDIR}/${outdatafile}_lbc.nc'   ! output file name
+ out_type          = 2                                   ! type of output grid (2: triangular)
+ out_filetype      = 4                                   ! output filetype (4: NetCDF)
+ l_have3dbuffer    = .FALSE.                             ! buffer option
+ ncstorage_file    = "${WEIGHTDIR}/ncstorage_lbc.tmp"
 /
 EOF_2C
 
-    ${START} ${ICONTOOLS_DIR}/iconremap -q --remap_nml ${OUTDIR}/NAMELIST_ICONREMAP_LBC \
-	     --input_field_nml  ${OUTDIR}/NAMELIST_ICONREMAP_FIELDS 2>&1
+    ${START} ${TOOLS_ICONTOOLS_DIR}/iconremap -q --remap_nml ${TEMP_NAMELIST_LBC} \
+             --input_field_nml ${TEMP_NAMELIST_FIELDS} 2>&1
     
-    rm ${OUTDIR}/NAMELIST_ICONREMAP_LBC
+    # Clean up temporary files for this iteration
+    rm ${TEMP_NAMELIST_LBC}
+    rm ${temp_file}
 done
 
-# Clean up
-rm ${OUTDIR}/NAMELIST*
+# Clean up field namelist
+rm ${TEMP_NAMELIST_FIELDS}
 
 #-----------------------------------------------------------------------------
 exit
 #-----------------------------------------------------------------------------
-
-echo 'fertig'
