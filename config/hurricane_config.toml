@@ -6,7 +6,7 @@ extpar_dir = "/work/bb1376/tools/extpar"
 
 [project]
 name = "hurricane-paulette2020-segments"
-width_config = "width20km_reinit24h"
+width_config = "width100km_reinit24h"
 # width_config = "width100km_reinit12h"
 working_dir = "/scratch/b/b380352/icontools"
 
@@ -35,3 +35,5 @@ dom_width = [300.0, 200.0, 100.0] # in km
 # Output directories
 grid_basedir = "/work/bb1376/data/icon/grids-extpar"
 icbc_basedir = "/work/bb1376/data/icon/bc-init"
+
+# end of config
