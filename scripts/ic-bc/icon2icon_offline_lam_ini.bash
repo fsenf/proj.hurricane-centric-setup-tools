@@ -24,7 +24,7 @@
 #SBATCH --exclusive
 #SBATCH --time=02:00:00
 #SBATCH --mem=0
-#SBATCH --output=../LOG/slurm-%j.out
+#SBATCH --output=../LOG/slurm-%x-%j.out
 #=============================================================================
 set -eux
 ulimit -s unlimited

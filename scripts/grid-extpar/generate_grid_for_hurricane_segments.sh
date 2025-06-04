@@ -24,7 +24,7 @@
 #SBATCH --cpus-per-task=16
 #SBATCH --exclusive
 #SBATCH --time=02:30:00
-#SBATCH --output=../LOG/slurm-%j.out
+#SBATCH --output=../LOG/slurm-%x-%j.out
 #=============================================================================
 
 
