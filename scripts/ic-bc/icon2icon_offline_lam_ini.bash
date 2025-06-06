@@ -103,7 +103,7 @@ OUTGRID="${OUTPUT_GRID_BASEDIR}/${DOMNAME}/${PROJECT_NAME}-seg${iseg}_dom1_DOM01
 # Set up output name for initial conditions
 OUTNAME="ifces2-atlanXL-$(basename ${INFILE} | cut -d'_' -f5 | cut -d'.' -f1)_${DOMNAME//\//_}_DOM01_ini.nc"
 
-OUT_IC_DIR="${OUTPUT_IC_BASEDIR}/${DOMNAME}"
+OUT_IC_DIR="${OUTPUT_ICBC_BASEDIR}/${DOMNAME}"
 
 if [ ! -d "${OUT_IC_DIR}" ]; then
     mkdir -p "${OUT_IC_DIR}"
