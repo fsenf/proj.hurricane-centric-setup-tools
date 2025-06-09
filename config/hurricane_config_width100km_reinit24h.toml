@@ -6,7 +6,7 @@ extpar_dir = "/work/bb1376/tools/extpar"
 
 [project]
 name = "hurricane-paulette2020-segments"
-width_config = "width20km_reinit12h"
+width_config = "width100km_reinit24h"
 working_dir = "/scratch/b/b380352/icontools"
 
 [reference]
@@ -24,10 +24,11 @@ track_file = "ifces2-atlanXL-20200907-exp021-DOM02_paulette_best-fit.nc"
 
 [domains]
 # Domain configuration
-segment_reinit_hours = 12.0
+segment_reinit_hours = 24.0
 segment_length_added = 3.0
 nests = 3
-dom_width = [60.0, 40.0, 20.0]  # in km
+# dom_width = [60.0, 40.0, 20.0]  # in km
+dom_width = [300.0, 200.0, 100.0] # in km
 
 [output]
 # Output directories
