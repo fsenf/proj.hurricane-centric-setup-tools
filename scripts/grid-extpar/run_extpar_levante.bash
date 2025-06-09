@@ -6,16 +6,9 @@
 #   for hurricane-centric grids.
 #
 # USAGE:
-#   ./run_extpar_levante.bash [segment_number]
-#
-# DEPENDENCIES:
-#   This script calls:
-#   - ../../utilities/toml_reader.sh
-#   - ../../config/hurricane_config.toml
-#   - ExtPar Fortran binaries and Python scripts
+#   ./run_extpar_levante.bash [segment_number] [-c|--config config_file]
 #
 #=============================================================================
-####### EXECUTE SCRIPT FROM ENVIRONMENT THAT LOADS PYTHON AND CDO ######
 
 # Levante cpu batch job parameters
 #
@@ -34,6 +27,68 @@ set -eux
 ulimit -s unlimited
 ulimit -c 0
 
+#=============================================================================
+# Configuration and Argument Parsing
+#=============================================================================
+
+# Get script directory
+ORIGINAL_SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
+echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
+
+# Load shared configuration handler
+source "${ORIGINAL_SCRIPT_DIR}/../../utilities/config_handler.sh"
+
+# Parse config argument
+CONFIG_ARG=$(parse_config_argument "$@")
+
+# Handle configuration loading
+handle_config "$ORIGINAL_SCRIPT_DIR" \
+              "${ORIGINAL_SCRIPT_DIR}/../../config/hurricane_config.toml" \
+              "$CONFIG_ARG"
+
+# Remove config arguments and parse remaining arguments
+REMAINING_ARGS=($(remove_config_args "$@"))
+
+# Parse segment number
+iseg=""
+for arg in "${REMAINING_ARGS[@]}"; do
+    case $arg in
+        -h|--help)
+            echo "Usage: $0 [segment_number] [options]"
+            echo ""
+            echo "Arguments:"
+            echo "  segment_number    Hurricane segment number to process"
+            echo ""
+            show_config_help
+            exit 0
+            ;;
+        -*)
+            echo "Error: Unknown option $arg"
+            exit 1
+            ;;
+        *)
+            if [[ -z "$iseg" ]]; then
+                iseg="$arg"
+            else
+                echo "Error: Too many positional arguments"
+                exit 1
+            fi
+            ;;
+    esac
+done
+
+# Validate segment number
+if [[ -z "$iseg" ]]; then
+    echo "Error: segment_number is required"
+    exit 1
+fi
+
+if ! [[ "$iseg" =~ ^[0-9]+$ ]]; then
+    echo "Error: segment_number must be a positive integer"
+    exit 1
+fi
+
+echo "Processing segment: $iseg"
 
 #=============================================================================
 # OpenMP environment variables

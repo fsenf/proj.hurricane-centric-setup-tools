@@ -6,9 +6,19 @@
 #   Converts boundary conditions from coarse to nested hurricane-centric grids.
 #
 # USAGE:
-#   ./icon2icon_offline_lam_lbc.bash [segment_number]
+#   ./icon2icon_offline_lam_lbc.bash [segment_number] [-c|--config config_file]
+#
+# ARGUMENTS:
+#   segment_number  - Hurricane segment number to process
+#
+# OPTIONS:
+#   -c, --config    - Path to TOML configuration file (optional)
+#                     Default: ../../config/hurricane_config.toml
+#                     Relative paths are resolved from script directory
+#   -h, --help      - Show this help message
 #
 # DEPENDENCIES:
+#   - ../../utilities/config_handler.sh
 #   - ../../utilities/toml_reader.sh
 #   - ../../utilities/find_icbc_file.py
 #   - ../../config/hurricane_config.toml
@@ -27,9 +37,73 @@
 #SBATCH --mem=0
 #SBATCH --output=../LOG/slurm-%x-%j.out
 #=============================================================================
+
 set -eux
 ulimit -s unlimited
 ulimit -c 0
+
+#=============================================================================
+# Configuration and Argument Parsing
+#=============================================================================
+
+# Get script directory
+ORIGINAL_SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
+echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
+
+# Load shared configuration handler
+source "${ORIGINAL_SCRIPT_DIR}/../../utilities/config_handler.sh"
+
+# Parse config argument
+CONFIG_ARG=$(parse_config_argument "$@")
+
+# Handle configuration loading
+handle_config "$ORIGINAL_SCRIPT_DIR" \
+              "${ORIGINAL_SCRIPT_DIR}/../../config/hurricane_config.toml" \
+              "$CONFIG_ARG"
+
+# Remove config arguments and parse remaining arguments
+REMAINING_ARGS=($(remove_config_args "$@"))
+
+# Parse segment number
+iseg=""
+for arg in "${REMAINING_ARGS[@]}"; do
+    case $arg in
+        -h|--help)
+            echo "Usage: $0 [segment_number] [options]"
+            echo ""
+            echo "Arguments:"
+            echo "  segment_number    Hurricane segment number to process"
+            echo ""
+            show_config_help
+            exit 0
+            ;;
+        -*)
+            echo "Error: Unknown option $arg"
+            exit 1
+            ;;
+        *)
+            if [[ -z "$iseg" ]]; then
+                iseg="$arg"
+            else
+                echo "Error: Too many positional arguments"
+                exit 1
+            fi
+            ;;
+    esac
+done
+
+# Validate segment number
+if [[ -z "$iseg" ]]; then
+    echo "Error: segment_number is required"
+    exit 1
+fi
+
+if ! [[ "$iseg" =~ ^[0-9]+$ ]]; then
+    echo "Error: segment_number must be a positive integer"
+    exit 1
+fi
+
+echo "Processing segment: $iseg"
 
 #=============================================================================
 # OpenMP environment variables
@@ -54,25 +128,9 @@ export HDF5_USE_FILE_LOCKING=FALSE
 export OMPI_MCA_io="romio321"
 export UCX_HANDLE_ERRORS=bt
 
-#=============================================================================
-# Get Configuration and Script Directory
-#=============================================================================
-
-# Get script directory - use SLURM_SUBMIT_DIR when submitted via SLURM
-ORIGINAL_SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
-echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
-
-# Load TOML reader and configuration
-source "${ORIGINAL_SCRIPT_DIR}/../../utilities/toml_reader.sh"
-CONFIG_FILE="${ORIGINAL_SCRIPT_DIR}/../../config/hurricane_config.toml"
-read_toml_config "$CONFIG_FILE"
-
-cd $PROJECT_WORKING_DIR
-
 export START="srun -l --cpu_bind=verbose --distribution=block:cyclic --ntasks=8 --cpus-per-task=${OMP_NUM_THREADS}"
 
-# Parse arguments - simplified to just take segment number
-iseg="$1"
+cd $PROJECT_WORKING_DIR
 
 # Load python and cdo modules
 module load python3

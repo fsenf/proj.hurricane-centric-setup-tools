@@ -1,17 +1,21 @@
 #!/bin/bash
+# filepath: /home/b/b380352/proj/2025-05_hurricane-centric-setup-tools/scripts/grid-extpar/generate_grid_for_hurricane_segments.sh
 #=============================================================================
 # DESCRIPTION:
 #   Grid generation script for hurricane segments. Creates nested grids
 #   centered on hurricane trajectories using ICON tools and segment masks.
 #
 # USAGE:
-#   ./generate_grid_for_hurricane_segments.sh [segment_number]
+#   ./generate_grid_for_hurricane_segments.sh [segment_number] [-c|--config config_file]
 #
-# DEPENDENCIES:
-#   This script calls:
-#   - ../../utilities/35-Create-a-Segment-Mask-for-Hurricane-Centric-Runs.py
-#   - ../../utilities/toml_reader.sh
-#   - ../../config/hurricane_config.toml
+# ARGUMENTS:
+#   segment_number  - Hurricane segment number to process
+#
+# OPTIONS:
+#   -c, --config    - Path to TOML configuration file (optional)
+#                     Default: ../../config/hurricane_config.toml
+#                     Relative paths are resolved from script directory
+#   -h, --help      - Show this help message
 #
 #=============================================================================
 #
@@ -27,14 +31,83 @@
 #SBATCH --output=../LOG/slurm-%x-%j.out
 #=============================================================================
 
-
 set -eux
 ulimit -s unlimited
 ulimit -c 0
 
 #=============================================================================
-# OpenMP environment variables
+# Configuration and Argument Parsing
 #=============================================================================
+
+# Get script directory
+ORIGINAL_SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
+echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
+
+# Load shared configuration handler
+source "${ORIGINAL_SCRIPT_DIR}/../../utilities/config_handler.sh"
+
+# Parse config argument
+CONFIG_ARG=$(parse_config_argument "$@")
+
+# Handle configuration loading
+handle_config "$ORIGINAL_SCRIPT_DIR" \
+              "${ORIGINAL_SCRIPT_DIR}/../../config/hurricane_config.toml" \
+              "$CONFIG_ARG"
+
+# Remove config arguments and parse remaining arguments
+REMAINING_ARGS=($(remove_config_args "$@"))
+
+# Parse remaining arguments
+iseg=""
+for arg in "${REMAINING_ARGS[@]}"; do
+    case $arg in
+        -h|--help)
+            echo "Usage: $0 [segment_number] [options]"
+            echo ""
+            echo "Arguments:"
+            echo "  segment_number    Hurricane segment number to process"
+            echo ""
+            show_config_help
+            echo ""
+            echo "Examples:"
+            echo "  $0 5"
+            echo "  $0 5 -c hurricane_config_width200km_reinit12h.toml"
+            exit 0
+            ;;
+        -*)
+            echo "Error: Unknown option $arg"
+            exit 1
+            ;;
+        *)
+            if [[ -z "$iseg" ]]; then
+                iseg="$arg"
+            else
+                echo "Error: Too many positional arguments"
+                exit 1
+            fi
+            ;;
+    esac
+done
+
+# Validate segment number
+if [[ -z "$iseg" ]]; then
+    echo "Error: segment_number is required"
+    echo "Usage: $0 [segment_number] [-c|--config config_file]"
+    exit 1
+fi
+
+if ! [[ "$iseg" =~ ^[0-9]+$ ]]; then
+    echo "Error: segment_number must be a positive integer"
+    exit 1
+fi
+
+echo "Processing segment: $iseg"
+
+#=============================================================================
+# Environment Setup
+#=============================================================================
+
+# OpenMP environment variables
 export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
 export KMP_AFFINITY=verbose,granularity=fine,scatter
 export OMP_STACKSIZE=128M
@@ -57,30 +130,14 @@ export UCX_HANDLE_ERRORS=bt
 
 export START="srun -l --cpu_bind=verbose --distribution=block:cyclic --ntasks-per-node=8 --cpus-per-task=${OMP_NUM_THREADS}"
 
-#=============================================================================
-# Get Configuration and Script Directory
-#=============================================================================
-ORIGINAL_SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
-echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
-
-# Load TOML reader and configuration
-source "${ORIGINAL_SCRIPT_DIR}/../../utilities/toml_reader.sh"
-CONFIG_FILE="${ORIGINAL_SCRIPT_DIR}/../../config/hurricane_config.toml"
-read_toml_config "$CONFIG_FILE"
-
 cd $PROJECT_WORKING_DIR
-
-# INPUT ARGUMENT
-iseg=$1
-
 module load python3
 
-#-----------------------------------------------------------------------------
-# PART I: Create auxiliary grid file which contains only the cells of the 
-#         boundary zone.
-#-----------------------------------------------------------------------------
+#=============================================================================
+# Grid Generation
+#=============================================================================
 
-# Use configuration values with new variable names
+# Use configuration values
 DOMNAME="${PROJECT_NAME}/seg${iseg}_${PROJECT_WIDTH_CONFIG}"
 maskdir=${OUTPUT_GRID_BASEDIR}/${DOMNAME}
 maskname=${maskdir}/'${PROJECT_NAME}_mask_${REFERENCE_EXPNAME}_seg${iseg}_dom${idom}.nc'
