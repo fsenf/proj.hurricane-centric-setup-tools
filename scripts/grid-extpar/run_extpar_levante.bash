@@ -113,23 +113,9 @@ export HDF5_USE_FILE_LOCKING=FALSE
 export OMPI_MCA_io="romio321"
 export UCX_HANDLE_ERRORS=bt
 
-#=============================================================================
-# Get Configuration and Script Directory
-#=============================================================================
-
-# Get script directory
-ORIGINAL_SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
-echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
-
-# Load TOML reader and configuration
-source "${ORIGINAL_SCRIPT_DIR}/../../utilities/toml_reader.sh"
-CONFIG_FILE="${ORIGINAL_SCRIPT_DIR}/../../config/hurricane_config.toml"
-read_toml_config "$CONFIG_FILE"
 
 cd $PROJECT_WORKING_DIR
 
-# INPUT ARGUMENT
-iseg=$1
 
 module purge
 module load python3 
@@ -141,7 +127,7 @@ grid_dir="${OUTPUT_GRID_BASEDIR}/${DOMNAME}"
 # Create icon_grid_files array based on TOML config
 declare -a icon_grid_files
 for ((idom = 1; idom <= DOMAINS_NESTS; idom++)); do
-    icon_grid_files+=("paulette-seg${iseg}_dom${idom}_DOM01.nc")
+    icon_grid_files+=("${PROJECT_NAME}-seg${iseg}_dom${idom}_DOM01.nc")
 done
 
 # Directory with input data for generation of external parameters

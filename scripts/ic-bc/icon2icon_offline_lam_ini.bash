@@ -111,26 +111,12 @@ export HDF5_USE_FILE_LOCKING=FALSE
 export OMPI_MCA_io="romio321"
 export UCX_HANDLE_ERRORS=bt
 
-#=============================================================================
-# Get Configuration and Script Directory
-#=============================================================================
-
-# Get script directory - use SLURM_SUBMIT_DIR when submitted via SLURM
-ORIGINAL_SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
-echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
-
-# Load TOML reader and configuration
-source "${ORIGINAL_SCRIPT_DIR}/../../utilities/toml_reader.sh"
-CONFIG_FILE="${ORIGINAL_SCRIPT_DIR}/../../config/hurricane_config.toml"
-read_toml_config "$CONFIG_FILE"
+export START="srun -l --cpu_bind=verbose --distribution=block:cyclic --ntasks=8 --cpus-per-task=${OMP_NUM_THREADS}"
 
 cd $PROJECT_WORKING_DIR
 
 
-export START="srun -l --cpu_bind=verbose --distribution=block:cyclic --ntasks=8 --cpus-per-task=${OMP_NUM_THREADS}"
 
-# Parse arguments - simplified to just take segment number
-iseg="$1"
 
 # Load python module
 module load python3
@@ -155,27 +141,31 @@ INGRID="$REFERENCE_INPUT_GRID"
 
 # Set up domain name and output grid
 DOMNAME="${PROJECT_NAME}/seg${iseg}_${PROJECT_WIDTH_CONFIG}"
-OUTGRID="${OUTPUT_GRID_BASEDIR}/${DOMNAME}/${PROJECT_NAME}-seg${iseg}_dom1_DOM01.nc"
 
-# Set up output name for initial conditions
-OUTNAME="ifces2-atlanXL-$(basename ${INFILE} | cut -d'_' -f5 | cut -d'.' -f1)_${DOMNAME//\//_}_DOM01_ini.nc"
+# Loop through domains as specified in TOML config
+for idom in $(seq 1 ${DOMAINS_NESTS}); do
+    echo "Processing domain $idom of ${DOMAINS_NESTS}"
+    
+    OUTGRID="${OUTPUT_GRID_BASEDIR}/${DOMNAME}/${PROJECT_NAME}-seg${iseg}_dom${idom}_DOM01.nc"
 
-OUT_IC_DIR="${OUTPUT_ICBC_BASEDIR}/${DOMNAME}"
+    # Set up output name for initial conditions
+    OUTNAME="ifces2-atlanXL-$(basename ${INFILE} | cut -d'_' -f5 | cut -d'.' -f1)_${DOMNAME//\//_}_DOM0${idom}_ini.nc"
 
-if [ ! -d "${OUT_IC_DIR}" ]; then
-    mkdir -p "${OUT_IC_DIR}"
-fi
-FULL_OUTNAME="${OUT_IC_DIR}/${OUTNAME}"
+    OUT_IC_DIR="${OUTPUT_ICBC_BASEDIR}/${DOMNAME}"
 
+    if [ ! -d "${OUT_IC_DIR}" ]; then
+        mkdir -p "${OUT_IC_DIR}"
+    fi
+    FULL_OUTNAME="${OUT_IC_DIR}/${OUTNAME}"
 
+    # Create directory for weights
+    WEIGHTDIR=`mktemp -d -p ${PROJECT_WORKING_DIR}`
+    NAMELIST_FILE=${WEIGHTDIR}/NAMELIST_ICONREMAP_INI
 
-# Create directory for weights
-WEIGHTDIR=`mktemp -d -p ${PROJECT_WORKING_DIR}`
-NAMELIST_FILE=${WEIGHTDIR}/NAMELIST_ICONREMAP_INI
+    [ ! -d ${WEIGHTDIR} ] && mkdir -p ${WEIGHTDIR}
 
-[ ! -d ${WEIGHTDIR} ] && mkdir -p ${WEIGHTDIR}
-
-cat > ${NAMELIST_FILE} << REMAP_NML_EOF
+    # Generate namelist and run remap for this domain
+    cat > ${NAMELIST_FILE} << REMAP_NML_EOF
 ! REMAPPING NAMELIST FILE
 !
 &remap_nml
@@ -390,12 +380,13 @@ loptional=.TRUE.
 
 REMAP_NML_EOF
 
-#=============================================================================
-# Start remapping
-#=============================================================================
+    #=============================================================================
+    # Start remapping
+    #=============================================================================
 
-${START} ${ICONTOOLS_DIR}/iconremap --remap_nml ${NAMELIST_FILE}
-rm ${NAMELIST_FILE}
+    ${START} ${ICONTOOLS_DIR}/iconremap --remap_nml ${NAMELIST_FILE}
+    rm ${NAMELIST_FILE}
+done
 
 #-----------------------------------------------------------------------------
 exit
