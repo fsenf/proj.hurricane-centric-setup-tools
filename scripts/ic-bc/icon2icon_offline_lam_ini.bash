@@ -216,6 +216,46 @@ outputname = "qs"
 intp_method = 3
 /
 &input_field_nml
+inputname = "qg"
+outputname = "qg"
+intp_method = 3
+/
+&input_field_nml
+inputname = "qh"
+outputname = "qh"
+intp_method = 3
+/
+&input_field_nml
+inputname = "qnc"
+outputname = "qnc"
+intp_method = 3
+/
+&input_field_nml
+inputname = "qns"
+outputname = "qns"
+intp_method = 3
+/
+&input_field_nml
+inputname = "qnr"
+outputname = "qnr"
+intp_method = 3
+/
+&input_field_nml
+inputname = "qni"
+outputname = "qni"
+intp_method = 3
+/
+&input_field_nml
+inputname = "qng"
+outputname = "qng"
+intp_method = 3
+/
+&input_field_nml
+inputname = "qnh"
+outputname = "qnh"
+intp_method = 3
+/
+&input_field_nml
 inputname = "temp"
 outputname = "temp"
 intp_method = 3
@@ -377,7 +417,12 @@ outputname = "z_ifc"
 intp_method = 2
 loptional=.TRUE.
 /
-
+&input_field_nml
+inputname = "z_mc"
+outputname = "z_mc"
+intp_method = 2
+loptional=.TRUE.
+/
 REMAP_NML_EOF
 
     #=============================================================================
