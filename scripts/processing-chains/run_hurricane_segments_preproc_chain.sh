@@ -196,4 +196,18 @@ fi
 printf "... BC job submitted with ID: $bc_job\n\n"
 
 echo "All jobs submitted successfully!"
-echo "Grid: $grid_job | Extpar: $extpar_job | IC: $ic_job | BC: $bc_job"
+echo "Grid: $grid_job | Extpar: $extpar_job | IC: $ic_job | BC: $bc_job\n\n"
+
+#------------------------------------------------------------------------------
+# PART V: Final Tesrun
+#------------------------------------------------------------------------------
+echo "Submitting final testrun job..."
+cd ${pp_path}/processing-chains
+if [[ -n "$CONFIG_OPTION" ]]; then
+    testrun_job=$(sbatch --parsable --dependency=afterany:$bc_job ./run_hurricane_testrun_chain.sh $iseg $CONFIG_OPTION)
+else
+    testrun_job=$(sbatch --parsable --dependency=afterany:$bc_job ./run_hurricane_testrun_chain.sh $iseg)
+fi
+printf "... Testrun job submitted with ID: $testrun_job\n\n"
+echo "All preprocessing and testrun jobs submitted successfully!"
+echo "Final testrun job ID: $testrun_job"
