@@ -36,6 +36,7 @@
 #SBATCH --mem=2G                  # Specify amount of memory needed
 #SBATCH --time=00:05:00           # Set a limit on the total run time
 #SBATCH --account=bb1376          # Charge resources on this project account
+#SBATCH --output=../LOG/slurm-%x-%j.out
 
 
 #=============================================================================
