@@ -1,1 +1,4 @@
 LOG
+thrash/*
+slurm*out
+*.pyc

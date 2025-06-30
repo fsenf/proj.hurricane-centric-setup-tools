@@ -3,6 +3,7 @@
 icontools_dir = "/work/bb1376/tools/dwd_icon_tools/icontools"
 extpar_input_dir = "/work/pd1167/extpar-input-data"
 extpar_dir = "/work/bb1376/tools/extpar"
+icon_build_dir = "/work/bb1376/user/fabian/model/icon/icon-builds/icon-release-2024.07/"
 
 [project]
 name = "hurricane-paulette2020-segments"
