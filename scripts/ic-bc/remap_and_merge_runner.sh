@@ -61,8 +61,16 @@
 #=============================================================================
 
 # Get script directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-echo "Script directory: ${SCRIPT_DIR}"
+
+ORIGINAL_SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
+
+if [[ -z "$ORIGINAL_SCRIPT_DIR" ]]; then
+    ORIGINAL_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+fi
+
+SCRIPT_DIR=${ORIGINAL_SCRIPT_DIR}
+
+echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
 
 # Load shared configuration handler
 source "${SCRIPT_DIR}/../../utilities/config_handler.sh"
