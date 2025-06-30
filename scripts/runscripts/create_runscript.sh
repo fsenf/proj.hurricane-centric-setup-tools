@@ -26,6 +26,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Parse arguments
 iseg=""
 test_mode=".FALSE."
+test_flag=""
 output_file=""
 config_file="${SCRIPT_DIR}/../../config/hurricane_config.toml"
 
@@ -37,6 +38,7 @@ while [[ $# -gt 0 ]]; do
             ;;
         -t|--test)
             test_mode=".TRUE."
+            test_flag="-t"
             shift
             ;;
         -c|--config)
@@ -76,8 +78,8 @@ read_toml_config "$config_file"
 module load python3
 
 # Generate start and end dates using print_timings.py
-start_date=$(python3 "${SCRIPT_DIR}/../../utilities/print_timings.py" "$config_file" "$iseg" "START" ${test_mode:+-t})
-end_date=$(python3 "${SCRIPT_DIR}/../../utilities/print_timings.py" "$config_file" "$iseg" "END" ${test_mode:+-t})
+start_date=$(python3 "${SCRIPT_DIR}/../../utilities/print_timings.py" "$config_file" "$iseg" "START" ${test_flag})
+end_date=$(python3 "${SCRIPT_DIR}/../../utilities/print_timings.py" "$config_file" "$iseg" "END" ${test_flag})
 
 # Generate experiment name using segment and date
 init_date=$(get_init_date_from_segment "$iseg")
@@ -100,7 +102,7 @@ template_file="${SCRIPT_DIR}/exp.TEMPLATE_for_segment_runscript"
 touch "$output_file"
 
 # Generate our dynamic parameters section
-cat >> "$output_file" << EOF
+cat > "$output_file" << EOF
 # 1. Segment number - read from command line argument iseg=${iseg}
 iseg="${iseg}"
 seg="seg${iseg}"

@@ -399,7 +399,7 @@ cat > ${atmo_namelist} << EOF
 EOF
 
 if [ "${test_mode}" != ".TRUE." ]; then
-  cat > ${atmo_namelist} << EOF
+  cat >> ${atmo_namelist} << EOF
 
 
 !TTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTTT
@@ -502,24 +502,16 @@ if [ "${test_mode}" != ".TRUE." ]; then
  dom              = -1
  output_filename  = 'lam_input_IC'
  filename_format  = "<output_filename>_DOM<physdom>_<levtype>_<datetime2>"
- ml_varlist = 'rho','pres', 'QC', 'QI','QR','QV', 'QS', 'temp', 'theta_v', 'TKE', 'U','V', 'VN', 'W', 'c_t_lk', 'freshsnow', 'fr_seaice', 'h_ice', 'h_ml_lk', 'h_snow', 'hsnow_max', 'qv_s', 'rho_snow', 't_sk', 'snowfrac', 't_bot_lk','t_ice', 't_mnw_lk', 't_seasfc', 't_snow', 't_wml_lk', 'w_i', 'gz0', 't_so', 't_2m', 'w_so', 'w_so_ice', 'z_ifc', 'z_mc', 't_g','w_snow'
- filetype         = 5
+ ml_varlist = 'rho','pres', 'temp', 'theta_v','QV', 
+              'QC', 'QI','QR', 'QS', 'QG','QH',
+              'QNC', 'QNI','QNR', 'QNS', 'QNG','QNH',
+              'TKE', 'U','V', 'VN', 'W', 'c_t_lk', 
+              'freshsnow', 'fr_seaice', 'h_ice', 'h_ml_lk', 'h_snow', 'hsnow_max', 
+              'qv_s', 'rho_snow', 't_sk', 'snowfrac', 't_bot_lk','t_ice', 't_mnw_lk', 
+              't_seasfc', 't_snow', 't_wml_lk', 'w_i', 'gz0', 't_so', 't_2m', 'w_so', 
+              'w_so_ice', 'z_ifc','z_mc','t_g','w_snow' 
+filetype         = 5
 /
-!!!   !====================================================================
-!!!   ! LAM BC
-!!!   ! ===================================================================
-!!!   &output_nml
-!!!    output_start     = "${ic_output_start_date}"
-!!!    output_end       = "${end_date}"
-!!!    include_last     = .TRUE.
-!!!    output_interval  = "PT01H"
-!!!    file_interval    = "PT01H"
-!!!    dom              = 2
-!!!    output_filename  = 'lam_input_BC'
-!!!    filename_format  = "<output_filename>_DOM<physdom>_<levtype>_<datetime2>"
-!!!    ml_varlist = 'rho', 'QC', 'QI','QR','QV', 'QS', 'theta_v', 'VN', 'W'
-!!!    filetype         = 5
-!!!   /
 !====================================================================
 ! Regridded Output
 ! ===================================================================
@@ -533,6 +525,20 @@ if [ "${test_mode}" != ".TRUE." ]; then
  remap            = 1
  filename_format  = "<output_filename>_DOM<physdom>_<levtype>_<datetime2>_regrid1km"
  ml_varlist       = 'qc','qi','qr','qs','qg','qh'
+ reg_lon_def      = ${reg_lon_def}
+ reg_lat_def      = ${reg_lat_def}
+ filetype         = 5
+/
+&output_nml
+ output_start     = "${start_date}"
+ output_end       = "${end_date}"
+ output_interval = "${regrid_output_interval}"
+ file_interval    = "PT01H"
+ include_last     = .FALSE.
+ output_filename  = '3d_full_qnum'
+ remap            = 1
+ filename_format  = "<output_filename>_DOM<physdom>_<levtype>_<datetime2>_regrid1km"
+ ml_varlist       = 'qnc','qni','qnr','qns','qng','qnh'
  reg_lon_def      = ${reg_lon_def}
  reg_lat_def      = ${reg_lat_def}
  filetype         = 5

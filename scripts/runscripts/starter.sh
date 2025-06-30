@@ -129,7 +129,7 @@ fi
 icon_run_dir="/work/bb1376/user/fabian/model/icon/icon-builds/icon-release-2024.07/run"
 
 # Default SLURM parameters
-nodes=100
+nodes=160
 ctime="08:00:00"
 account="bb1376"
 
@@ -221,9 +221,6 @@ echo "Cleaned up temporary experiment script"
 # Submit Job
 #=============================================================================
 
-# Resolve script directory path for passing to runscript
-SCRIPT_DIR_RESOLVED="$(readlink -f "${SCRIPT_DIR}")"
-
 # Prepare experiment arguments string
 exp_args_string=""
 if [[ -n "$CONFIG_OPTION" ]]; then
@@ -235,7 +232,7 @@ for arg in "${exp_arguments[@]}"; do
 done
 
 # Prepare sbatch command - pass resolved script directory as first argument
-sbatch_cmd="sbatch exp.${expname}.run $SCRIPT_DIR_RESOLVED"
+sbatch_cmd="sbatch exp.${expname}.run"
 if [[ -n "$exp_args_string" ]]; then
     sbatch_cmd="$sbatch_cmd $exp_args_string"
 fi
