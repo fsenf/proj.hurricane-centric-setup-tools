@@ -232,7 +232,7 @@ for arg in "${exp_arguments[@]}"; do
 done
 
 # Prepare sbatch command - pass resolved script directory as first argument
-sbatch_cmd="sbatch exp.${expname}.run"
+sbatch_cmd="sbatch --mem=0 exp.${expname}.run"
 if [[ -n "$exp_args_string" ]]; then
     sbatch_cmd="$sbatch_cmd $exp_args_string"
 fi
