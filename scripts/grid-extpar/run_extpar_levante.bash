@@ -18,8 +18,8 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=8
 #SBATCH --distribution=block:block
-#SBATCH --mem=10G
-#SBATCH --time=00:20:00
+#SBATCH --mem=20G
+#SBATCH --time=01:00:00
 #SBATCH --output=../LOG/slurm-%x-%j.out
 #=============================================================================
 

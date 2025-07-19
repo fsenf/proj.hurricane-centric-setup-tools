@@ -25,7 +25,7 @@
 #SBATCH --job-name=gridgen
 #SBATCH --partition=compute
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=16
+#SBATCH --cpus-per-task=128
 #SBATCH --exclusive
 #SBATCH --time=02:30:00
 #SBATCH --output=../LOG/slurm-%x-%j.out
@@ -128,7 +128,7 @@ export HDF5_USE_FILE_LOCKING=FALSE
 export OMPI_MCA_io="romio321"
 export UCX_HANDLE_ERRORS=bt
 
-export START="srun -l --cpu_bind=verbose --distribution=block:cyclic --ntasks-per-node=8 --cpus-per-task=${OMP_NUM_THREADS}"
+export START="srun -l --cpu_bind=verbose --distribution=block:cyclic --ntasks-per-node=1 --cpus-per-task=${OMP_NUM_THREADS}"
 
 cd $PROJECT_WORKING_DIR
 module load python3

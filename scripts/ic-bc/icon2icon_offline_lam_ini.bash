@@ -14,9 +14,9 @@
 #SBATCH --job-name=ifs2icon_ini
 #SBATCH --partition=compute
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=16
+#SBATCH --cpus-per-task=8
 #SBATCH --exclusive
-#SBATCH --time=02:00:00
+#SBATCH --time=06:00:00
 #SBATCH --mem=0
 #SBATCH --output=../LOG/slurm-%x-%j.out
 #=============================================================================
@@ -111,7 +111,7 @@ export HDF5_USE_FILE_LOCKING=FALSE
 export OMPI_MCA_io="romio321"
 export UCX_HANDLE_ERRORS=bt
 
-export START="srun -l --cpu_bind=verbose --distribution=block:cyclic --ntasks=8 --cpus-per-task=${OMP_NUM_THREADS}"
+export START="srun -l --cpu_bind=verbose --distribution=block:cyclic --ntasks=16 --cpus-per-task=${OMP_NUM_THREADS}"
 
 cd $PROJECT_WORKING_DIR
 
