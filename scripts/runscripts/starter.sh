@@ -74,6 +74,7 @@ for arg in "${REMAINING_ARGS[@]}"; do
             echo "  --nodes=N         Number of compute nodes"
             echo "  --time=HH:MM:SS   Job time limit"
             echo "  --account=ACCOUNT Account name"
+            echo "  --dependency=TYPE Job dependency specification"
             echo ""
             echo "Experiment Arguments:"
             echo "  Any other arguments are passed to the experiment script"
@@ -85,7 +86,7 @@ for arg in "${REMAINING_ARGS[@]}"; do
             echo "  $0 ifces2-atlanLEM-segment2-20200909-exp107 2 -t --nodes=25"
             exit 0
             ;;
-        --nodes=*|--time=*|--account=*)
+        --nodes=*|--time=*|--account=*|--dependency=*)
             # These are SLURM options
             sbatch_options+=("$arg")
             ;;
@@ -132,6 +133,7 @@ icon_run_dir="/work/bb1376/user/fabian/model/icon/icon-builds/icon-release-2024.
 nodes=160
 ctime="08:00:00"
 account="bb1376"
+dependency=""
 
 # Override defaults with any provided SLURM options
 for option in "${sbatch_options[@]}"; do
@@ -148,6 +150,10 @@ for option in "${sbatch_options[@]}"; do
             account="${option#*=}"
             echo "Using custom account: $account"
             ;;
+        --dependency=*)
+            dependency="${option#*=}"
+            echo "Using custom dependency: $dependency"
+            ;;
     esac
 done
 
@@ -155,6 +161,9 @@ echo "SLURM configuration:"
 echo "  Nodes: $nodes"
 echo "  Time: $ctime"
 echo "  Account: $account"
+if [[ -n "$dependency" ]]; then
+    echo "  Dependency: $dependency"
+fi
 
 #=============================================================================
 # Prepare Experiment Script
@@ -232,7 +241,11 @@ for arg in "${exp_arguments[@]}"; do
 done
 
 # Prepare sbatch command - pass resolved script directory as first argument
-sbatch_cmd="sbatch --mem=0 exp.${expname}.run"
+sbatch_cmd="sbatch  --purge-slurm-env --mem=0"
+if [[ -n "$dependency" ]]; then
+    sbatch_cmd="$sbatch_cmd --dependency=$dependency"
+fi
+sbatch_cmd="$sbatch_cmd exp.${expname}.run"
 if [[ -n "$exp_args_string" ]]; then
     sbatch_cmd="$sbatch_cmd $exp_args_string"
 fi
