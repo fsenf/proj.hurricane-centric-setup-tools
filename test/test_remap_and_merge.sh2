@@ -28,13 +28,13 @@ resolve_unique_file() {
     return 0
 }
 
-experiment_dir=/work/bb1376/user/fabian/model/icon/icon-builds/icon-release-2024.07/experiments
+tools_icon_build_dir="/work/bb1376/user/fabian/model/icon/icon-builds/icon-release-2024.07"
 project_name="hurricane-paulette2020-segments"
 #project_width_config="width200km_reinit12h"
 #project_width_config="width100km_reinit24h"
 project_width_config="width100km_reinit12h"
 
-
+experiment_dir="${tools_icon_build_dir}/experiments"
 
 i=${idom} # Domain number, can be 1, 2, or 3
 # Define patterns with wildcards instead of hardcoded dates
