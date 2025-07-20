@@ -63,9 +63,13 @@ icon_output_interval="PT01H"
 regrid_output_interval="PT01H"
 
 # restart=.TRUE.
-restart_hours=3
+restart_hours=4
 dt_restart=`expr ${restart_hours} \* 3600`
-#dt_restart=34200
+dt_checkpoint=`expr ${restart_hours} \* 3600 `
+
+restart_interval="PT0${restart_hours}H"
+checkpoint_interval=${restart_interval}
+
 
 init_date=`echo ${start_date%%:*} | sed 's/\-//g'`
 #init_date=`echo ${start_date%%:*} | sed 's/\-//g' | sed 's/T/_T/g'`
@@ -74,7 +78,6 @@ init_date=`echo ${start_date%%:*} | sed 's/\-//g'`
 #-----------------------------------------------------------------------------
 # model timing
 dtime=6   # 10 seconds is ~ valid for 1km grid spacing, see ICON Tutorial p. 84
-dt_checkpoint=`expr ${restart_hours} \* 3600 `  # write restart file every 30 hours - hence disabled
 #
 #-----------------------------------------------------------------------------
 # model parameters
