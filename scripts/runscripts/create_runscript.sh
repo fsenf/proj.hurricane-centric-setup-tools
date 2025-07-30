@@ -78,16 +78,16 @@ read_toml_config "$config_file"
 module load python3
 
 # Generate start and end dates using print_timings.py
-start_date=$(python3 "${SCRIPT_DIR}/../../utilities/print_timings.py" "$config_file" "$iseg" "START" ${test_flag})
+start_date=$(python3 "${SCRIPT_DIR}/../../utilities/print_timings.py" "$config_file" "$iseg" "START")
 end_date=$(python3 "${SCRIPT_DIR}/../../utilities/print_timings.py" "$config_file" "$iseg" "END" ${test_flag})
 
 # Generate experiment name using segment and date
-init_date=$(get_init_date_from_segment "$iseg")
+init_date=$(python3 "${SCRIPT_DIR}/../../utilities/print_timings.py" "$config_file" "$iseg" "INIT_DATE")
 
 if [[ $test_mode == ".TRUE." ]]; then
-    expname="${PROJECT_NAME}-${PROJECT_WIDTH_CONFIG}-segment${iseg}-${init_date}-exp108"
+    expname="${PROJECT_NAME}-${PROJECT_WIDTH_CONFIG}-segment${iseg}-${init_date}-exp110"
 else
-    expname="${PROJECT_NAME}-${PROJECT_WIDTH_CONFIG}-segment${iseg}-${init_date}-exp109"
+    expname="${PROJECT_NAME}-${PROJECT_WIDTH_CONFIG}-segment${iseg}-${init_date}-exp111"
 fi
 
 # Set default output filename if not specified

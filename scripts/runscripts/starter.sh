@@ -127,7 +127,7 @@ fi
 #=============================================================================
 
 # ICON run directory
-icon_run_dir="/work/bb1376/user/fabian/model/icon/icon-builds/icon-release-2024.07/run"
+icon_run_dir=${TOOLS_ICON_BUILD_DIR}/run
 
 # Default SLURM parameters
 nodes=160

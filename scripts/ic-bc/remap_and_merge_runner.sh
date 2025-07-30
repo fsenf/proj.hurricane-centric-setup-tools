@@ -197,38 +197,47 @@ for idom in $(seq 1 ${DOMAINS_NESTS}); do
     #=============================================================================
 
     # Define patterns with wildcards instead of hardcoded dates
-    ic_bg_pattern="${experiment_dir}/${project_name}-${project_width_config}-segment${to_iseg}-????????-exp108/IC_vertically_interpolated_DOM0${idom}.nc"
-    ic_seg_pattern="${experiment_dir}/${project_name}-${project_width_config}-segment${from_iseg}-????????-exp109/lam_input_IC_DOM0${idom}_ML_????????T??????Z.nc"
-    to_grid_pattern="${experiment_dir}/${project_name}-${project_width_config}-segment${to_iseg}-????????-exp108/hurricane-paulette2020-segments-seg${to_iseg}_dom${idom}_DOM01.nc"
-    from_grid_pattern="${experiment_dir}/${project_name}-${project_width_config}-segment${from_iseg}-????????-exp109/hurricane-paulette2020-segments-seg${from_iseg}_dom${idom}_DOM01.nc"
+    # ic_bg_pattern="${experiment_dir}/${project_name}-${project_width_config}-segment${to_iseg}-????????-exp108/IC_vertically_interpolated_DOM0${idom}.nc"
+    
+    ic_bg_dir="${experiment_dir}/${project_name}-${project_width_config}-segment${to_iseg}-????????T????Z-exp110"
+    ic_bg_pattern="${ic_bg_dir}/lam_input_IC_DOM0${idom}_ML_????????T??????Z.nc"
+    to_grid_pattern="${ic_bg_dir}/hurricane-paulette2020-segments-seg${to_iseg}_dom${idom}_DOM01.nc"
+    
+    ic_seg_dir="${experiment_dir}/${project_name}-${project_width_config}-segment${from_iseg}-????????T????Z-exp111"
+    ic_seg_pattern="${ic_seg_dir}/lam_input_IC_DOM0${idom}_ML_????????T??????Z.nc"
+    from_grid_pattern="${ic_seg_dir}/hurricane-paulette2020-segments-seg${from_iseg}_dom${idom}_DOM01.nc"
 
     # Resolve patterns to actual files
     echo "Resolving file patterns for domain $idom..."
 
     ic_bg_file=$(resolve_unique_file "$ic_bg_pattern")
-    if [ $? -ne 0 ]; then
-        echo "Failed to resolve background IC file pattern: $ic_bg_pattern"
-        echo "Skipping domain $idom"
-        continue
+
+    files_missing=".FALSE."
+
+    if [[ ! -f "$ic_bg_file" ]]; then
+        echo "Background IC file does not exist: $ic_bg_file"
+        files_missing=".TRUE."
     fi
 
     ic_seg_file=$(resolve_unique_file "$ic_seg_pattern")
-    if [ $? -ne 0 ]; then
-        echo "Failed to resolve segment IC file pattern: $ic_seg_pattern"
-        echo "Skipping domain $idom"
-        continue
+    if [[ ! -f "$ic_seg_file" ]]; then
+        echo "Segment IC file does not exist: $ic_seg_file"
+        files_missing=".TRUE."
     fi
 
     to_grid=$(resolve_unique_file "$to_grid_pattern")
-    if [ $? -ne 0 ]; then
-        echo "Failed to resolve target grid file pattern: $to_grid_pattern"
-        echo "Skipping domain $idom"
-        continue
+    if [[ ! -f "$to_grid" ]]; then
+        echo "Target grid file does not exist: $to_grid"
+        files_missing=".TRUE."
     fi
 
     from_grid=$(resolve_unique_file "$from_grid_pattern")
-    if [ $? -ne 0 ]; then
-        echo "Failed to resolve source grid file pattern: $from_grid_pattern"
+    if [[ ! -f "$from_grid" ]]; then
+        echo "Source grid file does not exist: $from_grid"
+        files_missing=".TRUE."
+    fi
+
+    if [[ "files_missing" == ".TRUE." ]]; then
         echo "Skipping domain $idom"
         continue
     fi

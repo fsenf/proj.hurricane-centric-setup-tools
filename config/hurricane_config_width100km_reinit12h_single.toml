@@ -1,0 +1,38 @@
+[tools]
+# Tool directories and executables
+icontools_dir = "/work/bb1376/tools/dwd_icon_tools/icontools"
+extpar_input_dir = "/work/pd1167/extpar-input-data"
+extpar_dir = "/work/bb1376/tools/extpar"
+icon_build_dir = "/work/bb1376/user/fabian/model/icon/icon-builds/icon-release-2025.04-2_intel-noopenmp"
+
+[project]
+name = "hurricane-paulette2020-segments"
+width_config = "width100km_reinit12h_single"
+working_dir = "/scratch/b/b380352/icontools"
+
+[reference]
+# Reference grids and datasets
+init_time = "20200907T000000Z"
+expname = "ifces2-atlanXL-20200907-exp021"
+input_grid = "/work/bb1376/data/icon/grids-extpar/atlanXL/atlanXL_R02B10_DOM02.nc"
+input_icbc_dir = "/work/bb1376/data/icon/atlantic-cases/paulette/ifces2-atlanXL-20200907-exp021"
+input_icbc_subdir = "NESTING"
+
+[track]
+# Hurricane track data
+track_dir = "/work/bb1376/data/icon/atlantic-cases/derived-data/tracks/"
+track_file = "ifces2-atlanXL-20200907-exp021-DOM02_paulette_best-fit.nc"
+
+[domains]
+# Domain configuration
+segment_reinit_hours = 12.0
+segment_length_added = 3.0
+nests = 1
+dom_width = [300.0] # in km
+
+[output]
+# Output directories
+grid_basedir = "/work/bb1376/data/icon/grids-extpar"
+icbc_basedir = "/work/bb1376/data/icon/bc-init"
+
+# end of config

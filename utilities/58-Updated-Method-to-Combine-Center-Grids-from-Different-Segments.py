@@ -199,15 +199,7 @@ def main():
     in_seg_data = xr.open_dataset(args.segment_file, chunks=args.chunk_size)
     in_bg_data = xr.open_dataset(args.background_file, chunks=args.chunk_size)
     
-    # Fix dimension naming inconsistencies
-    try:
-        in_bg_data = dim_rename(in_bg_data)
-    except:
-        try:
-            in_bg_data = dim_rename(in_bg_data, names={"height_2": "height", "height_2_2": "height_2"})
-        except:
-            in_bg_data = dim_rename(in_bg_data, names={"lev": "height", "lev_2": "height_2"})
-        
+    # Rename dimensions to ensure consistency       
     in_seg_data = cell_rename( in_seg_data )
 
     # Assign level coordinates
