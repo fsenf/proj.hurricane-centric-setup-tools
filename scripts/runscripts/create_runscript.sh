@@ -109,6 +109,8 @@ seg="seg${iseg}"
 
 project_name="${PROJECT_NAME}"
 project_width_config="${PROJECT_WIDTH_CONFIG}"
+domains_nests="${DOMAINS_NESTS}"
+
 
 # 2. Test mode flag - set from command line argument -t
 test_mode="${test_mode}"
@@ -128,7 +130,7 @@ grid_file="${grid_dir}/${PROJECT_NAME}-seg${iseg}_dom1_DOM01.nc"
 region_bounds=$(python3 "${SCRIPT_DIR}/../../utilities/extract_region_bounds.py" "$grid_file" 2>/dev/null)
 echo "$region_bounds" >> "$output_file"
 
-# Extract everything from line 66 onwards from template
+# Extract everything from line 30 onwards from template
 tail -n +30 "$template_file" >> "$output_file"
 
 # Make executable

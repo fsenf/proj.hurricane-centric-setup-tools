@@ -138,24 +138,16 @@ echo "Segment reinit hours: $segment_reinit_hours"
 
 # Convert to integer (properly handling floating point values)
 reinit_hours_int=$(printf "%.0f" "$segment_reinit_hours")
+nnests=$(printf "%.0f" "$DOMAINS_NESTS")
 
-if [[ "$reinit_hours_int" -eq 12 ]]; then
-    # 12-hour reinit configuration:
-    # - 3 grid files (one per domain)
-    # - 3 extpar files (one per domain)
-    # - 3 IC files (one per domain) 
-    # - ~13 BC files (depends on exact timing)
-    min_required_files=22
-    echo "Using reinit12h configuration, minimum required files: $min_required_files"
-else
-    # 24-hour reinit configuration:
-    # - 3 grid files (one per domain)
-    # - 3 extpar files (one per domain)
-    # - 3 IC files (one per domain)
-    # - ~25 BC files (depends on exact timing)
-    min_required_files=34
-    echo "Using reinit24h configuration, minimum required files: $min_required_files"
-fi
+# Calculate minimum required files: reinit_hours + 3 * nests
+# This accounts for:
+# - BC files (~reinit_hours files)
+# - Grid files (nnests files)
+# - Extpar files (nnests files)  
+# - IC files (nnests files)
+min_required_files=$((reinit_hours_int + 1 + 3 * nnests))
+echo "Using configuration with ${reinit_hours_int}h reinit and ${nnests} nests, minimum required files: $min_required_files"
 
 #=============================================================================
 # Run check for all file types

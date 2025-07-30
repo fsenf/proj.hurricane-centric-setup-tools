@@ -1,4 +1,6 @@
 LOG
 thrash/*
+.vscode
 slurm*out
 *.pyc
+*.swp
