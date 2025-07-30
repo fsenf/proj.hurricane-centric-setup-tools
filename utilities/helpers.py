@@ -148,14 +148,14 @@ def print_timings(config_file, iseg, file_type, test_mode=False):
 
     elif file_type.upper() == "END":
         if not test_mode:
+            segment_end_time = init_time + timedelta(
+                hours=int((iseg + 1) * segment_reinit_hours)
+            )
+        else:
             segment_end_time = (
                 init_time
                 + timedelta(hours=int(iseg * segment_reinit_hours))
                 + timedelta(minutes=5)
-            )
-        else:
-            segment_end_time = init_time + timedelta(
-                hours=int(iseg * segment_reinit_hours) + 1
             )
 
         return segment_end_time.strftime("%Y-%m-%dT%H:%M:%SZ")
