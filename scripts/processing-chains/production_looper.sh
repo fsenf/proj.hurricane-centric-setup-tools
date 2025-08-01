@@ -3,7 +3,7 @@
 #=============================================================================
 # DESCRIPTION:
 #   Hurricane production chain looper script that runs multiple segments
-#   sequentially with proper dependency chaining between segments.
+#   sequentially with proper dependency via ICON post proc capabilities.
 #
 # USAGE:
 #   ./production_looper.sh start_segment end_segment [options] [slurm_options]
@@ -20,12 +20,10 @@
 # SLURM OPTIONS:
 #   --nodes=N         - Number of compute nodes (default: 64)
 #   --time=HH:MM:SS   - Job time limit (default: 08:00:00)
-#   --dependency=TYPE - Job dependency specification for first segment (default: none)
 #
 # EXAMPLES:
 #   ./production_looper.sh 1 5 -c ../../config/hurricane_config.toml
 #   ./production_looper.sh 1 3 -c ../../config/hurricane_config.toml --nodes=128 --time=12:00:00
-#   ./production_looper.sh 2 4 -c ../../config/hurricane_config.toml --dependency=afterok:12345
 #
 #=============================================================================
 
@@ -55,6 +53,10 @@ fi
 CONFIG_FILE_ABS=$(readlink -f "$CONFIG_ARG")
 echo "Config file: $CONFIG_FILE_ABS"
 
+# Load TOML reader
+source "${SCRIPT_DIR}/../../utilities/toml_reader.sh"
+read_toml_config "$CONFIG_FILE_ABS"
+
 # Remove config arguments and parse remaining arguments
 REMAINING_ARGS=($(remove_config_args "$@"))
 
@@ -66,7 +68,6 @@ slurm_options=()
 # Default SLURM parameters (similar to starter.sh)
 nodes=64
 ctime="08:00:00"
-dependency=""
 
 for arg in "${REMAINING_ARGS[@]}"; do
     case $arg in
@@ -83,15 +84,13 @@ for arg in "${REMAINING_ARGS[@]}"; do
             echo "SLURM Options:"
             echo "  --nodes=N         Number of compute nodes (default: 64)"
             echo "  --time=HH:MM:SS   Job time limit (default: 08:00:00)"
-            echo "  --dependency=TYPE Job dependency specification for first segment (default: none)"
             echo ""
             echo "Examples:"
             echo "  $0 1 5 -c ../../config/hurricane_config.toml"
             echo "  $0 1 3 -c ../../config/hurricane_config.toml --nodes=128 --time=12:00:00"
-            echo "  $0 2 4 -c ../../config/hurricane_config.toml --dependency=afterok:12345"
             exit 0
             ;;
-        --nodes=*|--time=*|--dependency=*)
+        --nodes=*|--time=*)
             # These are SLURM options
             slurm_options+=("$arg")
             ;;
@@ -158,10 +157,6 @@ for option in "${slurm_options[@]}"; do
             ctime="${option#*=}"
             echo "Using custom time limit: $ctime"
             ;;
-        --dependency=*)
-            dependency="${option#*=}"
-            echo "Using custom initial dependency: $dependency"
-            ;;
     esac
 done
 
@@ -170,66 +165,109 @@ echo "  Segments: $start_segment to $end_segment"
 echo "  Config: $CONFIG_FILE_ABS"
 echo "  Nodes: $nodes"
 echo "  Time: $ctime"
-if [[ -n "$dependency" ]]; then
-    echo "  Initial Dependency: $dependency"
-fi
 
 #=============================================================================
 # Production Chain Loop
 #=============================================================================
+module load python3
+
+# Get ICON run directory from config
+icon_run_dir=${TOOLS_ICON_BUILD_DIR}/run
+
+if [[ ! -d "$icon_run_dir" ]]; then
+    echo "❌ ERROR: ICON run directory does not exist: $icon_run_dir"
+    exit 1
+fi
+
+echo "ICON run directory: $icon_run_dir"
 
 echo ""
 echo "Starting production chain loop..."
 echo "========================================"
 
-current_dependency="$dependency"
+# Initialize previous post-processing script variable
+previous_postproc_script=""
 
 for iseg in $(seq $start_segment $end_segment); do
     echo ""
     echo "Processing segment $iseg..."
     echo "----------------------------------------"
     
-    # Build production chain command
+    # Prepare Post-Processing script
+
+    # Generate experiment name using segment and date
+    init_date=$(python3 "${SCRIPT_DIR}/../../utilities/print_timings.py" "$CONFIG_FILE_ABS" "$iseg" "INIT_DATE")
+    expname="${PROJECT_NAME}-${PROJECT_WIDTH_CONFIG}-segment${iseg}-${init_date}-exp111"
+    echo "Experiment name: $expname"
+
+    actual_postproc_script="${SCRIPT_DIR}/../runscripts/post.${expname}.run"
+    template_file="${SCRIPT_DIR}/../runscripts/post.TEMPLATE_for_segment_runscript"
+
+    # Check if template file exists
+    if [[ ! -f "$template_file" ]]; then
+        echo "❌ ERROR: Template file not found: $template_file"
+        exit 1
+    fi
+
+    cat "$template_file" > "$actual_postproc_script"
+    echo "Post-processing script created: $actual_postproc_script"
+    # Set main production command
     chain_cmd="bash ${SCRIPT_DIR}/../processing-chains/run_hurricane_production_chain.sh $iseg -c $CONFIG_FILE_ABS --nodes=$nodes --time=$ctime"
-    
-    # Add dependency if we have one
-    if [[ -n "$current_dependency" ]]; then
-        chain_cmd="$chain_cmd --dependency=$current_dependency"
-        echo "Using dependency: $current_dependency"
+
+    if [[ $iseg -eq $start_segment ]]; then
+
+        echo "Executing: $chain_cmd"
+        echo ""
+        
+        # Execute the production chain and capture output
+        chain_output=$(eval "$chain_cmd" 2>&1)
+        chain_exit_code=$?
+        
+        echo "$chain_output"
+        
+        # Check if the command succeeded
+        if [[ $chain_exit_code -ne 0 ]]; then
+            echo "❌ ERROR: Production chain failed for segment $iseg (exit code: $chain_exit_code)"
+            exit $chain_exit_code
+        fi
+        
+        echo "✅ Successfully submitted segment $iseg"
+        echo "----------------------------------------"
+
     else
-        echo "No dependency for this segment"
+        echo "Preparing Post-Processing script for segment $iseg"
+        
+        # Only process previous script if it exists
+        if [[ -n "$previous_postproc_script" && -f "$previous_postproc_script" ]]; then
+            echo "Post-processing script: $previous_postproc_script"
+            
+            # Prepare the post-processing script for the previous segment
+            echo "$chain_cmd" >> "$previous_postproc_script"
+
+            cp "$previous_postproc_script" "$icon_run_dir"
+            echo "Copied post-processing script to ICON run directory: $icon_run_dir"
+        else
+            echo "⚠️  WARNING: No previous post-processing script found"
+        fi
     fi
-    
-    echo "Executing: $chain_cmd"
-    echo ""
-    
-    # Execute the production chain and capture output
-    chain_output=$(eval "$chain_cmd" 2>&1)
-    chain_exit_code=$?
-    
-    echo "$chain_output"
-    
-    # Check if the command succeeded
-    if [[ $chain_exit_code -ne 0 ]]; then
-        echo "❌ ERROR: Production chain failed for segment $iseg (exit code: $chain_exit_code)"
-        exit $chain_exit_code
-    fi
-    
-    # Extract job ID from the output (look for "Submitted batch job XXXXXX")
-    job_id=$(echo "$chain_output" | grep -o "Submitted batch job [0-9]*" | grep -o "[0-9]*" | tail -n 1)
-    
-    if [[ -z "$job_id" ]]; then
-        echo "⚠️  WARNING: Could not extract job ID from output for segment $iseg"
-        echo "Next segment will run without dependency"
-        current_dependency=""
+
+
+    if [[ $iseg -eq $end_segment ]]; then
+        echo "Finalizing post-processing script for segment $iseg"
+        echo "Post-processing script: $actual_postproc_script"
+
+        # Add final commands to the post-processing script
+        echo "echo 'Post-processing completed for segment $iseg'" >> "$actual_postproc_script"
+        echo "echo 'All segments processed successfully!'" >> "$actual_postproc_script"
+
+        cp $actual_postproc_script $icon_run_dir
+        echo "Copied post-processing script to ICON run directory: $icon_run_dir"
     else
-        echo "✅ Successfully submitted segment $iseg with job ID: $job_id"
-        # Set dependency for next iteration
-        current_dependency="afterok:$job_id"
-        echo "Next segment will depend on: $current_dependency"
+        echo "Continuing to next segment..."
     fi
-    
-    echo "----------------------------------------"
+
+    # Update previous script reference for next iteration
+    previous_postproc_script="$actual_postproc_script"
 done
 
 echo ""

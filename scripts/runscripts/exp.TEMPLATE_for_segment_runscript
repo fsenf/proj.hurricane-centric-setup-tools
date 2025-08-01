@@ -42,9 +42,11 @@ atmo_namelist=NAMELIST_${EXPNAME}
 if [ "${test_mode}" = ".TRUE." ]; then
   reinit_mode='cold'
   ic_output_date="${start_date}"
+  autoPostProcessing="false"
 else
   reinit_mode='warm'
   ic_output_date="${end_date}"
+  autoPostProcessing="true"
 fi
 
 if [ "${reinit_mode}" = "cold" ]; then

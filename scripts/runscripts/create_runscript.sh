@@ -81,7 +81,6 @@ module load python3
 start_date=$(python3 "${SCRIPT_DIR}/../../utilities/print_timings.py" "$config_file" "$iseg" "START")
 end_date=$(python3 "${SCRIPT_DIR}/../../utilities/print_timings.py" "$config_file" "$iseg" "END" ${test_flag})
 
-# Generate experiment name using segment and date
 init_date=$(python3 "${SCRIPT_DIR}/../../utilities/print_timings.py" "$config_file" "$iseg" "INIT_DATE")
 
 if [[ $test_mode == ".TRUE." ]]; then
