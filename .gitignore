@@ -4,3 +4,5 @@ thrash/*
 slurm*out
 *.pyc
 *.swp
+scripts/runscripts/exp.*exp???
+scripts/runscripts/post.*.run
