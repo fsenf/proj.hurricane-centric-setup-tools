@@ -1,4 +1,4 @@
-# Levante cpu batch job parameters
+#!/bin/bash
 #
 #SBATCH --job-name=post_run
 #SBATCH --partition=shared

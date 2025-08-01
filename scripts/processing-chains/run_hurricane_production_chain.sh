@@ -34,20 +34,12 @@
 # DATE:
 #   June 2025
 #=============================================================================
-#SBATCH --job-name=production_chain  # Specify job name
-#SBATCH --partition=shared           # Specify partition name
-#SBATCH --mem=2G                     # Specify amount of memory needed
-#SBATCH --time=00:05:00              # Set a limit on the total run time
-#SBATCH --account=bb1376             # Charge resources on this project account
-#SBATCH --output=../LOG/slurm-%x-%j.out
 
 
 #=============================================================================
 # Configuration and Argument Parsing
 #=============================================================================
 
-# Get script directory - handle both SLURM and direct execution
-ORIGINAL_SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
 
 if [[ -z "$ORIGINAL_SCRIPT_DIR" ]]; then
     ORIGINAL_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"

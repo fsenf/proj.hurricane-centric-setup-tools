@@ -209,10 +209,15 @@ for iseg in $(seq $start_segment $end_segment); do
         exit 1
     fi
 
+    # Create post-processing script from template
     cat "$template_file" > "$actual_postproc_script"
+    echo "cd ${SCRIPT_DIR}" >> "$actual_postproc_script"
+    chmod +x "$actual_postproc_script"
     echo "Post-processing script created: $actual_postproc_script"
+
+
     # Set main production command
-    chain_cmd="bash ${SCRIPT_DIR}/../processing-chains/run_hurricane_production_chain.sh $iseg -c $CONFIG_FILE_ABS --nodes=$nodes --time=$ctime"
+    chain_cmd="bash run_hurricane_production_chain.sh $iseg -c $CONFIG_FILE_ABS --nodes=$nodes --time=$ctime"
 
     if [[ $iseg -eq $start_segment ]]; then
 
