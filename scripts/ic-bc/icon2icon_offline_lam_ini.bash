@@ -14,7 +14,7 @@
 #SBATCH --job-name=ifs2icon_ini
 #SBATCH --partition=compute
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=4
 #SBATCH --exclusive
 #SBATCH --time=06:00:00
 #SBATCH --mem=0
@@ -111,7 +111,7 @@ export HDF5_USE_FILE_LOCKING=FALSE
 export OMPI_MCA_io="romio321"
 export UCX_HANDLE_ERRORS=bt
 
-export START="srun -l --cpu_bind=verbose --distribution=block:cyclic --ntasks=16 --cpus-per-task=${OMP_NUM_THREADS}"
+export START="srun -l --cpu_bind=verbose --distribution=block:cyclic --ntasks=8 --cpus-per-task=${OMP_NUM_THREADS}"
 
 cd $PROJECT_WORKING_DIR
 
@@ -148,26 +148,28 @@ DOMNAME="${PROJECT_NAME}/seg${iseg}_${PROJECT_WIDTH_CONFIG}"
 for idom in $(seq 1 ${DOMAINS_NESTS}); do
     echo "Processing domain $idom of ${DOMAINS_NESTS}"
     
-    OUTGRID="${OUTPUT_GRID_BASEDIR}/${DOMNAME}/${PROJECT_NAME}-seg${iseg}_dom${idom}_DOM01.nc"
+    # Run in background for parallel execution
+    (
+        OUTGRID="${OUTPUT_GRID_BASEDIR}/${DOMNAME}/${PROJECT_NAME}-seg${iseg}_dom${idom}_DOM01.nc"
 
-    # Set up output name for initial conditions
-    OUTNAME="${TIMESTAMP}_DOM0${idom}_ini.nc"
+        # Set up output name for initial conditions
+        OUTNAME="${TIMESTAMP}_DOM0${idom}_ini.nc"
 
-    OUT_IC_DIR="${OUTPUT_ICBC_BASEDIR}/${DOMNAME}"
+        OUT_IC_DIR="${OUTPUT_ICBC_BASEDIR}/${DOMNAME}"
 
-    if [ ! -d "${OUT_IC_DIR}" ]; then
-        mkdir -p "${OUT_IC_DIR}"
-    fi
-    FULL_OUTNAME="${OUT_IC_DIR}/${OUTNAME}"
+        if [ ! -d "${OUT_IC_DIR}" ]; then
+            mkdir -p "${OUT_IC_DIR}"
+        fi
+        FULL_OUTNAME="${OUT_IC_DIR}/${OUTNAME}"
 
-    # Create directory for weights
-    WEIGHTDIR=`mktemp -d -p ${PROJECT_WORKING_DIR}`
-    NAMELIST_FILE=${WEIGHTDIR}/NAMELIST_ICONREMAP_INI
+        # Create directory for weights
+        WEIGHTDIR=`mktemp -d -p ${PROJECT_WORKING_DIR}`
+        NAMELIST_FILE=${WEIGHTDIR}/NAMELIST_ICONREMAP_INI
 
-    [ ! -d ${WEIGHTDIR} ] && mkdir -p ${WEIGHTDIR}
+        [ ! -d ${WEIGHTDIR} ] && mkdir -p ${WEIGHTDIR}
 
-    # Generate namelist and run remap for this domain
-    cat > ${NAMELIST_FILE} << REMAP_NML_EOF
+        # Generate namelist and run remap for this domain
+        cat > ${NAMELIST_FILE} << REMAP_NML_EOF
 ! REMAPPING NAMELIST FILE
 !
 &remap_nml
@@ -427,13 +429,22 @@ loptional=.TRUE.
 /
 REMAP_NML_EOF
 
-    #=============================================================================
-    # Start remapping
-    #=============================================================================
+        #=============================================================================
+        # Start remapping
+        #=============================================================================
 
-    ${START} ${ICONTOOLS_DIR}/iconremap --remap_nml ${NAMELIST_FILE}
-    rm ${NAMELIST_FILE}
+        ${START} ${ICONTOOLS_DIR}/iconremap --remap_nml ${NAMELIST_FILE}
+        rm ${NAMELIST_FILE}
+        rm -rf ${WEIGHTDIR}
+    ) &
+    
+
 done
+
+# Wait for all domain processing to complete
+wait
+
+echo "All domains processed successfully"
 
 #-----------------------------------------------------------------------------
 exit
