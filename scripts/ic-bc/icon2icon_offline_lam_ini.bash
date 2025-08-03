@@ -123,7 +123,7 @@ module load python3
 
 # Find IC file using Python utility
 INFILE=$(python "${ORIGINAL_SCRIPT_DIR}/../../utilities/find_icbc_file.py" "$CONFIG_FILE" "$iseg" "IC")
-TIMESTAMP=$(python3 "${SCRIPT_DIR}/../../utilities/print_timings.py" "$CONFIG_FILE" "$iseg" "INIT_DATE")
+TIMESTAMP=$(python3 "${ORIGINAL_SCRIPT_DIR}/../../utilities/print_timings.py" "$CONFIG_FILE" "$iseg" "INIT_DATE")
 
 if [ $? -ne 0 ] || [ -z "$INFILE" ]; then
     echo "Error: IC file not found for segment $iseg"
