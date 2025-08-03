@@ -31,7 +31,7 @@
 #SBATCH --job-name=ifs2icon_lbc
 #SBATCH --partition=compute
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=4
 #SBATCH --exclusive
 #SBATCH --time=04:00:00
 #SBATCH --mem=0
@@ -269,14 +269,19 @@ for datafilename in "${DATAFILELIST[@]}" ; do
     outdatafile=${datafile%.*}
     outdatafile=${outdatafile#*ML_}
 
-    # Add geo reference - create temporary merged file
-    temp_file=$(mktemp --tmpdir=${PROJECT_WORKING_DIR})
-    cdo merge ${datafilename} ${GEOFILE} ${temp_file}
-    
-    # Create temporary namelist for this file
-    TEMP_NAMELIST_LBC=$(mktemp --suffix=_NAMELIST_ICONREMAP_LBC)
-    
-    cat > ${TEMP_NAMELIST_LBC} << EOF_2C
+    # Run in background for parallel execution
+    (
+        # Add geo reference - create temporary merged file
+        temp_file=$(mktemp --tmpdir=${PROJECT_WORKING_DIR})
+        cdo merge ${datafilename} ${GEOFILE} ${temp_file}
+        
+        # Create temporary namelist for this file
+        TEMP_NAMELIST_LBC=$(mktemp --suffix=_NAMELIST_ICONREMAP_LBC)
+        
+        # Create unique ncstorage file to avoid conflicts in parallel execution
+        ncstorage_file="${WEIGHTDIR}/ncstorage_lbc_${outdatafile}.tmp"
+        
+        cat > ${TEMP_NAMELIST_LBC} << EOF_2C
 &remap_nml
  in_grid_filename  = '${INGRID}'                         ! file containing grid information of input data
  in_filename       = '${temp_file}'                      ! input data file name
@@ -286,17 +291,30 @@ for datafilename in "${DATAFILELIST[@]}" ; do
  out_type          = 2                                   ! type of output grid (2: triangular)
  out_filetype      = 4                                   ! output filetype (4: NetCDF)
  l_have3dbuffer    = .FALSE.                             ! buffer option
- ncstorage_file    = "${WEIGHTDIR}/ncstorage_lbc.tmp"
+ ncstorage_file    = "${ncstorage_file}"
 /
 EOF_2C
 
-    ${START} ${TOOLS_ICONTOOLS_DIR}/iconremap -q --remap_nml ${TEMP_NAMELIST_LBC} \
-             --input_field_nml ${TEMP_NAMELIST_FIELDS} 2>&1
+        ${START} ${TOOLS_ICONTOOLS_DIR}/iconremap -q --remap_nml ${TEMP_NAMELIST_LBC} \
+                 --input_field_nml ${TEMP_NAMELIST_FIELDS} 2>&1
+        
+        # Clean up temporary files for this iteration
+        rm ${TEMP_NAMELIST_LBC}
+        rm ${temp_file}
+        rm -f ${ncstorage_file}
+    ) &
     
-    # Clean up temporary files for this iteration
-    rm ${TEMP_NAMELIST_LBC}
-    rm ${temp_file}
+    # Optional: limit number of parallel jobs to avoid overwhelming the system
+    # Uncomment and adjust the number based on your system's capabilities
+    # if (( $(jobs -r | wc -l) >= 4 )); then
+    #     wait -n  # wait for any background job to complete
+    # fi
 done
+
+# Wait for all background jobs to complete
+wait
+
+echo "All BC files processed successfully"
 
 # Clean up field namelist
 rm ${TEMP_NAMELIST_FIELDS}
