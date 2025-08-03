@@ -6,6 +6,8 @@
 
 #set -eux  # Enable debugging and exit on error
 
+$CONFIG_FILE=$1
+
 # Get script directory
 ORIGINAL_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
@@ -16,7 +18,7 @@ source "${ORIGINAL_SCRIPT_DIR}/../utilities/toml_reader.sh"
 
 # Read configuration with debugging
 echo "Reading TOML configuration..."
-CONFIG_FILE="${ORIGINAL_SCRIPT_DIR}/../config/hurricane_config.toml"
+CONFIG_FILE="${ORIGINAL_SCRIPT_DIR}/$CONFIG_FILE"
 read_toml_config "$CONFIG_FILE"
 
 echo ""
