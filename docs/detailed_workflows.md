@@ -34,7 +34,7 @@ Each segment uses multiple nested grids:
 ### Warmstart Processing
 Advanced initialization technique that blends:
 - **Segment data**: High-resolution fields from previous segment
-- **Background data**: Global model data for current segment
+- **Reference data**: Full domain data for current segment
 - **Spatial blending**: Smooth transition between data sources
 
 ## Preprocessing Workflows
@@ -157,7 +157,7 @@ Submitting preprocessing chain for segment 2...
 #### Step 2: Create Production Runscript
 - **Script**: `create_runscript.sh`
 - **Purpose**: Generate ICON experiment script
-- **Output**: `exp.[experiment_name].run`
+- **Output**: `exp.[experiment_name]`
 
 #### Step 3: Submit Production Job
 - **Script**: `starter.sh`
@@ -182,8 +182,9 @@ Submitting preprocessing chain for segment 2...
 
 **Key Features**:
 - **Sequential execution**: Each segment waits for previous to complete
-- **Dependency chaining**: SLURM dependencies ensure proper order
-- **Post-processing**: Automated post-processing script generation
+- **Dependency chaining**: 
+  * ICON restarts itself for a given segment until the full simulation period has been completed 
+  * the dependency chain for the next segment is started from the final ICON job as part of ICON's automated post-processing capabilities
 - **Resource management**: Consistent resource allocation across segments
 
 **Example**:
@@ -197,13 +198,22 @@ Submitting preprocessing chain for segment 2...
 
 **Script**: `run_hurricane_testrun_chain.sh`
 
-**Purpose**: Validate preprocessing with short simulation
+**Purpose**: 
+1. Validate that all preprocessing files have been properly created
+2. Create and submit a test simulation to verify setup integrity
+3. Allow ressource estimation and a quick validation before proceeding to full production runs
+4. Providie vertically interpolated IC data that are consistent and balanced
+
 
 **Workflow**:
-1. **File validation**: Check all preprocessing outputs exist
-2. **Remap/merge test**: Test warmstart file processing
-3. **Runscript creation**: Generate test experiment script
-4. **Short simulation**: Run 1-hour test simulation
+1. **File validation**: Check all preprocessing outputs exist and are valid
+   - Grid files for all domains
+   - External parameter files
+   - Initial condition files 
+   - Boundary condition files
+2. **File count verification**: Ensure sufficient files based on configuration (reinit hours and domain count)
+3. **Test runscript creation**: Generate a short test experiment script
+4. **Test simulation submission**: Submit 5-minute test run with 20 nodes to validate setup and to create vertically interpolated IC data
 
 **Usage**:
 ```bash
@@ -264,8 +274,8 @@ All scripts support sophisticated dependency management:
 Adjust computational resources based on requirements:
 
 ```bash
-# High-resolution run
-./production_looper.sh 1 8 -c config.toml --nodes=256 --time=24:00:00
+# Very Large Runs
+./production_looper.sh 1 8 -c config.toml --nodes=256 --time=08:00:00
 
 # Quick test
 ./production_looper.sh 1 2 -c config.toml --nodes=32 --time=02:00:00
@@ -276,36 +286,40 @@ Adjust computational resources based on requirements:
 Use different configurations for different scenarios:
 
 ```bash
-# High-resolution configuration
+# Smaller domain configuration
 ./run_hurricane_segments_preproc_chain.sh 1 -c ../../config/hurricane_config_width100km_reinit12h.toml
 
-# Low-resolution configuration  
+# Larger domain configuration  
 ./run_hurricane_segments_preproc_chain.sh 1 -c ../../config/hurricane_config_width200km_reinit24h.toml
 ```
 
 ## File Organization
 
 ### Generated File Structure
-```
+```bash
 ${OUTPUT_GRID_BASEDIR}/
 └── ${PROJECT_NAME}/
-    └── seg${N}_${WIDTH_CONFIG}/
-        ├── ${PROJECT_NAME}-seg${N}_dom1_DOM01.nc
-        ├── ${PROJECT_NAME}-seg${N}_dom2_DOM01.nc
-        └── ${PROJECT_NAME}-seg${N}_dom3_DOM01.nc
+    └── seg${k}_${WIDTH_CONFIG}/
+        ├── ${PROJECT_NAME}-seg${k}_dom1_DOM01.nc
+        ├── ${PROJECT_NAME}-seg${k}_dom2_DOM01.nc
+        └── ${PROJECT_NAME}-seg${k}_dom3_DOM01.nc
 
 ${OUTPUT_ICBC_BASEDIR}/
 └── ${PROJECT_NAME}/
-    └── seg${N}_${WIDTH_CONFIG}/
-        ├── ifces2-atlanXL-ML_${PROJECT_NAME}_seg${N}_DOM01_ic.nc
-        ├── ifces2-atlanXL-ML_${PROJECT_NAME}_seg${N}_DOM01_lbc.nc
-        └── ifces2-atlanXL-ML_${PROJECT_NAME}_seg${N}_warmini.nc
+    └── seg${k}_${WIDTH_CONFIG}/
+        ├── ifces2-atlanXL-ML_${PROJECT_NAME}_seg${k}_DOM01_ic.nc
+        ├── ${YYYYMMDD}T${HHMMSS}Z_lbc.nc
+        └── ifces2-atlanXL-ML_${PROJECT_NAME}_seg${k}_warmini.nc
 
 ${TOOLS_ICON_BUILD_DIR}/experiments/
-└── ${PROJECT_NAME}-segment${N}-${DATE}-exp111/
-    ├── exp.${PROJECT_NAME}-segment${N}-${DATE}-exp111.run
-    ├── ICON_master.namelist
-    └── output/
+└── ${PROJECT_NAME}-${PROJECT_WIDTH_CONFIG}-segment${k}-${YYYYMMDDTHHMMZ}-exp111/
+  ├── 2d_*.nc     # 2D output (original ICON grid and regridded)
+  ├── 3d_*.nc     # 3D output (original ICON grid and regridded)
+  └── lam_input_IC*.nc   # for initializaiton of next segment
+
+${TOOLS_ICON_BUILD_DIR}/run/
+├── exp.${PROJECT_NAME}-${PROJECT_WIDTH_CONFIG}-segment${k}-${YYYYMMDDTHHMMZ}-exp111.run   # Active experiment script
+└── post.${PROJECT_NAME}-${PROJECT_WIDTH_CONFIG}-segment${k}-${YYYYMMDDTHHMMZ}-exp111.run  # Post-processing script
 ```
 
 ## Monitoring and Debugging
@@ -314,9 +328,6 @@ ${TOOLS_ICON_BUILD_DIR}/experiments/
 ```bash
 # Monitor all your jobs
 squeue -u $USER
-
-# Watch job progress
-watch "squeue -u $USER"
 
 # Check specific job details
 scontrol show job [job_id]
@@ -362,6 +373,7 @@ For more specific troubleshooting, see individual script documentation and log f
 
 - **[Getting Started Guide](getting_started.md)**: For beginners and installation instructions
 - **[Configuration Reference](configuration_reference.md)**: Complete TOML parameter documentation
+- **[Preparing New Hurricane Cases](preparing_new_hurricane_cases.md)**: Advanced guide for setting up different hurricanes
 - **[Grid Generation](generate_grid_for_hurricane_segments.md)**: Detailed grid generation documentation
 - **[ExtPar Processing](run_extpar_levante.md)**: External parameter processing guide
 - **[Main README](../README.md)**: Project overview and quick start

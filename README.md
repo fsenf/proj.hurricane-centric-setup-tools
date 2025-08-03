@@ -24,7 +24,7 @@ cd scripts/processing-chains
 
 ### 2. Multi-Segment Processing
 ```bash
-./preproc_chain_looper.sh 1 8 -c config/hurricane_config.toml  # Process segments 1 through 8
+./preproc_chain_looper.sh 1 5 -c config/hurricane_config.toml 
 ```
 
 ### 3. Production Run
@@ -42,8 +42,9 @@ cd scripts/processing-chains
 ## Documentation
 
 - **[Getting Started Guide](docs/getting_started.md)** - Installation, setup, and first steps
-- **[Detailed Workflows](docs/detailed_workflows.md)** - Complete workflow documentation
+- **[Detailed Workflows](docs/detailed_workflows.md)** - Complete workflow documentation  
 - **[Configuration Reference](docs/configuration_reference.md)** - TOML configuration options
+- **[Preparing New Hurricane Cases](docs/preparing_new_hurricane_cases.md)** - Advanced: Setup for different hurricanes
 - **[Grid Generation](docs/generate_grid_for_hurricane_segments.md)** - Grid setup workflow
 - **[ExtPar Processing](docs/run_extpar_levante.md)** - External parameter processing
 

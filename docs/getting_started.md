@@ -11,15 +11,10 @@ This guide will help you get up and running with the Hurricane-Centric Setup Too
 
 ### Software Dependencies
 - **ICON Model** with complete installation and tools
-- **Python 3.7+** with required packages:
-  ```bash
-  # Check if you have the required packages
-  python -c "import tomllib, numpy, xarray, netCDF4"
-  # If missing, set up a python user environment and install: pip install tomli numpy xarray netCDF4
-  ```
+- **Python 3.7+** with required packages (tomllib, numpy, xarray, netCDF4)
 - **CDO** (Climate Data Operators)
-- **ICON Tools** from https://gitlab.dkrz.de/dwd-sw/dwd_icon_tools
-- **ExtPar** for external parameter processing
+- **ICON Tools** from https://gitlab.dkrz.de/dwd-sw/dwd_icon_tools for grid generation and regridding
+- **ExtPar** from https://github.com/C2SM/extpar for external parameter processing
 
 ### Input Data Requirements
 You'll need access to:
@@ -31,17 +26,17 @@ You'll need access to:
 
 ### 1. Clone the Repository
 ```bash
-git clone <repository_url> hurricane-centric-setup-tools
+git clone https://github.com/fsenf/proj.hurricane-centric-setup-tools.git hurricane-centric-setup-tools
 cd hurricane-centric-setup-tools
 ```
 
 ### 2. Set up Environment
 ```bash
 # Example for Levante/DKRZ
-module load python3 cdo netcdf
+module load python3 cdo
 
-# Verify your environment
-python -c "import tomllib, numpy, xarray, netCDF4" && echo "✅ Python packages OK"
+# Verify your environment (for Python version <= 3.10)
+python -c "import tomli, numpy, xarray, netCDF4" && echo "✅ Python packages OK"
 which cdo && echo "✅ CDO found"
 ```
 
@@ -56,27 +51,29 @@ vim config/my_config.toml
 
 #### Key Configuration Parameters to Update:
 ```toml
-[paths]
+[tools]
 # Update these paths to match your system
-output_grid_basedir = "/your/path/to/grids"
-output_icbc_basedir = "/your/path/to/icbc"
-tools_icon_build_dir = "/your/path/to/icon/build"
-extpar_input_dir = "/your/path/to/input/data"
+icon_build_dir = "/your/path/to/icon/build/"
 
 [project]
 # Customize your project name
 name = "your-hurricane-project"
+working_dir = "/your/path/to/working/dir/"
+
+[output]
+# Output directories
+grid_basedir = "/your/path/to/grids"
+icbc_basedir = "/your/path/to/icbc"
 ```
+If you do not change `[reference]` and `[track]` parts than you start to test the software with existing data from hurricane Paulette 2020. For setting up own hurricane simulations, please read [Preparing New Hurricane Cases](preparing_new_hurricane_cases.md) carefully.
+
 
 ### 4. Test Your Installation
 ```bash
 # Test configuration parsing
 cd test
-./test_toml_reader.sh
-
-# Run a basic validation
-cd ../utilities
-python check_preprocessing_files.py ../config/my_config.toml 1 grid
+bash test_toml_reader.sh ../config/my_config.toml
+cd ..
 ```
 
 ## Your First Hurricane Simulation
@@ -87,8 +84,8 @@ Start with processing one hurricane segment to verify everything works:
 ```bash
 cd scripts/processing-chains
 
-# Process segment 1 with your configuration
-./run_hurricane_segments_preproc_chain.sh 1 -c ../../config/my_config.toml
+# Process initial segment 2 with your configuration (assuming reinit=12h and one day spinup)
+bash run_hurricane_segments_preproc_chain.sh 2 -c ../../config/my_config.toml
 ```
 
 This will submit 5 SLURM jobs in sequence:
@@ -111,7 +108,7 @@ tail -f ../LOG/slurm-*.out
 ```bash
 # Check if all files were created successfully
 cd ../../utilities
-python check_preprocessing_files.py ../config/my_config.toml 1 all
+python check_preprocessing_files.py ../config/my_config.toml 2 all
 ```
 
 ### Step 4: Run Production Simulation
@@ -119,7 +116,7 @@ Once preprocessing is complete:
 
 ```bash
 cd ../scripts/processing-chains
-./run_hurricane_production_chain.sh 1 -c ../../config/my_config.toml
+./run_hurricane_production_chain.sh 2 -c ../../config/my_config.toml
 ```
 
 ## Common First-Time Issues
@@ -176,3 +173,12 @@ python check_preprocessing_files.py [config] [segment] [type]
 # Monitor jobs
 squeue -u $USER
 ```
+
+## Related Documentation
+
+- **[Detailed Workflows](detailed_workflows.md)**: Complete technical reference for all workflows
+- **[Configuration Reference](configuration_reference.md)**: Complete TOML parameter documentation
+- **[Preparing New Hurricane Cases](preparing_new_hurricane_cases.md)**: Advanced guide for setting up different hurricanes
+- **[Grid Generation](generate_grid_for_hurricane_segments.md)**: Detailed grid generation documentation
+- **[ExtPar Processing](run_extpar_levante.md)**: External parameter processing guide
+- **[Main README](../README.md)**: Project overview and quick start
