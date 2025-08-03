@@ -135,7 +135,7 @@ def check_bc_files(config, segment):
         return 0, 1
     
     # Find all BC files in the directory
-    bc_files = sorted( glob.glob(os.path.join(bc_dir, "*_lbc.nc")) )
+    bc_files = sorted( glob.glob(os.path.join(bc_dir, "[0-9]*_lbc.nc")) )
     
     if not bc_files:
         print(f"No BC files found in {bc_dir}")
