@@ -155,6 +155,7 @@ echo "Found experiment directory: $EXPERIMENT_DIR"
 # Check for successful test run
 #=============================================================================
 
+echo ""
 echo "=== Checking for successful test run ==="
 
 # Look for LAM input files that should have been created by test run
@@ -200,6 +201,7 @@ fi
 # Copy LAM input files to IC/BC directory
 #=============================================================================
 
+echo ""
 echo "=== Copying LAM input files to IC/BC directory ==="
 
 COPIED_FILES=0
@@ -261,7 +263,7 @@ fi
 echo ""
 echo "Created files:"
 for idom in $(seq 1 ${DOMAINS_NESTS}); do
-    TARGET_FILE="${ICBC_DIR}/${TIMESTAMP}_DOM0${idom}_ini.nc"
+    TARGET_FILE="${ICBC_DIR}/${TIMESTAMP}_DOM0${idom}_warmini.nc"
     if [ -f "$TARGET_FILE" ]; then
         echo "  ✓ $(basename $TARGET_FILE)"
     fi
