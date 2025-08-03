@@ -109,7 +109,7 @@ seg="seg${iseg}"
 project_name="${PROJECT_NAME}"
 project_width_config="${PROJECT_WIDTH_CONFIG}"
 
-grids_base_folder="${OUTPUT_GRIDS_BASEDIR}"
+grids_base_folder="${OUTPUT_GRID_BASEDIR}"
 icbc_base_folder="${OUTPUT_ICBC_BASEDIR}"
 domains_nests="${DOMAINS_NESTS}"
 
