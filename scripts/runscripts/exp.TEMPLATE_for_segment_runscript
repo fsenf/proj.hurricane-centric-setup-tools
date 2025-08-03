@@ -13,6 +13,9 @@ test_mode='.TRUE.'  #  via optional flag -t
 
 project_name="hurricane-paulette2020-segments" # from toml config
 project_width_config="width100km_reinit12h" # from toml config
+
+grids_base_folder="/work/bb1376/data/icon/grids-extpar" # from toml config
+icbc_base_folder="/work/bb1376/data/icon/bc-init" # from toml config
 domains_nests=3 # from toml config
 
 start_date="2020-09-08T00:00:00Z" # via `python print_timings.py <config_file> <iseg> START``
@@ -27,8 +30,15 @@ reg_lat_def="14.41,0.01,20.91"   # comes with the above command
 
 
 
+
+
+
+
+
+
+
 #==============================================================================
-# TEMPLATE PART STARTS HERE (at line 31)
+# TEMPLATE PART STARTS HERE (at line 41)
 #==============================================================================
 
 atmo_namelist=NAMELIST_${EXPNAME}
@@ -96,18 +106,15 @@ iforcing=3        # 3 for inwp forcing; 0 for no forcing
 #-----------------------------------------------------------------------------
 # prepare the environment
 #-----------------------------------------------------------------------------
-export MAIN_DIR=/work/bb1376
 
 # absolute path to directory with LAM data
-ICON_DATA_DIR=${MAIN_DIR}/data/icon
 domain_name="${project_name}/${seg}_${project_width_config}"
-
 
 #-------------------------------
 #--- set grid specifications ---
 #-------------------------------
 
-grids_folder=${ICON_DATA_DIR}/"grids-extpar/${domain_name}"
+grids_folder="${grids_base_folder}/${domain_name}"
 grid_1="${project_name}-${seg}_dom1_DOM01"
 grid_2="${project_name}-${seg}_dom2_DOM01"
 grid_3="${project_name}-${seg}_dom3_DOM01"
@@ -125,19 +132,11 @@ else
 fi
 
 
-#-------------------------------
-#--- set external data specs ---
-#-------------------------------
-#LATBC PATH
-LATBC_PATH=$ICON_DATA_DIR/"bc-init/${domain_name}"
 #
 #EXT DATA
-ext_data_path=${grids_folder}  #### TODO need to be changes in sens experiments
-
-#extpar_suffix="external_parameter_icon"
+ext_data_path=${grids_folder}
 extpar_suffix="extpar"
-# external_parameter_icon_atlan-mov_DOM01_tiles.nc from DWD
-# extpar_atlan-mov_DOM01_tiles.nc from local extpar
+
 
 add_link_file $ext_data_path/${extpar_suffix}_${grid_1}_tiles.nc  extpar_${grid_1}.nc
 add_link_file $ext_data_path/${extpar_suffix}_${grid_2}_tiles.nc  extpar_${grid_2}.nc
@@ -146,15 +145,13 @@ add_link_file $ext_data_path/${extpar_suffix}_${grid_3}_tiles.nc  extpar_${grid_
 
 
 
-#INITIAL DATA, e.g. lam_input_IC_DOM02_ML_20200910T000000Z_ini.nc
-init_data_path=$LATBC_PATH
-
 # ${init_date}_DOM01_ini.nc
+latbc_init_folder="${icbc_base_folder}/${domain_name}"
 init_basename="${init_date}"
 
-init_dom1_name=$init_data_path/${init_basename}_DOM01_${init_suffix}.nc
-init_dom2_name=$init_data_path/${init_basename}_DOM02_${init_suffix}.nc
-init_dom3_name=$init_data_path/${init_basename}_DOM03_${init_suffix}.nc
+init_dom1_name=$latbc_init_folder/${init_basename}_DOM01_${init_suffix}.nc
+init_dom2_name=$latbc_init_folder/${init_basename}_DOM02_${init_suffix}.nc
+init_dom3_name=$latbc_init_folder/${init_basename}_DOM03_${init_suffix}.nc
 
 
 ### add_link_file ${init_data_name} ifs2icon_R2B09_DOM01.nc
@@ -235,7 +232,7 @@ cat > ${atmo_namelist} << EOF
  itype_latbc     = 1
  dtime_latbc     = 3600.   ! 3600, 7200, 10800, 14400, 18000, 21600
  nlev_latbc      = 70
- latbc_path      = '${LATBC_PATH}'
+ latbc_path      = '${latbc_init_folder}'
  latbc_filename  = '<y><m><d>T<h>0000Z_lbc.nc'  !e.g. 20200904_T00_lbc.nc
  latbc_boundary_grid    =  '${grids_folder}/${grid_1}_lbc.nc'
  ! latbc_varnames_map_file = '$basedir/run/dict.lem'

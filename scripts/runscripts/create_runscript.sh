@@ -108,6 +108,9 @@ seg="seg${iseg}"
 
 project_name="${PROJECT_NAME}"
 project_width_config="${PROJECT_WIDTH_CONFIG}"
+
+grids_base_folder="${OUTPUT_GRIDS_BASEDIR}"
+icbc_base_folder="${OUTPUT_ICBC_BASEDIR}"
 domains_nests="${DOMAINS_NESTS}"
 
 
@@ -130,7 +133,7 @@ region_bounds=$(python3 "${SCRIPT_DIR}/../../utilities/extract_region_bounds.py"
 echo "$region_bounds" >> "$output_file"
 
 # Extract everything from line 30 onwards from template
-tail -n +30 "$template_file" >> "$output_file"
+tail -n +40 "$template_file" >> "$output_file"
 
 # Make executable
 chmod +x "$output_file"
