@@ -306,9 +306,9 @@ EOF_2C
     
     # Optional: limit number of parallel jobs to avoid overwhelming the system
     # Uncomment and adjust the number based on your system's capabilities
-    # if (( $(jobs -r | wc -l) >= 4 )); then
-    #     wait -n  # wait for any background job to complete
-    # fi
+    if (( $(jobs -r | wc -l) >= 7 )); then
+        wait -n  # wait for any background job to complete
+    fi
 done
 
 # Wait for all background jobs to complete
