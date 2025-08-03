@@ -52,7 +52,11 @@ echo "Segment IC file: $ic_seg_file"
 echo "Target grid file: $to_grid"
 echo "Source grid file: $from_grid"
 
-output_file="/work/bb1376/data/icon/bc-init/${project_name}/seg${to_iseg}_${project_width_config}/ifces2-atlanXL-ML_hurricane-paulette2020-segments_seg${to_iseg}_${project_width_config}_DOM0${i}_warmini.nc"
+# Get timestamp for target segment using utilities/print_timings.py
+config_file="../config/hurricane_config.toml"
+timestamp=$(python3 ../utilities/print_timings.py "$config_file" "$to_iseg" "INIT_DATE")
+
+output_file="/work/bb1376/data/icon/bc-init/${project_name}/seg${to_iseg}_${project_width_config}/${timestamp}_DOM0${i}_warmini.nc"
 echo "Output will be saved to: $output_file"
 
 echo "Changing to IC-BC directory..."

@@ -15,7 +15,8 @@ get_init_date_from_config() {
     local config_file="$1"
     local iseg="$2"
     
-    get_init_date_from_segment "$iseg"
+    # Use print_timings.py for consistent timestamp calculation
+    python3 "$(dirname "${BASH_SOURCE[0]}")/print_timings.py" "$config_file" "$iseg" "INIT_DATE"
 }
 
 # Function to get datafile list from segment number
@@ -54,5 +55,5 @@ setup_ic_bc_config() {
     
     # Set up output name for initial conditions
     local scratch_dir="${SCRATCH:-/scratch/b/b380352}"
-    export OUTNAME="${scratch_dir}/icontools/ifces2-atlanXL-${init_date}T000000Z_${DOMNAME//\//_}_DOM01_ini.nc"
+    export OUTNAME="${scratch_dir}/icontools/${init_date}T000000Z_${DOMNAME//\//_}_DOM01_ini.nc"
 }

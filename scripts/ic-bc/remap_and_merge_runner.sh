@@ -40,7 +40,7 @@
 #   Creates blended initial condition files in the specified output directory:
 #   ${OUTPUT_ICBC_BASEDIR}/${project_name}/seg${to_segment}_${project_width_config}/
 #   
-#   Filename format: ifces2-atlanXL-ML_${project_name}_seg${to_segment}_${project_width_config}_DOM0${domain}_warmini.nc
+#   Filename format: ${YYYYMMDDTHHMMZ}_DOM0${domain}_warmini.nc
 #=============================================================================
 # Levante cpu batch job parameters
 #
@@ -139,7 +139,12 @@ fi
 
 from_iseg=$((to_iseg - 1))
 
+# Calculate segment start time for naming
+module load python3
+segment_start_time=$(python3 "${SCRIPT_DIR}/../../utilities/print_timings.py" "$CONFIG_FILE" "$to_iseg" "INIT_DATE")
+
 echo "Processing from segment $from_iseg to segment $to_iseg"
+echo "Target segment start time: $segment_start_time"
 
 #=============================================================================
 # FUNCTIONS
@@ -250,7 +255,7 @@ for idom in $(seq 1 ${DOMAINS_NESTS}); do
 
     # Use output directory from config
     output_dir="${OUTPUT_ICBC_BASEDIR}/${project_name}/seg${to_iseg}_${project_width_config}"
-    output_file="${output_dir}/ifces2-atlanXL-ML_${project_name}_seg${to_iseg}_${project_width_config}_DOM0${idom}_warmini.nc"
+    output_file="${output_dir}/${segment_start_time}_DOM0${idom}_warmini.nc"
 
     echo "Output will be saved to: $output_file"
 

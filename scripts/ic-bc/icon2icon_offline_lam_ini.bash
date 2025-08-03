@@ -123,6 +123,8 @@ module load python3
 
 # Find IC file using Python utility
 INFILE=$(python "${ORIGINAL_SCRIPT_DIR}/../../utilities/find_icbc_file.py" "$CONFIG_FILE" "$iseg" "IC")
+TIMESTAMP=$(python3 "${SCRIPT_DIR}/../../utilities/print_timings.py" "$CONFIG_FILE" "$iseg" "INIT_DATE")
+
 if [ $? -ne 0 ] || [ -z "$INFILE" ]; then
     echo "Error: IC file not found for segment $iseg"
     exit 1
@@ -149,7 +151,7 @@ for idom in $(seq 1 ${DOMAINS_NESTS}); do
     OUTGRID="${OUTPUT_GRID_BASEDIR}/${DOMNAME}/${PROJECT_NAME}-seg${iseg}_dom${idom}_DOM01.nc"
 
     # Set up output name for initial conditions
-    OUTNAME="ifces2-atlanXL-$(basename ${INFILE} | cut -d'_' -f5 | cut -d'.' -f1)_${DOMNAME//\//_}_DOM0${idom}_ini.nc"
+    OUTNAME="${TIMESTAMP}_DOM0${idom}_ini.nc"
 
     OUT_IC_DIR="${OUTPUT_ICBC_BASEDIR}/${DOMNAME}"
 

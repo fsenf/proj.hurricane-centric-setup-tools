@@ -19,7 +19,7 @@ import glob
 import argparse
 from datetime import datetime, timedelta
 import xarray as xr
-from helpers import load_config
+from helpers import load_config, print_timings
 
 
 def check_netcdf(filepath):
@@ -154,7 +154,7 @@ def check_bc_files(config, segment):
     return valid_count, invalid_count
 
 
-def check_ic_files(config, segment):
+def check_ic_files(config, segment, config_file_path=None):
     """Check if all initial condition files exist and are valid."""
     valid_count = 0
     invalid_count = 0
@@ -177,8 +177,10 @@ def check_ic_files(config, segment):
     
     # Check each domain's IC file
     for idom in range(1, domains_nests + 1):
-        # The pattern from icon2icon_offline_lam_ini.bash
-        ic_pattern = f"ifces2-atlanXL-*_{project_name}_seg{segment}_{width_config}_DOM0{idom}_ini.nc"
+        # Get the timestamp for this segment
+        timestamp = print_timings(config_file_path, segment, "INIT_DATE")
+        # The pattern from updated icon2icon_offline_lam_ini.bash
+        ic_pattern = f"{timestamp}_DOM0{idom}_ini.nc"
         ic_files = glob.glob(os.path.join(ic_dir, ic_pattern))
         
         if not ic_files:
@@ -229,7 +231,7 @@ def main():
                 elif file_type == "bc":
                     valid, invalid = check_bc_files(config, args.segment)
                 elif file_type == "ic":
-                    valid, invalid = check_ic_files(config, args.segment)
+                    valid, invalid = check_ic_files(config, args.segment, args.config_file)
                 
                 # Accumulate totals
                 total_valid += valid
@@ -252,7 +254,7 @@ def main():
             elif args.file_type == "bc":
                 valid, invalid = check_bc_files(config, args.segment)
             elif args.file_type == "ic":
-                valid, invalid = check_ic_files(config, args.segment)
+                valid, invalid = check_ic_files(config, args.segment, args.config_file)
         
         # Print final summary
         if args.file_type == "all":

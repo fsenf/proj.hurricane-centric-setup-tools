@@ -75,7 +75,7 @@ restart_interval="PT0${restart_hours}H"
 checkpoint_interval=${restart_interval}
 
 
-init_date=`echo ${start_date%%:*} | sed 's/\-//g'`
+init_date=`echo ${start_date} | sed 's/\-//g' | sed 's/://g' | sed 's/Z$/Z/'`
 #init_date=`echo ${start_date%%:*} | sed 's/\-//g' | sed 's/T/_T/g'`
 
 #
@@ -149,8 +149,8 @@ add_link_file $ext_data_path/${extpar_suffix}_${grid_3}_tiles.nc  extpar_${grid_
 #INITIAL DATA, e.g. lam_input_IC_DOM02_ML_20200910T000000Z_ini.nc
 init_data_path=$LATBC_PATH
 
-# ifces2-atlanXL-ML_hurricane-paulette2020-segments_seg2_width100km_reinit12h_DOM01_ini.nc
-init_basename="ifces2-atlanXL-ML_${project_name}_${seg}_${project_width_config}"
+# ${init_date}_DOM01_ini.nc
+init_basename="${init_date}"
 
 init_dom1_name=$init_data_path/${init_basename}_DOM01_${init_suffix}.nc
 init_dom2_name=$init_data_path/${init_basename}_DOM02_${init_suffix}.nc
