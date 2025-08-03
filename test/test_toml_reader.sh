@@ -6,7 +6,7 @@
 
 #set -eux  # Enable debugging and exit on error
 
-$CONFIG_FILE=$1
+CONFIG_FILE=$1
 
 # Get script directory
 ORIGINAL_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
