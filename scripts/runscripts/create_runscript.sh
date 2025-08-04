@@ -107,7 +107,6 @@ touch "$output_file"
 cat > "$output_file" << EOF
 # 1. Segment number - read from command line argument iseg=${iseg}
 iseg="${iseg}"
-seg="seg${iseg}"
 
 project_name="${PROJECT_NAME}"
 project_width_config="${PROJECT_WIDTH_CONFIG}"

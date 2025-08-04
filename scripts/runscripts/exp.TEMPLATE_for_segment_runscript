@@ -7,7 +7,6 @@
 # adjustable parameters
 #-------------------------------------------------------------------------------
 iseg=2 # via positional input
-seg="seg${iseg}"
 
 test_mode='.TRUE.'  #  via optional flag -t
 
@@ -37,11 +36,15 @@ reg_lat_def="14.41,0.01,20.91"   # comes with the above command
 
 
 
+
 #==============================================================================
 # TEMPLATE PART STARTS HERE (at line 41)
 #==============================================================================
 
 atmo_namelist=NAMELIST_${EXPNAME}
+
+iseg_string=$(printf "%02d" $iseg)
+seg="seg${iseg_string}"
 
 
 #------------------------------------------------------------------------------
