@@ -362,30 +362,5 @@ python ../utilities/check_preprocessing_files.py ../config/hurricane_config.toml
    - Ensure track covers the simulation time period
    - Validate hurricane position data quality
 
-### File Structure Generated
-
-The configuration generates the following directory structure:
-
-```
-${output.grid_basedir}/
-└── ${project.name}/
-    └── seg${kk}_${project.width_config}/
-        ├── ${project.name}-seg${kk}_dom1_DOM01.nc
-        ├── ${project.name}-seg${kk}_dom2_DOM01.nc
-        └── ${project.name}-seg${kk}_dom3_DOM01.nc
-
-${output.icbc_basedir}/
-└── ${project.name}/
-    └── seg${kk}_${project.width_config}/
-        ├── ifces2-atlanXL-ML_${project.name}_seg${kk}_DOM01_ic.nc
-        ├── ifces2-atlanXL-ML_${project.name}_seg${kk}_DOM01_lbc.nc
-        └── ifces2-atlanXL-ML_${project.name}_seg${kk}_warmini.nc
-
-${tools.icon_build_dir}/experiments/
-└── ${project.name}-segment${kk}-${DATE}-exp111/
-    ├── exp.${project.name}-segment${kk}-${DATE}-exp111.run
-    ├── ICON_master.namelist
-    └── output/
-```
 
 For additional help, see the [Getting Started](getting_started.md) guide, [Preparing New Hurricane Cases](preparing_new_hurricane_cases.md) for advanced setups, or [Detailed Workflows](detailed_workflows.md) documentation.
