@@ -173,8 +173,16 @@ Submitting preprocessing chain for segment 2...
 
 **Usage**:
 ```bash
-./run_hurricane_production_chain.sh [segment_number] [-c config_file] [--nodes N] [--time HH:MM:SS] [--dependency TYPE]
+./run_hurricane_production_chain.sh [segment_number] [-c config_file] [--nodes N] [--time HH:MM:SS] [--dependency TYPE] [--initial]
 ```
+
+**Options**:
+- `segment_number`: Hurricane segment to process
+- `-c, --config`: Path to TOML configuration file
+- `--nodes=N`: Number of compute nodes (default: 64)
+- `--time=HH:MM:SS`: Job time limit (default: 08:00:00) 
+- `--dependency=TYPE`: Job dependency specification for SLURM (default: none)
+- `--initial`: Mark segment as initial run, skips remap/merge and runs set_initial_segment.sh (default: false)
 
 **Workflow Steps**:
 
@@ -199,7 +207,14 @@ Submitting preprocessing chain for segment 2...
 
 **Example**:
 ```bash
+# Basic production run
 ./run_hurricane_production_chain.sh 2 -c ../../config/hurricane_config.toml --nodes=64 --time=08:00:00
+
+# Initial segment (first segment of simulation)
+./run_hurricane_production_chain.sh 1 -c ../../config/hurricane_config.toml --initial
+
+# Production run with dependency on external job
+./run_hurricane_production_chain.sh 2 -c ../../config/hurricane_config.toml --dependency=afterok:12345
 ```
 
 ### 2. Multi-Segment Production
@@ -210,8 +225,17 @@ Submitting preprocessing chain for segment 2...
 
 **Usage**:
 ```bash
-./production_looper.sh start_segment end_segment [-c config_file] [--nodes N] [--time HH:MM:SS]
+./production_looper.sh start_segment end_segment [-c config_file] [--nodes N] [--time HH:MM:SS] [--dependency TYPE] [--initial]
 ```
+
+**Options**:
+- `start_segment`: First segment number to process
+- `end_segment`: Last segment number to process  
+- `-c, --config`: Path to TOML configuration file
+- `--nodes=N`: Number of compute nodes (default: 64)
+- `--time=HH:MM:SS`: Job time limit (default: 08:00:00)
+- `--dependency=TYPE`: Job dependency specification for first sbatch (default: none)
+- `--initial`: Mark first segment as initial run (default: false)
 
 **Key Features**:
 - **Sequential execution**: Each segment waits for previous to complete
@@ -227,11 +251,18 @@ Submitting preprocessing chain for segment 2...
 
 **Example**:
 ```bash
-# First, set up initial segment (run once)
-./set_initial_segment.sh 1 -c ../../config/hurricane_config.toml
-
-# Then start production looper
+# Basic usage
 ./production_looper.sh 1 5 -c ../../config/hurricane_config.toml --nodes=128 --time=12:00:00
+
+# With initial segment setup (recommended for first segment)
+./production_looper.sh 1 5 -c ../../config/hurricane_config.toml --initial
+
+# With dependency chain from external job
+./production_looper.sh 1 5 -c ../../config/hurricane_config.toml --dependency=afterok:12345
+
+# Alternative: Manual setup first, then run looper
+./set_initial_segment.sh 1 -c ../../config/hurricane_config.toml
+./production_looper.sh 1 5 -c ../../config/hurricane_config.toml
 ```
 
 ## Validation and Testing

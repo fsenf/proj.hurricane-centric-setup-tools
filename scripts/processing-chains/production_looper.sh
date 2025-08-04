@@ -20,9 +20,15 @@
 # SLURM OPTIONS:
 #   --nodes=N         - Number of compute nodes (default: 64)
 #   --time=HH:MM:SS   - Job time limit (default: 08:00:00)
+#   --dependency=TYPE - Job dependency specification for first sbatch (default: none)
+#
+# PRODUCTION OPTIONS:
+#   --initial         - Mark first segment as initial run (default: false)
 #
 # EXAMPLES:
 #   ./production_looper.sh 1 5 -c ../../config/hurricane_config.toml
+#   ./production_looper.sh 1 3 -c ../../config/hurricane_config.toml --initial
+#   ./production_looper.sh 1 5 -c ../../config/hurricane_config.toml --dependency=afterok:12345
 #   ./production_looper.sh 1 3 -c ../../config/hurricane_config.toml --nodes=128 --time=12:00:00
 #
 #=============================================================================
@@ -68,6 +74,8 @@ slurm_options=()
 # Default SLURM parameters (similar to starter.sh)
 nodes=64
 ctime="08:00:00"
+dependency=""
+initial=false
 
 for arg in "${REMAINING_ARGS[@]}"; do
     case $arg in
@@ -84,15 +92,25 @@ for arg in "${REMAINING_ARGS[@]}"; do
             echo "SLURM Options:"
             echo "  --nodes=N         Number of compute nodes (default: 64)"
             echo "  --time=HH:MM:SS   Job time limit (default: 08:00:00)"
+            echo "  --dependency=TYPE Job dependency specification for first sbatch (default: none)"
+            echo ""
+            echo "Production Options:"
+            echo "  --initial         Mark first segment as initial run (default: false)"
             echo ""
             echo "Examples:"
             echo "  $0 1 5 -c ../../config/hurricane_config.toml"
             echo "  $0 1 3 -c ../../config/hurricane_config.toml --nodes=128 --time=12:00:00"
+            echo "  $0 1 5 -c ../../config/hurricane_config.toml --initial"
+            echo "  $0 1 3 -c ../../config/hurricane_config.toml --dependency=afterok:12345"
             exit 0
             ;;
-        --nodes=*|--time=*)
+        --nodes=*|--time=*|--dependency=*)
             # These are SLURM options
             slurm_options+=("$arg")
+            ;;
+        --initial)
+            initial=true
+            echo "Initial segment mode enabled"
             ;;
         -*)
             echo "Error: Unknown option $arg"
@@ -157,6 +175,10 @@ for option in "${slurm_options[@]}"; do
             ctime="${option#*=}"
             echo "Using custom time limit: $ctime"
             ;;
+        --dependency=*)
+            dependency="${option#*=}"
+            echo "Using custom dependency: $dependency"
+            ;;
     esac
 done
 
@@ -165,6 +187,10 @@ echo "  Segments: $start_segment to $end_segment"
 echo "  Config: $CONFIG_FILE_ABS"
 echo "  Nodes: $nodes"
 echo "  Time: $ctime"
+echo "  Initial segment: $initial"
+if [[ -n "$dependency" ]]; then
+    echo "  Dependency: $dependency"
+fi
 
 #=============================================================================
 # Production Chain Loop
@@ -221,6 +247,17 @@ for iseg in $(seq $start_segment $end_segment); do
 
     # Set main production command
     chain_cmd="bash run_hurricane_production_chain.sh $iseg -c $CONFIG_FILE_ABS --nodes=$nodes --time=$ctime"
+    
+    if [[ $iseg -eq $start_segment ]]; then
+        # Add dependency option if specified
+        if [[ -n "$dependency" ]]; then
+            chain_cmd="$chain_cmd --dependency=$dependency"
+        fi
+
+        # Add initial option if initial is true
+        if [[ "$initial" == "true" ]]; then
+            chain_cmd="$chain_cmd --initial"
+        fi
 
     if [[ $iseg -eq $start_segment ]]; then
 

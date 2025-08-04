@@ -68,7 +68,7 @@ icbc_basedir = "/your/path/to/icbc"
 If you do not change `[reference]` and `[track]` parts than you start to test the software with existing data from hurricane Paulette 2020. For setting up own hurricane simulations, please read [Preparing New Hurricane Cases](preparing_new_hurricane_cases.md) carefully.
 
 
-### 4. Test Your Installation
+### 4. Test Your Configuration
 ```bash
 # Test configuration parsing
 cd test
@@ -169,10 +169,10 @@ Once you have successfully run your first simulation:
 ./preproc_chain_looper.sh [start] [end] -c [config]
 
 # Single segment production
-./run_hurricane_production_chain.sh [segment] -c [config]
+./run_hurricane_production_chain.sh [segment] -c [config] [--nodes N] [--time HH:MM:SS] [--dependency TYPE] [--initial]
 
 # Multiple segments production (sequential)
-./production_looper.sh [start] [end] -c [config]
+./production_looper.sh [start] [end] -c [config] [--nodes N] [--time HH:MM:SS] [--dependency TYPE] [--initial]
 
 # Validate files
 python check_preprocessing_files.py [config] [segment] [type]

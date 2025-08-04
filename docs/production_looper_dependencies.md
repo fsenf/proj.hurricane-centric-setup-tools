@@ -12,6 +12,13 @@ This document shows the dependency graph for `production_looper.sh` using Mermai
    ```bash
    ./set_initial_segment.sh [segment_number] -c [config_file]
    ```
+   **Alternatively**, use the `--initial` flag with `production_looper.sh` to automatically handle initial segment setup.
+
+## New Options Available
+
+- `--initial`: Automatically runs `set_initial_segment.sh` for the first segment
+- `--dependency=TYPE`: Specify SLURM dependency for the first job
+- `--nodes=N` and `--time=HH:MM:SS`: Custom resource allocation
 
 ```mermaid
 graph TD
