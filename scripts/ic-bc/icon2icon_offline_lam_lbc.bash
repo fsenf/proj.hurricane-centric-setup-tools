@@ -110,6 +110,11 @@ iseg_string=$(printf "%02d" $iseg)
 echo "Formatted segment string: $iseg_string"
 
 #=============================================================================
+# Parallel job control settings
+#=============================================================================
+Njob_parallel=7  # Maximum number of parallel background jobs
+
+#=============================================================================
 # OpenMP environment variables
 #=============================================================================
 export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
@@ -262,6 +267,9 @@ intp_method = 3
 /
 EOF_2A
 
+# Initialize job counter for parallel processing
+njobs=0
+
 # Loop over all BC files
 for datafilename in "${DATAFILELIST[@]}" ; do
     echo "Processing BC file: $datafilename"
@@ -308,9 +316,11 @@ EOF_2C
         rm -f ${ncstorage_file}
     ) &
     
-    # Optional: limit number of parallel jobs to avoid overwhelming the system
-    # Uncomment and adjust the number based on your system's capabilities
-    if (( $(jobs -r | wc -l) >= 7 )); then
+    # Increment job counter
+    ((njobs++))
+    
+    # Wait for jobs if we've reached the parallel limit
+    if (( njobs % Njob_parallel == 0 )); then
         wait -n  # wait for any background job to complete
     fi
 done
