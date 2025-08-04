@@ -78,11 +78,12 @@ slurm_options=()
 nodes=64
 ctime="08:00:00"
 dependency=""
+initial=false
 
 for arg in "${REMAINING_ARGS[@]}"; do
     case $arg in
         -h|--help)
-            echo "Usage: $0 [segment_number] -c|--config config_file [--nodes N] [--time HH:MM:SS] [--dependency TYPE]"
+            echo "Usage: $0 [segment_number] -c|--config config_file [--nodes N] [--time HH:MM:SS] [--dependency TYPE] [--initial]"
             echo ""
             echo "Arguments:"
             echo "  segment_number    Hurricane segment number to check"
@@ -90,12 +91,16 @@ for arg in "${REMAINING_ARGS[@]}"; do
             show_config_help
             echo ""
             echo "SLURM Options:"
-            echo "  --nodes=N         Number of compute nodes (default: 20)"
-            echo "  --time=HH:MM:SS   Job time limit (default: 01:00:00)"
+            echo "  --nodes=N         Number of compute nodes (default: 64)"
+            echo "  --time=HH:MM:SS   Job time limit (default: 08:00:00)"
             echo "  --dependency=TYPE Job dependency specification for first sbatch (default: none)"
+            echo ""
+            echo "Production Options:"
+            echo "  --initial         Mark this as initial segment run (default: false)"
             echo ""
             echo "Examples:"
             echo "  $0 5 -c ../../config/hurricane_config.toml"
+            echo "  $0 1 -c ../../config/hurricane_config.toml --initial"
             echo "  $0 5 -c ../../config/hurricane_config_width100km_reinit12h.toml --nodes=50 --time=02:00:00"
             echo "  $0 5 -c ../../config/hurricane_config.toml --dependency=afterok:12345"
             exit 0
@@ -103,6 +108,10 @@ for arg in "${REMAINING_ARGS[@]}"; do
         --nodes=*|--time=*|--dependency=*)
             # These are SLURM options
             slurm_options+=("$arg")
+            ;;
+        --initial)
+            initial=true
+            echo "Initial segment mode enabled"
             ;;
         -*)
             echo "Error: Unknown option $arg"
@@ -125,7 +134,7 @@ done
 #------------------------------------------------------------------------------
 if [[ -z "$iseg" ]]; then
     echo "Error: segment_number is required"
-    echo "Usage: $0 [segment_number] -c|--config config_file [--nodes N] [--time HH:MM:SS] [--dependency TYPE]"
+    echo "Usage: $0 [segment_number] -c|--config config_file [--nodes N] [--time HH:MM:SS] [--dependency TYPE] [--initial]"
     exit 1
 fi
 
@@ -155,27 +164,50 @@ done
 echo "SLURM configuration:"
 echo "  Nodes: $nodes"
 echo "  Time: $ctime"
+echo "  Initial segment: $initial"
 if [[ -n "$dependency" ]]; then
     echo "  Dependency: $dependency"
 fi
 
 #=============================================================================
-# Submit Remap and Merge Job
+# Submit Remap and Merge Job (only if not initial segment)
 #=============================================================================
 echo "Changing to ic-bc directory..."
 cd "${SCRIPT_DIR}/../ic-bc" 
 
-# Prepare sbatch command for merge job with optional dependency
-merge_sbatch_cmd="sbatch --parsable"
-if [[ -n "$dependency" ]]; then
-    merge_sbatch_cmd="$merge_sbatch_cmd --dependency=$dependency"
+merge_job=""
+starter_dependency=""
+
+if [[ "$initial" != "true" ]]; then
+
+    # Prepare sbatch command for merge job with optional dependency
+    merge_sbatch_cmd="sbatch --parsable"
+    if [[ -n "$dependency" ]]; then
+        merge_sbatch_cmd="$merge_sbatch_cmd --dependency=$dependency"
+    fi
+    merge_sbatch_cmd="$merge_sbatch_cmd remap_and_merge_runner.sh $iseg -c $CONFIG_FILE"
+
+    echo "Submitting merge job with command:"
+    echo "$merge_sbatch_cmd"
+
+    merge_job=$(eval "$merge_sbatch_cmd")
+    starter_dependency="--dependency=afterok:$merge_job"
+else
+    echo "Initial segment mode: skipping remap and merge job"
+
+    # Run set_initial_segment.sh for initial segment setup
+    echo "Running set_initial_segment.sh for initial segment $iseg"
+    bash set_initial_segment.sh $iseg -c $CONFIG_FILE
+    status=$?
+    if [[ $status -ne 0 ]]; then
+        echo "❌ ERROR: set_initial_segment.sh failed with exit code $status"
+        exit $status
+    fi
+
+    if [[ -n "$dependency" ]]; then
+        starter_dependency="--dependency=$dependency"
+    fi
 fi
-merge_sbatch_cmd="$merge_sbatch_cmd remap_and_merge_runner.sh $iseg -c $CONFIG_FILE"
-
-echo "Submitting merge job with command:"
-echo "$merge_sbatch_cmd"
-
-merge_job=$(eval "$merge_sbatch_cmd")
 
 
 #=============================================================================
@@ -201,7 +233,11 @@ fi
 echo -e "\nRunscript detected: $production_runscript"
 echo "Submitting production run to queue..."
 
-# Submit the production job using starter.sh with dependency on merge job
-bash starter.sh --dependency=afterok:$merge_job --nodes=$nodes --time=$ctime $production_runscript
+# Submit the production job using starter.sh with appropriate dependency
+if [[ -n "$starter_dependency" ]]; then
+    bash starter.sh $starter_dependency --nodes=$nodes --time=$ctime $production_runscript
+else
+    bash starter.sh --nodes=$nodes --time=$ctime $production_runscript
+fi
 
 exit 0
