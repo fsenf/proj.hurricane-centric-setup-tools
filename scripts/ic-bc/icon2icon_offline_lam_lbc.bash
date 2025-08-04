@@ -285,7 +285,7 @@ for datafilename in "${DATAFILELIST[@]}" ; do
     (
         # Add geo reference - create temporary merged file
         temp_file=$(mktemp --tmpdir=${PROJECT_WORKING_DIR})
-        cdo merge ${datafilename} ${GEOFILE} ${temp_file}
+        cdo -P 4 merge ${datafilename} ${GEOFILE} ${temp_file}
         
         # Create temporary namelist for this file
         TEMP_NAMELIST_LBC=$(mktemp --suffix=_NAMELIST_ICONREMAP_LBC)
@@ -317,8 +317,8 @@ EOF_2C
     ) &
     
     # Increment job counter
-    echo "Started background job for $datafile"
-    ((njobs++))
+    echo "Started background job for $datafile for $njobs" 
+    njobs=$((njobs + 1))
     
     # Wait for jobs if we've reached the parallel limit
     if (( njobs % Njob_parallel == 0 )); then
