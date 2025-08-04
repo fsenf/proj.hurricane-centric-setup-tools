@@ -2,11 +2,9 @@
 
 This document provides a comprehensive reference for all TOML configuration options used in the Hurricane-Centric Setup Tools.
 
-# Configuration Reference
+## Overview
 
-This document provides a comprehensive reference for all TOML configuration options used in the Hurricane-Centric Setup Tools.
-
-## Configuration File Structure
+### Configuration File Format
 
 The system uses TOML (Tom's Obvious Minimal Language) configuration files. The main configuration file is `config/hurricane_config.toml`.
 
@@ -106,13 +104,17 @@ input_icbc_subdir = "NESTING"
   - Format: NetCDF grid file with ICON mesh information
   - Used for: IC/BC generation and grid templates
 
-- **`input_icbc_dir`** (string): Directory containing reference IC/BC data
-  - Contains: ERA5 or other global model data
-  - Format: Organized by initialization date
+- **`input_icbc_dir`** (string): Main directory containing reference ICON data
+  - Contains: reference ICON data (large domain ICOn simulations)
+  - Format: Typically includes initialization date and experiment name
 
 - **`input_icbc_subdir`** (string): Subdirectory within reference IC/BC dir
   - Format: Typically subdirectory name within the input_icbc_dir
-  - Contains: Actual IC/BC files for interpolation
+  - Contains: 
+    - actual IC/BC files for initialization and boundary conditions
+    - files for IC `lam_input_IC_DOM0?_ML_{init_time}.nc` and BC `lam_input_BC_DOM0?_ML_{init_time}.nc`
+    - should also contain one `lam_input_geo_DOM02_ML.nc` file with variable `z_ifc`
+
 
 ### [track] - Hurricane Track Data
 
@@ -127,7 +129,6 @@ track_file = "ifces2-atlanXL-20200907-exp021-DOM02_paulette_best-fit.nc"
 **Parameters**:
 - **`track_dir`** (string): Hurricane track data directory
   - Contains: Track files for grid center positioning
-  - Format: NetCDF files with hurricane position data
 
 - **`track_file`** (string): Hurricane track filename
   - Format: NetCDF file with time-dependent hurricane position
@@ -148,19 +149,19 @@ dom_width = [60.0, 40.0, 20.0]  # in km
 **Parameters**:
 - **`segment_reinit_hours`** (float): Hours between segment reinitializations
   - Common values: 12.0, 24.0, 48.0
-  - Controls: Temporal overlap between segments
+  - Controls: Temporal extent of segments
   - Example: 12.0 = new segment every 12 hours
 
 - **`segment_length_added`** (float): Additional simulation hours beyond reinit
-  - Purpose: Overlap for warmstart processing
+  - Purpose: Overlap before and after the actual segment for warmstart processing
   - Typical: 3.0 hours
-  - Total segment length: `segment_reinit_hours + segment_length_added`
+  - Total segment length: `segment_reinit_hours + 2 * segment_length_added`
 
 - **`nests`** (integer): Number of nested domains
-  - Range: 1-5 (typically 3)
+  - Range: 1-3 (typically 3)
   - Creates: Domain 1 (coarsest) to Domain N (finest)
 
-- **`dom_width`** (array of floats): Domain widths in kilometers
+- **`dom_width`** (array of floats): Domain cross-track widths in kilometers
   - Length: Must match `nests` parameter
   - Order: Coarsest to finest domain
   - Example: `[60.0, 40.0, 20.0]` for 3 domains
@@ -186,42 +187,6 @@ icbc_basedir = "/work/bb1376/data/icon/bc-init"
 
 ## Configuration Examples
 
-### High-Resolution Configuration
-```toml
-[tools]
-icontools_dir = "/work/bb1376/tools/dwd_icon_tools/icontools"
-extpar_input_dir = "/work/pd1167/extpar-input-data"
-extpar_dir = "/work/bb1376/tools/extpar"
-icon_build_dir = "/work/bb1376/user/fabian/model/icon/icon-builds/icon-release-2024.07/"
-
-[project]
-name = "hurricane-ida2021-hires"
-width_config = "width10km_reinit6h"
-working_dir = "/scratch/b/b380352/icontools"
-
-[reference]
-init_time = "20210828T000000Z"
-expname = "ifces2-atlanXL-20210828-exp042"
-input_grid = "/work/bb1376/data/icon/grids-extpar/atlanXL/atlanXL_R02B10_DOM02.nc"
-input_icbc_dir = "/work/bb1376/data/icon/atlantic-cases/ida/ifces2-atlanXL-20210828-exp042"
-input_icbc_subdir = "NESTING"
-
-[track]
-track_dir = "/work/bb1376/data/icon/atlantic-cases/derived-data/tracks/"
-track_file = "ifces2-atlanXL-20210828-exp042-DOM02_ida_best-fit.nc"
-
-[domains]
-segment_reinit_hours = 6.0
-segment_length_added = 2.0
-nests = 4
-dom_width = [80.0, 40.0, 20.0, 10.0]
-
-[output]
-grid_basedir = "/work/bb1376/data/icon/grids-extpar"
-icbc_basedir = "/work/bb1376/data/icon/bc-init"
-```
-
-### Standard Resolution Configuration
 ```toml
 [tools]
 icontools_dir = "/work/bb1376/tools/dwd_icon_tools/icontools"
@@ -347,14 +312,14 @@ python ../utilities/check_preprocessing_files.py ../config/hurricane_config.toml
 
 ### 3. Domain Configuration
 - Start with 3 nested domains for most applications
-- Ensure sufficient resolution jump between domains (factor of 1.5-2)
+- Grid spacing of the coarsest nest is half of the reference spacing
 - Match domain widths to your hurricane size and computational resources
-- Keep `segment_length_added` small (2-3 hours) for efficient warmstart
+- sufficient cross-track width `dom_width` helps to keep the hurricane laterally
+- sufficient `segment_length_added` help to keep slower or faster progressing hurricanes
 
 ### 4. Timing Configuration
-- Use 12-hour reinit for most hurricane applications
-- Reduce to 6 hours for rapidly evolving hurricanes
-- Use 24 hours for longer simulations or computational constraints
+- Use 24-hour reinit for most hurricane applications
+- Reduce to 12 hours if computational constraints are important
 - Ensure adequate overlap for warmstart processing
 
 ### 5. Version Control
