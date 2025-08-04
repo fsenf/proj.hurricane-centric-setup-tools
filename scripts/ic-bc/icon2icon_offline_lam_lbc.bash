@@ -317,10 +317,14 @@ EOF_2C
     ) &
     
     # Increment job counter
+    echo "Started background job for $datafile"
     ((njobs++))
     
     # Wait for jobs if we've reached the parallel limit
     if (( njobs % Njob_parallel == 0 )); then
+        echo "Waiting for background jobs to complete..."
+        echo "Current job count: $njobs"
+        # Wait for any background job to complete
         wait -n  # wait for any background job to complete
     fi
 done
