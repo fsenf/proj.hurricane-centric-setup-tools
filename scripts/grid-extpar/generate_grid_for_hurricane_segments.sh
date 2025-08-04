@@ -103,6 +103,10 @@ fi
 
 echo "Processing segment: $iseg"
 
+# Format segment number with leading zero for consistent naming
+iseg_string=$(printf "%02d" $iseg)
+echo "Formatted segment string: $iseg_string"
+
 #=============================================================================
 # Environment Setup
 #=============================================================================
@@ -138,16 +142,16 @@ module load python3
 #=============================================================================
 
 # Use configuration values
-DOMNAME="${PROJECT_NAME}/seg${iseg}_${PROJECT_WIDTH_CONFIG}"
+DOMNAME="${PROJECT_NAME}/seg${iseg_string}_${PROJECT_WIDTH_CONFIG}"
 maskdir=${OUTPUT_GRID_BASEDIR}/${DOMNAME}
-maskname=${maskdir}/'${PROJECT_NAME}_mask_${REFERENCE_EXPNAME}_seg${iseg}_dom${idom}.nc'
+maskname=${maskdir}/'${PROJECT_NAME}_mask_${REFERENCE_EXPNAME}_seg${iseg_string}_dom${idom}.nc'
 
 if [ ! -d ${maskdir} ]; then
     mkdir -p ${maskdir}
 fi
 
 outputdir="${OUTPUT_GRID_BASEDIR}/${DOMNAME}"
-outfile=${outputdir}/'${PROJECT_NAME}-seg${iseg}_dom${idom}'
+outfile=${outputdir}/'${PROJECT_NAME}-seg${iseg_string}_dom${idom}'
 
 idom=0
 fname=`eval echo $outfile`"_DOM01.nc"

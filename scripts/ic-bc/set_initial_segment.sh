@@ -96,6 +96,10 @@ fi
 
 echo "Processing segment: $iseg"
 
+# Format segment number with leading zero for consistent naming
+iseg_string=$(printf "%02d" $iseg)
+echo "Formatted segment string: $iseg_string"
+
 # Load python module for timestamp calculation
 module load python3 2>/dev/null || true
 
@@ -117,7 +121,7 @@ echo "Timestamp with seconds: $TIMESTAMP_WITH_SECONDS"
 #=============================================================================
 
 # Set up domain name and paths
-DOMNAME="${PROJECT_NAME}/seg${iseg}_${PROJECT_WIDTH_CONFIG}"
+DOMNAME="${PROJECT_NAME}/seg${iseg_string}_${PROJECT_WIDTH_CONFIG}"
 ICBC_DIR="${OUTPUT_ICBC_BASEDIR}/${DOMNAME}"
 
 # Check if IC/BC directory exists, create if needed

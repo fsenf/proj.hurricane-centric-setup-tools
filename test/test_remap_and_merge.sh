@@ -5,6 +5,10 @@ to_iseg=$1
 idom=$2
 from_iseg=$((to_iseg - 1))
 
+# Format segment numbers with leading zeros for consistent naming
+to_iseg_string=$(printf "%02d" $to_iseg)
+from_iseg_string=$(printf "%02d" $from_iseg)
+
 #=============================================================================
 # FUNCTIONS
 #=============================================================================
@@ -34,10 +38,10 @@ project_width_config="width200km_reinit12h"
 
 i=${idom} # Domain number, can be 1, 2, or 3
 # Define patterns with wildcards instead of hardcoded dates
-ic_bg_pattern="${experiment_dir}/${project_name}-${project_width_config}-segment${to_iseg}-????????-exp108/IC_vertically_interpolated_DOM0${i}.nc"
-ic_seg_pattern="${experiment_dir}/${project_name}-${project_width_config}-segment${from_iseg}-????????-exp109/lam_input_IC_DOM0${i}_ML_????????T??????Z.nc"
-to_grid_pattern="${experiment_dir}/${project_name}-${project_width_config}-segment${to_iseg}-????????-exp108/hurricane-paulette2020-segments-seg${to_iseg}_dom${i}_DOM01.nc"
-from_grid_pattern="${experiment_dir}/${project_name}-${project_width_config}-segment${from_iseg}-????????-exp109/hurricane-paulette2020-segments-seg${from_iseg}_dom${i}_DOM01.nc"
+ic_bg_pattern="${experiment_dir}/${project_name}-${project_width_config}-segment${to_iseg_string}-????????-exp108/IC_vertically_interpolated_DOM0${i}.nc"
+ic_seg_pattern="${experiment_dir}/${project_name}-${project_width_config}-segment${from_iseg_string}-????????-exp109/lam_input_IC_DOM0${i}_ML_????????T??????Z.nc"
+to_grid_pattern="${experiment_dir}/${project_name}-${project_width_config}-segment${to_iseg_string}-????????-exp108/hurricane-paulette2020-segments-seg${to_iseg_string}_dom${i}_DOM01.nc"
+from_grid_pattern="${experiment_dir}/${project_name}-${project_width_config}-segment${from_iseg_string}-????????-exp109/hurricane-paulette2020-segments-seg${from_iseg_string}_dom${i}_DOM01.nc"
 
 # Resolve patterns to actual files
 echo "Resolving file patterns..."
@@ -56,7 +60,7 @@ echo "Source grid file: $from_grid"
 config_file="../config/hurricane_config.toml"
 timestamp=$(python3 ../utilities/print_timings.py "$config_file" "$to_iseg" "INIT_DATE")
 
-output_file="/work/bb1376/data/icon/bc-init/${project_name}/seg${to_iseg}_${project_width_config}/${timestamp}_DOM0${i}_warmini.nc"
+output_file="/work/bb1376/data/icon/bc-init/${project_name}/seg${to_iseg_string}_${project_width_config}/${timestamp}_DOM0${i}_warmini.nc"
 echo "Output will be saved to: $output_file"
 
 echo "Changing to IC-BC directory..."

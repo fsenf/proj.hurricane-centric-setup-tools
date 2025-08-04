@@ -88,6 +88,10 @@ fi
 
 echo "Processing segment: $iseg"
 
+# Format segment number with leading zero for consistent naming
+iseg_string=$(printf "%02d" $iseg)
+echo "Formatted segment string: $iseg_string"
+
 #=============================================================================
 # OpenMP environment variables
 #=============================================================================
@@ -142,7 +146,7 @@ ICONTOOLS_DIR="$TOOLS_ICONTOOLS_DIR"
 INGRID="$REFERENCE_INPUT_GRID"
 
 # Set up domain name and output grid
-DOMNAME="${PROJECT_NAME}/seg${iseg}_${PROJECT_WIDTH_CONFIG}"
+DOMNAME="${PROJECT_NAME}/seg${iseg_string}_${PROJECT_WIDTH_CONFIG}"
 
 # Loop through domains as specified in TOML config
 for idom in $(seq 1 ${DOMAINS_NESTS}); do
@@ -150,7 +154,7 @@ for idom in $(seq 1 ${DOMAINS_NESTS}); do
     
     # Run in background for parallel execution
     (
-        OUTGRID="${OUTPUT_GRID_BASEDIR}/${DOMNAME}/${PROJECT_NAME}-seg${iseg}_dom${idom}_DOM01.nc"
+        OUTGRID="${OUTPUT_GRID_BASEDIR}/${DOMNAME}/${PROJECT_NAME}-seg${iseg_string}_dom${idom}_DOM01.nc"
 
         # Set up output name for initial conditions
         OUTNAME="${TIMESTAMP}_DOM0${idom}_ini.nc"

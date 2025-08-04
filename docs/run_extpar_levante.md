@@ -122,17 +122,17 @@ Processes the following parameters using ExtPar Python scripts:
 ### ExtPar Files
 ```
 output_base/project_name/seg{N}_{width_config}/
-├── extpar_paulette-seg{N}_dom1_tiles.nc    # First nested domain ExtPar
-├── extpar_paulette-seg{N}_dom2_tiles.nc    # Second nested domain ExtPar
-└── extpar_paulette-seg{N}_dom3_tiles.nc    # Third nested domain ExtPar
+├── extpar_paulette-seg{kk}_dom1_tiles.nc    # First nested domain ExtPar
+├── extpar_paulette-seg{kk}_dom2_tiles.nc    # Second nested domain ExtPar
+└── extpar_paulette-seg{kk}_dom3_tiles.nc    # Third nested domain ExtPar
 ```
 
 ### Log Files
 ```
 output_base/project_name/seg{N}_{width_config}/
-├── paulette-seg{N}_dom1.log                # Processing log for domain 1
-├── paulette-seg{N}_dom2.log                # Processing log for domain 2
-└── paulette-seg{N}_dom3.log                # Processing log for domain 3
+├── paulette-seg{kk}_dom1.log                # Processing log for domain 1
+├── paulette-seg{kk}_dom2.log                # Processing log for domain 2
+└── paulette-seg{kk}_dom3.log                # Processing log for domain 3
 ```
 
 ### Intermediate Files

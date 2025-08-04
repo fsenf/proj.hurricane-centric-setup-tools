@@ -110,13 +110,20 @@ tail -f ../LOG/slurm-*.out
 cd ../../utilities
 python check_preprocessing_files.py ../config/my_config.toml 2 all
 ```
+### Step 4: Set Initial Segment
+```bash
+# prepare segment 2 as first segment
+cd ../scripts/ic-bc
+bash set_initial_segment.sh 2 -c ../../config/my_config.toml
+cd ..
+```
 
-### Step 4: Run Production Simulation
+### Step 5: Run Production Simulation
 Once preprocessing is complete:
 
 ```bash
-cd ../scripts/processing-chains
-./run_hurricane_production_chain.sh 2 -c ../../config/my_config.toml
+cd scripts/processing-chains
+bash run_hurricane_production_chain.sh 2 -c ../../config/my_config.toml
 ```
 
 ## Common First-Time Issues

@@ -22,12 +22,12 @@ cd scripts/processing-chains
 ./run_hurricane_segments_preproc_chain.sh 1 -c ../../config/hurricane_config.toml
 ```
 
-### 2. Multi-Segment Processing
+### 2. Multi-Segment Preprocessing
 ```bash
-./preproc_chain_looper.sh 1 5 -c config/hurricane_config.toml 
+./preproc_chain_looper.sh 1 5 -c ../../config/hurricane_config.toml 
 ```
 
-### 3. Production Run
+### 3. Multi-Segment Production Runs
 ```bash
 ./production_looper.sh 1 5 -c ../../config/hurricane_config.toml
 ```

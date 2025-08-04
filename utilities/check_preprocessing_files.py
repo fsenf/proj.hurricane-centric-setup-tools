@@ -49,8 +49,11 @@ def check_grid_files(config, segment):
     domains_nests = config['domains']['nests']
     grid_basedir = config['output']['grid_basedir']
     
+    # Format segment number with leading zero for consistent naming
+    segment_string = f"{segment:02d}"
+    
     # Construct domain path
-    domain_path = f"{project_name}/seg{segment}_{width_config}"
+    domain_path = f"{project_name}/seg{segment_string}_{width_config}"
     grid_dir = os.path.join(grid_basedir, domain_path)
     
     # Check if grid directory exists
@@ -60,7 +63,7 @@ def check_grid_files(config, segment):
     
     # Check each domain's grid file
     for idom in range(1, domains_nests + 1):
-        grid_file = os.path.join(grid_dir, f"{project_name}-seg{segment}_dom{idom}_DOM01.nc")
+        grid_file = os.path.join(grid_dir, f"{project_name}-seg{segment_string}_dom{idom}_DOM01.nc")
         valid, msg = check_netcdf(grid_file)
         print(msg)
         
@@ -84,8 +87,11 @@ def check_extpar_files(config, segment):
     domains_nests = config['domains']['nests']
     grid_basedir = config['output']['grid_basedir']
     
+    # Format segment number with leading zero for consistent naming
+    segment_string = f"{segment:02d}"
+    
     # Construct domain path
-    domain_path = f"{project_name}/seg{segment}_{width_config}"
+    domain_path = f"{project_name}/seg{segment_string}_{width_config}"
     grid_dir = os.path.join(grid_basedir, domain_path)
     
     # Check if grid directory exists
@@ -95,7 +101,7 @@ def check_extpar_files(config, segment):
     
     # Check each domain's extpar file
     for idom in range(1, domains_nests + 1):
-        extpar_file = os.path.join(grid_dir, f"extpar_{project_name}-seg{segment}_dom{idom}_DOM01_tiles.nc")
+        extpar_file = os.path.join(grid_dir, f"extpar_{project_name}-seg{segment_string}_dom{idom}_DOM01_tiles.nc")
         valid, msg = check_netcdf(extpar_file)
         print(msg)
         
@@ -125,8 +131,11 @@ def check_bc_files(config, segment):
     segment_start = init_time + timedelta(hours=float(segment * segment_reinit_hours))
     segment_end = init_time + timedelta(hours=float((segment + 1) * segment_reinit_hours))
     
+    # Format segment number with leading zero for consistent naming
+    segment_string = f"{segment:02d}"
+    
     # Construct domain path
-    domain_path = f"{project_name}/seg{segment}_{width_config}"
+    domain_path = f"{project_name}/seg{segment_string}_{width_config}"
     bc_dir = os.path.join(icbc_basedir, domain_path)
     
     # Check if BC directory exists
@@ -166,8 +175,11 @@ def check_ic_files(config, segment, config_file_path=None):
     domains_nests = config['domains']['nests']
     icbc_basedir = config['output']['icbc_basedir']
     
+    # Format segment number with leading zero for consistent naming
+    segment_string = f"{segment:02d}"
+    
     # Construct domain path
-    domain_path = f"{project_name}/seg{segment}_{width_config}"
+    domain_path = f"{project_name}/seg{segment_string}_{width_config}"
     ic_dir = os.path.join(icbc_basedir, domain_path)
     
     # Check if IC directory exists

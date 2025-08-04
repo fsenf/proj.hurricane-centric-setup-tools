@@ -13,7 +13,7 @@ for fname in ${flist}; do
     echo "Extracted domain: $dom"
 
     source_name=IC_vertically_interpolated_$dom.nc
-    target_name=${init_name/'ini.nc'/'warmini-ref.nc'} # replace dwdFG with warmini
+    target_name=${init_name/'ini.nc'/'warmini.nc'} # replace dwdFG with warmini
 
     echo "moving $source_name to $target_name"
     mv -i $source_name $target_name

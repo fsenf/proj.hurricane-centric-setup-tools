@@ -56,6 +56,9 @@ def main():
     # Load configuration
     config = load_config(config_file)
     
+    # Format segment number with leading zero for consistent naming
+    isegment_string = f"{isegment:02d}"
+    
     # Extract configuration values - updated to match new TOML structure
     project_name = config['project']['name']
     width_config = config['project']['width_config']
@@ -84,9 +87,9 @@ def main():
     if idom == 1:
         geofile = input_grid  # Use input_grid instead of base_grid
     elif idom == 2:
-        geofile = f'{output_base}/{project_name}/seg{isegment}_{width_config}/{project_name}-seg{isegment}_dom1_DOM01.nc'
+        geofile = f'{output_base}/{project_name}/seg{isegment_string}_{width_config}/{project_name}-seg{isegment_string}_dom1_DOM01.nc'
     elif idom == 3:
-        geofile = f'{output_base}/{project_name}/seg{isegment}_{width_config}/{project_name}-seg{isegment}_dom2_DOM01.nc'
+        geofile = f'{output_base}/{project_name}/seg{isegment_string}_{width_config}/{project_name}-seg{isegment_string}_dom2_DOM01.nc'
     else:
         raise ValueError(f"Invalid domain number: {idom}")
 
@@ -134,12 +137,12 @@ def main():
     segment['mask'] = xr.where(distance < w, 1, 0)
 
     # Ensure output directory exists
-    data_path = f'{output_base}/{project_name}/seg{isegment}_{width_config}'
+    data_path = f'{output_base}/{project_name}/seg{isegment_string}_{width_config}'
     if not os.path.exists(data_path):
         os.makedirs(data_path)
 
     # Write output file
-    outname = f'{data_path}/{project_name}_mask_{expname}_seg{isegment}_dom{idom}.nc'
+    outname = f'{data_path}/{project_name}_mask_{expname}_seg{isegment_string}_dom{idom}.nc'
     print(f'...writing segment mask to {outname}')
     segment.to_netcdf(outname)
 

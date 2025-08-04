@@ -299,27 +299,27 @@ Use different configurations for different scenarios:
 ```bash
 ${OUTPUT_GRID_BASEDIR}/
 └── ${PROJECT_NAME}/
-    └── seg${k}_${WIDTH_CONFIG}/
-        ├── ${PROJECT_NAME}-seg${k}_dom1_DOM01.nc
-        ├── ${PROJECT_NAME}-seg${k}_dom2_DOM01.nc
-        └── ${PROJECT_NAME}-seg${k}_dom3_DOM01.nc
+    └── seg${kk}_${WIDTH_CONFIG}/
+        ├── ${PROJECT_NAME}-seg${kk}_dom1_DOM01.nc
+        ├── ${PROJECT_NAME}-seg${kk}_dom2_DOM01.nc
+        └── ${PROJECT_NAME}-seg${kk}_dom3_DOM01.nc
 
 ${OUTPUT_ICBC_BASEDIR}/
 └── ${PROJECT_NAME}/
-    └── seg${k}_${WIDTH_CONFIG}/
-        ├── ifces2-atlanXL-ML_${PROJECT_NAME}_seg${k}_DOM01_ic.nc
+    └── seg${kk}_${WIDTH_CONFIG}/
+        ├── ifces2-atlanXL-ML_${PROJECT_NAME}_seg${kk}_DOM01_ic.nc
         ├── ${YYYYMMDD}T${HHMMSS}Z_lbc.nc
-        └── ifces2-atlanXL-ML_${PROJECT_NAME}_seg${k}_warmini.nc
+        └── ifces2-atlanXL-ML_${PROJECT_NAME}_seg${kk}_warmini.nc
 
 ${TOOLS_ICON_BUILD_DIR}/experiments/
-└── ${PROJECT_NAME}-${PROJECT_WIDTH_CONFIG}-segment${k}-${YYYYMMDDTHHMMZ}-exp111/
+└── ${PROJECT_NAME}-${PROJECT_WIDTH_CONFIG}-segment${kk}-${YYYYMMDDTHHMMZ}-exp111/
   ├── 2d_*.nc     # 2D output (original ICON grid and regridded)
   ├── 3d_*.nc     # 3D output (original ICON grid and regridded)
   └── lam_input_IC*.nc   # for initializaiton of next segment
 
 ${TOOLS_ICON_BUILD_DIR}/run/
-├── exp.${PROJECT_NAME}-${PROJECT_WIDTH_CONFIG}-segment${k}-${YYYYMMDDTHHMMZ}-exp111.run   # Active experiment script
-└── post.${PROJECT_NAME}-${PROJECT_WIDTH_CONFIG}-segment${k}-${YYYYMMDDTHHMMZ}-exp111.run  # Post-processing script
+├── exp.${PROJECT_NAME}-${PROJECT_WIDTH_CONFIG}-segment${kk}-${YYYYMMDDTHHMMZ}-exp111.run   # Active experiment script
+└── post.${PROJECT_NAME}-${PROJECT_WIDTH_CONFIG}-segment${kk}-${YYYYMMDDTHHMMZ}-exp111.run  # Post-processing script
 ```
 
 ## Monitoring and Debugging

@@ -75,6 +75,9 @@ fi
 source "${SCRIPT_DIR}/../../utilities/toml_reader.sh"
 read_toml_config "$config_file"
 
+# Format segment number with leading zero for consistent naming
+iseg_string=$(printf "%02d" $iseg)
+
 module load python3
 
 # Generate start and end dates using print_timings.py
@@ -84,9 +87,9 @@ end_date=$(python3 "${SCRIPT_DIR}/../../utilities/print_timings.py" "$config_fil
 init_date=$(python3 "${SCRIPT_DIR}/../../utilities/print_timings.py" "$config_file" "$iseg" "INIT_DATE")
 
 if [[ $test_mode == ".TRUE." ]]; then
-    expname="${PROJECT_NAME}-${PROJECT_WIDTH_CONFIG}-segment${iseg}-${init_date}-exp110"
+    expname="${PROJECT_NAME}-${PROJECT_WIDTH_CONFIG}-segment${iseg_string}-${init_date}-exp110"
 else
-    expname="${PROJECT_NAME}-${PROJECT_WIDTH_CONFIG}-segment${iseg}-${init_date}-exp111"
+    expname="${PROJECT_NAME}-${PROJECT_WIDTH_CONFIG}-segment${iseg_string}-${init_date}-exp111"
 fi
 
 # Set default output filename if not specified
@@ -125,8 +128,8 @@ EOF
 
 
 # Define grid information
-grid_dir="${OUTPUT_GRID_BASEDIR}/${PROJECT_NAME}/seg${iseg}_${PROJECT_WIDTH_CONFIG}"
-grid_file="${grid_dir}/${PROJECT_NAME}-seg${iseg}_dom1_DOM01.nc"
+grid_dir="${OUTPUT_GRID_BASEDIR}/${PROJECT_NAME}/seg${iseg_string}_${PROJECT_WIDTH_CONFIG}"
+grid_file="${grid_dir}/${PROJECT_NAME}-seg${iseg_string}_dom1_DOM01.nc"
 
 # Add regional bounds extracted from grid file
 region_bounds=$(python3 "${SCRIPT_DIR}/../../utilities/extract_region_bounds.py" "$grid_file" 2>/dev/null)

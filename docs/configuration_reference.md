@@ -177,11 +177,11 @@ icbc_basedir = "/work/bb1376/data/icon/bc-init"
 
 **Parameters**:
 - **`grid_basedir`** (string): Base directory for generated grids
-  - Structure: `${grid_basedir}/${project.name}/seg${N}_${project.width_config}/`
+  - Structure: `${grid_basedir}/${project.name}/seg${kk}_${project.width_config}/`
   - Must have: Write permissions and sufficient disk space
 
 - **`icbc_basedir`** (string): Base directory for IC/BC files
-  - Structure: `${icbc_basedir}/${project.name}/seg${N}_${project.width_config}/`
+  - Structure: `${icbc_basedir}/${project.name}/seg${kk}_${project.width_config}/`
   - Must have: Write permissions and sufficient disk space
 
 ## Configuration Examples
@@ -404,21 +404,21 @@ The configuration generates the following directory structure:
 ```
 ${output.grid_basedir}/
 └── ${project.name}/
-    └── seg${N}_${project.width_config}/
-        ├── ${project.name}-seg${N}_dom1_DOM01.nc
-        ├── ${project.name}-seg${N}_dom2_DOM01.nc
-        └── ${project.name}-seg${N}_dom3_DOM01.nc
+    └── seg${kk}_${project.width_config}/
+        ├── ${project.name}-seg${kk}_dom1_DOM01.nc
+        ├── ${project.name}-seg${kk}_dom2_DOM01.nc
+        └── ${project.name}-seg${kk}_dom3_DOM01.nc
 
 ${output.icbc_basedir}/
 └── ${project.name}/
-    └── seg${N}_${project.width_config}/
-        ├── ifces2-atlanXL-ML_${project.name}_seg${N}_DOM01_ic.nc
-        ├── ifces2-atlanXL-ML_${project.name}_seg${N}_DOM01_lbc.nc
-        └── ifces2-atlanXL-ML_${project.name}_seg${N}_warmini.nc
+    └── seg${kk}_${project.width_config}/
+        ├── ifces2-atlanXL-ML_${project.name}_seg${kk}_DOM01_ic.nc
+        ├── ifces2-atlanXL-ML_${project.name}_seg${kk}_DOM01_lbc.nc
+        └── ifces2-atlanXL-ML_${project.name}_seg${kk}_warmini.nc
 
 ${tools.icon_build_dir}/experiments/
-└── ${project.name}-segment${N}-${DATE}-exp111/
-    ├── exp.${project.name}-segment${N}-${DATE}-exp111.run
+└── ${project.name}-segment${kk}-${DATE}-exp111/
+    ├── exp.${project.name}-segment${kk}-${DATE}-exp111.run
     ├── ICON_master.namelist
     └── output/
 ```

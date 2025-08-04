@@ -105,6 +105,10 @@ fi
 
 echo "Processing segment: $iseg"
 
+# Format segment number with leading zero for consistent naming
+iseg_string=$(printf "%02d" $iseg)
+echo "Formatted segment string: $iseg_string"
+
 #=============================================================================
 # OpenMP environment variables
 #=============================================================================
@@ -152,8 +156,8 @@ echo "Found ${#DATAFILELIST[@]} BC files for segment $iseg"
 INGRID="$REFERENCE_INPUT_GRID"
 
 # Set up domain name and grids
-DOMNAME="${PROJECT_NAME}/seg${iseg}_${PROJECT_WIDTH_CONFIG}"
-OUTGRID="${OUTPUT_GRID_BASEDIR}/${DOMNAME}/${PROJECT_NAME}-seg${iseg}_dom1_DOM01.nc"
+DOMNAME="${PROJECT_NAME}/seg${iseg_string}_${PROJECT_WIDTH_CONFIG}"
+OUTGRID="${OUTPUT_GRID_BASEDIR}/${DOMNAME}/${PROJECT_NAME}-seg${iseg_string}_dom1_DOM01.nc"
 
 # Output directory for boundary data
 OUTDIR="${OUTPUT_ICBC_BASEDIR}/${DOMNAME}"

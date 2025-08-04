@@ -193,11 +193,14 @@ for iseg in $(seq $start_segment $end_segment); do
     echo "Processing segment $iseg..."
     echo "----------------------------------------"
     
+    # Format segment number with leading zero for consistent naming
+    iseg_string=$(printf "%02d" $iseg)
+    
     # Prepare Post-Processing script
 
     # Generate experiment name using segment and date
     init_date=$(python3 "${SCRIPT_DIR}/../../utilities/print_timings.py" "$CONFIG_FILE_ABS" "$iseg" "INIT_DATE")
-    expname="${PROJECT_NAME}-${PROJECT_WIDTH_CONFIG}-segment${iseg}-${init_date}-exp111"
+    expname="${PROJECT_NAME}-${PROJECT_WIDTH_CONFIG}-segment${iseg_string}-${init_date}-exp111"
     echo "Experiment name: $expname"
 
     actual_postproc_script="${SCRIPT_DIR}/../runscripts/post.${expname}.run"

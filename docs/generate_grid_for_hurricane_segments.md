@@ -104,17 +104,17 @@ The script executes the following steps for each nested domain:
 ### Grid Files
 ```
 output_base/project_name/seg{N}_{width_config}/
-├── paulette-seg{N}_dom1_DOM01.nc    # First nested domain
-├── paulette-seg{N}_dom2_DOM01.nc    # Second nested domain
-└── paulette-seg{N}_dom3_DOM01.nc    # Third nested domain (if configured)
+├── paulette-seg{kk}_dom1_DOM01.nc    # First nested domain
+├── paulette-seg{kk}_dom2_DOM01.nc    # Second nested domain
+└── paulette-seg{kk}_dom3_DOM01.nc    # Third nested domain (if configured)
 ```
 
 ### Mask Files
 ```
 output_base/project_name/seg{N}_{width_config}/
-├── paulette_segment_mask_expname_seg{N}_dom1.nc
-├── paulette_segment_mask_expname_seg{N}_dom2.nc
-└── paulette_segment_mask_expname_seg{N}_dom3.nc
+├── paulette_segment_mask_expname_seg{kk}_dom1.nc
+├── paulette_segment_mask_expname_seg{kk}_dom2.nc
+└── paulette_segment_mask_expname_seg{kk}_dom3.nc
 ```
 
 ## SLURM Job Configuration

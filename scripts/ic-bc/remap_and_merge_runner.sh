@@ -139,11 +139,15 @@ fi
 
 from_iseg=$((to_iseg - 1))
 
+# Format segment numbers with leading zeros for consistent naming
+to_iseg_string=$(printf "%02d" $to_iseg)
+from_iseg_string=$(printf "%02d" $from_iseg)
+
 # Calculate segment start time for naming
 module load python3
 segment_start_time=$(python3 "${SCRIPT_DIR}/../../utilities/print_timings.py" "$CONFIG_FILE" "$to_iseg" "INIT_DATE")
 
-echo "Processing from segment $from_iseg to segment $to_iseg"
+echo "Processing from segment $from_iseg (${from_iseg_string}) to segment $to_iseg (${to_iseg_string})"
 echo "Target segment start time: $segment_start_time"
 
 #=============================================================================
@@ -202,15 +206,15 @@ for idom in $(seq 1 ${DOMAINS_NESTS}); do
     #=============================================================================
 
     # Define patterns with wildcards instead of hardcoded dates
-    # ic_bg_pattern="${experiment_dir}/${project_name}-${project_width_config}-segment${to_iseg}-????????-exp108/IC_vertically_interpolated_DOM0${idom}.nc"
+    # ic_bg_pattern="${experiment_dir}/${project_name}-${project_width_config}-segment${to_iseg_string}-????????-exp108/IC_vertically_interpolated_DOM0${idom}.nc"
     
-    ic_bg_dir="${experiment_dir}/${project_name}-${project_width_config}-segment${to_iseg}-????????T????Z-exp110"
+    ic_bg_dir="${experiment_dir}/${project_name}-${project_width_config}-segment${to_iseg_string}-????????T????Z-exp110"
     ic_bg_pattern="${ic_bg_dir}/lam_input_IC_DOM0${idom}_ML_????????T??????Z.nc"
-    to_grid_pattern="${ic_bg_dir}/hurricane-paulette2020-segments-seg${to_iseg}_dom${idom}_DOM01.nc"
+    to_grid_pattern="${ic_bg_dir}/hurricane-paulette2020-segments-seg${to_iseg_string}_dom${idom}_DOM01.nc"
     
-    ic_seg_dir="${experiment_dir}/${project_name}-${project_width_config}-segment${from_iseg}-????????T????Z-exp111"
+    ic_seg_dir="${experiment_dir}/${project_name}-${project_width_config}-segment${from_iseg_string}-????????T????Z-exp111"
     ic_seg_pattern="${ic_seg_dir}/lam_input_IC_DOM0${idom}_ML_????????T??????Z.nc"
-    from_grid_pattern="${ic_seg_dir}/hurricane-paulette2020-segments-seg${from_iseg}_dom${idom}_DOM01.nc"
+    from_grid_pattern="${ic_seg_dir}/hurricane-paulette2020-segments-seg${from_iseg_string}_dom${idom}_DOM01.nc"
 
     # Resolve patterns to actual files
     echo "Resolving file patterns for domain $idom..."
@@ -254,7 +258,7 @@ for idom in $(seq 1 ${DOMAINS_NESTS}); do
     echo "  Source grid file: $from_grid"
 
     # Use output directory from config
-    output_dir="${OUTPUT_ICBC_BASEDIR}/${project_name}/seg${to_iseg}_${project_width_config}"
+    output_dir="${OUTPUT_ICBC_BASEDIR}/${project_name}/seg${to_iseg_string}_${project_width_config}"
     output_file="${output_dir}/${segment_start_time}_DOM0${idom}_warmini.nc"
 
     echo "Output will be saved to: $output_file"

@@ -90,6 +90,10 @@ fi
 
 echo "Processing segment: $iseg"
 
+# Format segment number with leading zero for consistent naming
+iseg_string=$(printf "%02d" $iseg)
+echo "Formatted segment string: $iseg_string"
+
 #=============================================================================
 # OpenMP environment variables
 #=============================================================================
@@ -121,13 +125,13 @@ module purge
 module load python3 
 
 # Set variables from TOML config instead of sourcing extpar_config.sh
-DOMNAME="${PROJECT_NAME}/seg${iseg}_${PROJECT_WIDTH_CONFIG}"
+DOMNAME="${PROJECT_NAME}/seg${iseg_string}_${PROJECT_WIDTH_CONFIG}"
 grid_dir="${OUTPUT_GRID_BASEDIR}/${DOMNAME}"
 
 # Create icon_grid_files array based on TOML config
 declare -a icon_grid_files
 for ((idom = 1; idom <= DOMAINS_NESTS; idom++)); do
-    icon_grid_files+=("${PROJECT_NAME}-seg${iseg}_dom${idom}_DOM01.nc")
+    icon_grid_files+=("${PROJECT_NAME}-seg${iseg_string}_dom${idom}_DOM01.nc")
 done
 
 # Directory with input data for generation of external parameters
