@@ -259,8 +259,6 @@ for iseg in $(seq $start_segment $end_segment); do
             chain_cmd="$chain_cmd --initial"
         fi
 
-    if [[ $iseg -eq $start_segment ]]; then
-
         echo "Executing: $chain_cmd"
         echo ""
         
