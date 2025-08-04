@@ -132,6 +132,39 @@ Submitting preprocessing chain for segment 2...
 
 ## Production Workflows
 
+### 0. Initial Setup (Required Before First Production Run)
+
+**Script**: `set_initial_segment.sh`
+
+**Purpose**: Prepare initial segment for production by copying LAM files from test run
+
+**Usage**:
+```bash
+./set_initial_segment.sh [segment_number] -c|--config config_file
+```
+
+**When to use**:
+- **Once per configuration**: Run before starting any production cycle
+- **After preprocessing**: Must be run after successful preprocessing and test runs
+- **Initial segment only**: Typically run for segment 1 or your starting segment
+
+**What it does**:
+1. Validates test run completion for the specified segment
+2. Copies LAM input files from test run experiment directory
+3. Places files in the appropriate IC/BC directory for production use
+4. Converts filenames to production naming convention
+
+**Example**:
+```bash
+# Prepare segment 1 as the initial segment for production
+./set_initial_segment.sh 1 -c ../../config/hurricane_config.toml
+
+# Or prepare segment 2 if starting from there
+./set_initial_segment.sh 2 -c ../../config/hurricane_config.toml
+```
+
+**⚠️ Important**: This step is **required** before starting production workflows and should only be run once per configuration.
+
 ### 1. Single Segment Production
 
 **Script**: `run_hurricane_production_chain.sh`
@@ -187,8 +220,17 @@ Submitting preprocessing chain for segment 2...
   * the dependency chain for the next segment is started from the final ICON job as part of ICON's automated post-processing capabilities
 - **Resource management**: Consistent resource allocation across segments
 
+**Prerequisites**:
+- All segments must be preprocessed
+- Test runs must be completed and validated
+- **Initial segment setup**: Must run `set_initial_segment.sh` once before starting
+
 **Example**:
 ```bash
+# First, set up initial segment (run once)
+./set_initial_segment.sh 1 -c ../../config/hurricane_config.toml
+
+# Then start production looper
 ./production_looper.sh 1 5 -c ../../config/hurricane_config.toml --nodes=128 --time=12:00:00
 ```
 

@@ -27,7 +27,13 @@ cd scripts/processing-chains
 ./preproc_chain_looper.sh 1 5 -c ../../config/hurricane_config.toml 
 ```
 
-### 3. Multi-Segment Production Runs
+### 3. Set Initial Segment (Required Before Production)
+```bash
+# Run once before starting production workflows
+./set_initial_segment.sh 1 -c ../../config/hurricane_config.toml
+```
+
+### 4. Multi-Segment Production Runs
 ```bash
 ./production_looper.sh 1 5 -c ../../config/hurricane_config.toml
 ```

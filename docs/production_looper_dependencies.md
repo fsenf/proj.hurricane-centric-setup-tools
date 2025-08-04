@@ -2,6 +2,17 @@
 
 This document shows the dependency graph for `production_looper.sh` using Mermaid notation.
 
+## Prerequisites
+
+⚠️ **Important**: Before running `production_looper.sh`, you must complete the initial setup:
+
+1. **Complete preprocessing** for all segments
+2. **Run test simulations** to validate setup
+3. **Set initial segment** (run once): 
+   ```bash
+   ./set_initial_segment.sh [segment_number] -c [config_file]
+   ```
+
 ```mermaid
 graph TD
     %% Main Entry Point
