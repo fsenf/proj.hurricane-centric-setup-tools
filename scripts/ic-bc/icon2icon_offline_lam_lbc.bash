@@ -28,10 +28,10 @@
 # Levante cpu batch job parameters
 #
 #SBATCH --account=bb1376
-#SBATCH --job-name=ifs2icon_lbc
+#SBATCH --job-name=icon2icon_lbc
 #SBATCH --partition=compute
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=4
+#SBATCH --cpus-per-task=8
 #SBATCH --exclusive
 #SBATCH --time=04:00:00
 #SBATCH --mem=0
@@ -112,7 +112,7 @@ echo "Formatted segment string: $iseg_string"
 #=============================================================================
 # Parallel job control settings
 #=============================================================================
-Njob_parallel=7  # Maximum number of parallel background jobs
+Njob_parallel=5  # Maximum number of parallel background jobs
 
 #=============================================================================
 # OpenMP environment variables
@@ -139,11 +139,12 @@ export UCX_HANDLE_ERRORS=bt
 
 export START="srun -l --cpu_bind=verbose --distribution=block:cyclic --ntasks=8 --cpus-per-task=${OMP_NUM_THREADS}"
 
+ncpus=${SLURM_CPUS_PER_TASK}
 cd $PROJECT_WORKING_DIR
 
 # Load python and cdo modules
 module load python3
-module load cdo
+module load cdo nco
 
 # Find BC files using Python utility
 DATAFILELIST=($(python "${ORIGINAL_SCRIPT_DIR}/../../utilities/find_icbc_file.py" "$CONFIG_FILE" "$iseg" "BC"))
@@ -204,68 +205,29 @@ ${START} ${TOOLS_ICONTOOLS_DIR}/iconsub -vv --nml ${TEMP_NAMELIST_SUB}
 rm ${TEMP_NAMELIST_SUB}
 
 #=============================================================================
-# PART II: Extract boundary data
+# PART II: Get Weight file for remapping
 #=============================================================================
 
-# Create directory for weights
-WEIGHTDIR=${OUTDIR}/lbc_weights
-[ ! -d ${WEIGHTDIR} ] && mkdir -p ${WEIGHTDIR}
+# Set up input grid
+source_grid_file=$(mktemp --tmpdir=${PROJECT_WORKING_DIR})
+cdo -selname,cell_area ${REFERENCE_INPUT_GRID} ${source_grid_file}
 
-# Create temporary namelist for field definitions
-TEMP_NAMELIST_FIELDS=$(mktemp --suffix=_NAMELIST_ICONREMAP_FIELDS)
+target_grid_file=$(mktemp --tmpdir=${PROJECT_WORKING_DIR})
+cdo -selname,cell_area ${BOUNDGRID} ${target_grid_file}
 
-cat > ${TEMP_NAMELIST_FIELDS} << EOF_2A
-&input_field_nml
-inputname = "rho"
-outputname = "rho"
-intp_method = 3
-/
-&input_field_nml
-inputname = "qc"
-outputname = "qc"
-intp_method = 3
-/
-&input_field_nml
-inputname = "qi"
-outputname = "qi"
-intp_method = 3
-/
-&input_field_nml
-inputname = "qr"
-outputname = "qr"
-intp_method = 3
-/
-&input_field_nml
-inputname = "qv"
-outputname = "qv"
-intp_method = 3
-/
-&input_field_nml
-inputname = "qs"
-outputname = "qs"
-intp_method = 3
-/
-&input_field_nml
-inputname = "theta_v"
-outputname = "theta_v"
-intp_method = 3
-/
-&input_field_nml
-inputname = "vn"
-outputname = "vn"
-intp_method = 3
-/
-&input_field_nml
-inputname = "w"
-outputname = "w"
-intp_method = 3
-/
-&input_field_nml
-inputname = "z_ifc"
-outputname = "z_ifc"
-intp_method = 3
-/
-EOF_2A
+# Create weights file for remapping
+weights_file=$(mktemp --tmpdir=${PROJECT_WORKING_DIR})
+cdo -P ${SLURM_JOB_CPUS_PER_NODE} gencon,${target_grid_file} ${source_grid_file} ${weights_file}
+
+# Finally set the remap command
+remap_cmd="cdo -P ${ncpus} remap,${target_grid_file},${weights_file}"
+
+#=============================================================================
+# PART III: Remap geofile
+#=============================================================================
+z_ifc_output_file=$(mktemp --tmpdir=${PROJECT_WORKING_DIR})
+${remap_cmd} -selname,z_ifc ${GEOFILE} ${z_ifc_output_file}
+
 
 # Initialize job counter for parallel processing
 njobs=0
@@ -281,39 +243,37 @@ for datafilename in "${DATAFILELIST[@]}" ; do
     outdatafile=${datafile%.*}
     outdatafile=${outdatafile#*ML_}
 
+    FULL_OUTNAME="${OUTDIR}/${outdatafile}_lbc.nc"
+
+    if [ -f "${FULL_OUTNAME}" ]; then
+        echo "Output file ${FULL_OUTNAME} already exists. Removing ${FULL_OUTNAME}."
+        rm -f "${FULL_OUTNAME}"
+    fi
+
     # Run in background for parallel execution
     (
-        # Add geo reference - create temporary merged file
-        temp_file=$(mktemp --tmpdir=${PROJECT_WORKING_DIR})
-        cdo -P 4 merge ${datafilename} ${GEOFILE} ${temp_file}
-        
-        # Create temporary namelist for this file
-        TEMP_NAMELIST_LBC=$(mktemp --suffix=_NAMELIST_ICONREMAP_LBC)
-        
-        # Create unique ncstorage file to avoid conflicts in parallel execution
-        ncstorage_file="${WEIGHTDIR}/ncstorage_lbc_${outdatafile}.tmp"
-        
-        cat > ${TEMP_NAMELIST_LBC} << EOF_2C
-&remap_nml
- in_grid_filename  = '${INGRID}'                         ! file containing grid information of input data
- in_filename       = '${temp_file}'                      ! input data file name
- in_type           = 2                                   ! type of input grid (2: triangular)
- out_grid_filename = '${BOUNDGRID}'                      ! output lateral boundary grid
- out_filename      = '${OUTDIR}/${outdatafile}_lbc.nc'   ! output file name
- out_type          = 2                                   ! type of output grid (2: triangular)
- out_filetype      = 4                                   ! output filetype (4: NetCDF)
- l_have3dbuffer    = .FALSE.                             ! buffer option
- ncstorage_file    = "${ncstorage_file}"
-/
-EOF_2C
+        #=============================================================================
+        # Start remapping
+        #=============================================================================
 
-        ${START} ${TOOLS_ICONTOOLS_DIR}/iconremap -q --remap_nml ${TEMP_NAMELIST_LBC} \
-                 --input_field_nml ${TEMP_NAMELIST_FIELDS} 2>&1
+        echo "Starting remapping for file:" "$datafile"
+        novn_output_file=$(mktemp --tmpdir=${PROJECT_WORKING_DIR})
+        ${remap_cmd} -delname,vn ${datafilename} ${novn_output_file}
         
+        
+        if [ $? -ne 0 ]; then
+            echo "Error: Remapping failed for file: $datafile"
+            exit 1
+        fi
+
+        #=============================================================================
+        # Final variable merging
+        #=============================================================================
+
+        cdo merge ${novn_output_file} ${z_ifc_output_file} ${FULL_OUTNAME}
+
         # Clean up temporary files for this iteration
-        rm ${TEMP_NAMELIST_LBC}
-        rm ${temp_file}
-        rm -f ${ncstorage_file}
+        rm ${novn_output_file}
     ) &
     
     # Increment job counter
@@ -332,10 +292,17 @@ done
 # Wait for all background jobs to complete
 wait
 
-echo "All BC files processed successfully"
+# ==============================================================================
+# PART III: Finalize and clean up
+# ==============================================================================
 
-# Clean up field namelist
-rm ${TEMP_NAMELIST_FIELDS}
+echo "All background jobs completed. Finalizing..."
+# Clean up temporary files
+rm -f ${source_grid_file}
+rm -f ${target_grid_file}
+rm -f ${weights_file}
+rm -f ${z_ifc_output_file}
+
 
 #-----------------------------------------------------------------------------
 exit
