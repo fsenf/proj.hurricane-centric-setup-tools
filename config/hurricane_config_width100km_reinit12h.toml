@@ -6,7 +6,7 @@ extpar_dir = "/work/bb1376/tools/extpar"
 icon_build_dir = "/work/bb1376/user/fabian/model/icon/icon-builds/icon-release-2025.04-2_intel-noopenmp"
 
 [project]
-name = "hurricane-paulette2020-segments"
+name = "hurricane-centric_paulette2020"
 width_config = "width100km_reinit12h"
 working_dir = "/scratch/b/b380352/icontools"
 

@@ -7,7 +7,7 @@ icon_build_dir = "/work/bb1376/user/fabian/model/icon/icon-builds/icon-release-2
 
 [project]
 name = "hurricane-centric_paulette2020"
-width_config = "width100km_reinit24h"
+width_config = "width20km_reinit12h_single"
 working_dir = "/scratch/b/b380352/icontools"
 
 [reference]
@@ -15,8 +15,8 @@ working_dir = "/scratch/b/b380352/icontools"
 init_time = "20200907T000000Z"
 expname = "ifces2-atlanXL-20200907-exp021"
 input_grid = "/work/bb1376/data/icon/grids-extpar/atlanXL/atlanXL_R02B10_DOM02.nc"
-input_icbc_dir = "/work/bb1376/data/icon/atlantic-cases/paulette/ifces2-atlanXL-20200907-exp021"
-input_icbc_subdir = "NESTING"
+input_icbc_dir = "/scratch/b/b380352/icon_experiments/ifces2-atlanXL-20200907-exp021"
+input_icbc_subdir = ""
 
 [track]
 # Hurricane track data
@@ -25,15 +25,14 @@ track_file = "ifces2-atlanXL-20200907-exp021-DOM02_paulette_best-fit.nc"
 
 [domains]
 # Domain configuration
-segment_reinit_hours = 24.0
+segment_reinit_hours = 12.0
 segment_length_added = 3.0
-nests = 3
-# dom_width = [60.0, 40.0, 20.0]  # in km
-dom_width = [300.0, 200.0, 100.0] # in km
+nests = 1
+dom_width = [20.0]  # in km
 
 [output]
 # Output directories
-grid_basedir = "/work/bb1376/data/icon/grids-extpar"
-icbc_basedir = "/work/bb1376/data/icon/bc-init"
+grid_basedir = "/scratch/b/b380352/hurri-test/grids-extpar"
+icbc_basedir = "/scratch/b/b380352/hurri-test/bc-init"
 
 # end of config
