@@ -27,7 +27,7 @@ ulimit -s unlimited
 ulimit -c 0
 
 module purge
-module load Stages/2024 StdEnv Python
+module load Stages/2025 StdEnv Python
 
 export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
 export KMP_AFFINITY=verbose,granularity=fine,scatter
