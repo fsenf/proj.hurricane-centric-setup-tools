@@ -9,6 +9,7 @@ icon_build_dir = "/work/bb1376/user/fabian/model/icon/icon-builds/icon-release-2
 name = "hurricane-paulette2020-segments"
 width_config = "width20km_reinit12h"
 working_dir = "/scratch/b/b380352/icontools"
+system = "levante"
 
 [reference]
 # Reference grids and datasets
