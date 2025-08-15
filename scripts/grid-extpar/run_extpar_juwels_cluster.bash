@@ -33,4 +33,4 @@ export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
 export KMP_AFFINITY=verbose,granularity=fine,scatter
 export OMP_STACKSIZE=128M
 
-./run_extpar_generic.bash
+./run_extpar_generic.bash $@

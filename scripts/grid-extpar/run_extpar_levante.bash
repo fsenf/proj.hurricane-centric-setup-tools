@@ -55,4 +55,4 @@ module purge
 module load python3 
 
 
-./run_extpar_generic.bash
+./run_extpar_generic.bash $@

@@ -53,4 +53,4 @@ export START="srun -l --cpu_bind=verbose --distribution=block:cyclic --ntasks=8 
 # Load python module
 module load python3
 
-./icon2icon_offline_lam_ini_generic.bash
+./icon2icon_offline_lam_ini_generic.bash $@

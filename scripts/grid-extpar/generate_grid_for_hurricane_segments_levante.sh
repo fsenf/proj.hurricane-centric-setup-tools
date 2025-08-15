@@ -65,4 +65,4 @@ export START="srun -l --cpu_bind=verbose --distribution=block:cyclic --ntasks-pe
 
 module load python3
 
-./generate_grid_for_hurricane_segments_generic.sh
+./generate_grid_for_hurricane_segments_generic.sh $@

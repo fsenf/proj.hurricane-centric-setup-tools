@@ -47,4 +47,4 @@ export OMP_STACKSIZE=128M
 
 export START="srun -l --cpu_bind=verbose --distribution=block:cyclic --ntasks-per-node=1 --cpus-per-task=${OMP_NUM_THREADS}"
 
-./generate_grid_for_hurricane_segments_generic.sh
+./generate_grid_for_hurricane_segments_generic.sh $@

@@ -35,4 +35,4 @@ module load GCC OpenMPI Python
 
 export START="srun -l --cpu_bind=verbose --distribution=block:cyclic --ntasks=8 --cpus-per-task=${OMP_NUM_THREADS}"
 
-./icon2icon_offine_lam_ini_generic.bash
+./icon2icon_offine_lam_ini_generic.bash $@

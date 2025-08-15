@@ -76,4 +76,4 @@ export START="srun -l --cpu_bind=verbose --distribution=block:cyclic --ntasks=8 
 module load python3
 module load cdo
 
-./icon2icon_offline_lam_lbc_generic.bash
+./icon2icon_offline_lam_lbc_generic.bash $@

@@ -61,4 +61,4 @@ module load GCC OpenMPI
 module load python3
 module load cdo
 
-./icon2icon_offline_lam_lbc_generic.bash
+./icon2icon_offline_lam_lbc_generic.bash $@
