@@ -32,12 +32,6 @@
 # DATE:
 #   June 2025
 #=============================================================================
-#SBATCH --job-name=testrun_chain  # Specify job name
-#SBATCH --partition=shared        # Specify partition name
-#SBATCH --mem=2G                  # Specify amount of memory needed
-#SBATCH --time=00:05:00           # Set a limit on the total run time
-#SBATCH --account=bb1376          # Charge resources on this project account
-#SBATCH --output=../LOG/slurm-%x-%j.out
 
 
 #=============================================================================
@@ -174,7 +168,7 @@ echo "Using configuration with ${reinit_hours_int}h reinit and ${nnests} nests, 
 #=============================================================================
 # Run check for all file types
 #=============================================================================
-module load python3
+
 
 echo -e "\nRunning file validation check..."
 check_output=$(python "${SCRIPT_DIR}/../../utilities/check_preprocessing_files.py" "$CONFIG_FILE" "$iseg" all)
