@@ -31,7 +31,7 @@
 #SBATCH --job-name=icon2icon_lbc
 #SBATCH --partition=compute
 #SBATCH --nodes=1
-#SBATCH --cpus-per-task=8
+#SBATCH --cpus-per-task=16
 #SBATCH --exclusive
 #SBATCH --time=04:00:00
 #SBATCH --mem=0
@@ -112,7 +112,7 @@ echo "Formatted segment string: $iseg_string"
 #=============================================================================
 # Parallel job control settings
 #=============================================================================
-Njob_parallel=5  # Maximum number of parallel background jobs
+Njob_parallel=2  # Maximum number of parallel background jobs
 
 #=============================================================================
 # OpenMP environment variables
