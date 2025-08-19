@@ -58,3 +58,8 @@ echo ""
 echo "Processing for domain ${idom} completed successfully."
 
 
+# Cleanup temporary files
+rm -f "${ic_segment_novn_file}"
+rm -f "${interpolated_segment_file}"
+rm -f "${intermediate_merged_file}"
+rm -f "${intermediate_merged_file}.new"

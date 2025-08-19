@@ -10,13 +10,14 @@
 #   4. Boundary condition files (BC)
 #
 # USAGE:
-#   ./run_hurricane_testrun_chain.sh [segment_number] [-c|--config config_file]
+#   ./run_hurricane_testrun_chain.sh [segment_number] [-c|--config config_file] [--nodes N]
 #
 # ARGUMENTS:
 #   segment_number  - The hurricane segment number to check
 #
 # OPTIONS:
 #   -c, --config    - Path to TOML configuration file (required)
+#   --nodes=N       - Number of compute nodes (default: 20)
 #   -h, --help      - Show this help message
 #
 # EXIT CODES:
@@ -66,7 +67,7 @@ CONFIG_ARG=$(parse_config_argument "$@")
 # Handle configuration loading
 if [[ -z "$CONFIG_ARG" ]]; then
     echo "Error: Config file is required"
-    echo "Usage: $0 [segment_number] -c|--config config_file"
+    echo "Usage: $0 [segment_number] -c|--config config_file [--nodes N]"
     exit 1
 fi
 
@@ -80,21 +81,32 @@ read_toml_config "$CONFIG_FILE"
 # Remove config arguments and parse remaining arguments
 REMAINING_ARGS=($(remove_config_args "$@"))
 iseg=""
+slurm_options=()
+
+# Default SLURM parameters
+nodes=20
 
 for arg in "${REMAINING_ARGS[@]}"; do
     case $arg in
         -h|--help)
-            echo "Usage: $0 [segment_number] -c|--config config_file"
+            echo "Usage: $0 [segment_number] -c|--config config_file [--nodes N]"
             echo ""
             echo "Arguments:"
             echo "  segment_number    Hurricane segment number to check"
             echo ""
             show_config_help
             echo ""
+            echo "SLURM Options:"
+            echo "  --nodes=N         Number of compute nodes (default: 20)"
+            echo ""
             echo "Examples:"
             echo "  $0 5 -c ../../config/hurricane_config.toml"
-            echo "  $0 5 -c ../../config/hurricane_config_width100km_reinit12h.toml"
+            echo "  $0 5 -c ../../config/hurricane_config_width100km_reinit12h.toml --nodes=30"
             exit 0
+            ;;
+        --nodes=*)
+            # SLURM option
+            slurm_options+=("$arg")
             ;;
         -*)
             echo "Error: Unknown option $arg"
@@ -117,7 +129,7 @@ done
 #------------------------------------------------------------------------------
 if [[ -z "$iseg" ]]; then
     echo "Error: segment_number is required"
-    echo "Usage: $0 [segment_number] -c|--config config_file"
+    echo "Usage: $0 [segment_number] -c|--config config_file [--nodes N]"
     exit 1
 fi
 
@@ -125,6 +137,16 @@ if ! [[ "$iseg" =~ ^[0-9]+$ ]]; then
     echo "Error: segment_number (iseg) must be a number."
     exit 1
 fi
+
+# Override defaults with any provided SLURM options
+for option in "${slurm_options[@]}"; do
+    case "$option" in
+        --nodes=*)
+            nodes="${option#*=}"
+            echo "Using custom node count: $nodes"
+            ;;
+    esac
+done
 
 echo "Checking segment: $iseg"
 
@@ -220,6 +242,6 @@ echo -e "\nRunscript detected: $test_runscript"
 echo "Submitting test run to queue..."
 
 # Run the job using starter.sh with specified parameters
-bash starter.sh --nodes=20 --time=01:00:00 $test_runscript
+bash starter.sh --nodes=$nodes --time=01:00:00 $test_runscript
 
 exit 0

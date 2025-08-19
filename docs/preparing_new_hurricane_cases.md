@@ -177,6 +177,8 @@ If you intend to track on 10m winds then only `u_10m` and `v_10m` are needed. Ho
 - **` reg_lat_def=${reg_lat_def}`**: analysis domain definition need to be chosen carefully, e.g. `reg_lat_def="0,0.06,46"`
 
 
+
+
 ## 3. Hurricane Tracking with TOBAC
 
 ### 3.1 Main Steps for Tracking
@@ -289,7 +291,9 @@ nests = 3
 dom_width = [60.0, 40.0, 20.0]
 ```
 
-### 8.2 File Organization
+
+
+### 6.2 File Organization
 
 Organize your prepared data:
 
@@ -310,9 +314,22 @@ your_hurricane_case/
     └── runs/
 ```
 
-## 9. Summary and Next Steps
 
-### 9.1 Complete Workflow Checklist
+### 6.3 Geofile for BC Regridding
+
+After ICON's reference runs are successfully finished, one additional geofile to be created in advance of BC regridding:
+
+```bash
+cd <experiment_directory>
+module load cdo
+cdo -selname,z_ifc lam_input_IC_DOM02_ML_20200908T000000Z.nc lam_input_geo_DOM02_ML.nc
+```
+`lam_input_geo_DOM02_ML.nc` is a file also stored in the ICON experiment directory holding one variable (`z_ifc`: geometric height at model level interfaces)
+
+
+## 7. Summary and Next Steps
+
+### 7.1 Complete Workflow Checklist
 
 - [ ] **Reference Simulation**: Large domain ICON run with LAM output
 - [ ] **Spinup Assessment**: Determine and exclude spinup period
@@ -323,7 +340,7 @@ your_hurricane_case/
 - [ ] **Segment Planning**: Calculate meaningful segment range
 - [ ] **Hurricane-Centric Runs**: Proceed with processing chains
 
-### 9.2 Learning Recommendations
+### 7.2 Learning Recommendations
 
 **For beginners**: Start with the provided Hurricane Paulette 2020 case using the [Getting Started Guide](getting_started.md) before attempting new cases.
 
@@ -334,7 +351,7 @@ your_hurricane_case/
 - High-performance computing environments
 - NetCDF data handling
 
-### 9.3 Support and Resources
+### 7.3 Support and Resources
 
 - **Reference implementation**: Study the Paulette 2020 case setup
 - **TOBAC documentation**: https://tobac.readthedocs.io/

@@ -52,7 +52,7 @@
 #SBATCH --distribution=block:block
 #SBATCH --mem=30G
 #SBATCH --time=02:00:00
-#SBATCH --output=../LOG/slurm-%x-%j.out
+#SBATCH --output=../LOG/slurm-remapmerge-%j.out
 #=============================================================================
 
 
@@ -210,11 +210,11 @@ for idom in $(seq 1 ${DOMAINS_NESTS}); do
     
     ic_bg_dir="${experiment_dir}/${project_name}-${project_width_config}-segment${to_iseg_string}-????????T????Z-exp110"
     ic_bg_pattern="${ic_bg_dir}/lam_input_IC_DOM0${idom}_ML_????????T??????Z.nc"
-    to_grid_pattern="${ic_bg_dir}/hurricane-paulette2020-segments-seg${to_iseg_string}_dom${idom}_DOM01.nc"
+    to_grid_pattern="${ic_bg_dir}/${project_name}-seg${to_iseg_string}_dom${idom}_DOM01.nc"
     
     ic_seg_dir="${experiment_dir}/${project_name}-${project_width_config}-segment${from_iseg_string}-????????T????Z-exp111"
     ic_seg_pattern="${ic_seg_dir}/lam_input_IC_DOM0${idom}_ML_????????T??????Z.nc"
-    from_grid_pattern="${ic_seg_dir}/hurricane-paulette2020-segments-seg${from_iseg_string}_dom${idom}_DOM01.nc"
+    from_grid_pattern="${ic_seg_dir}/${project_name}-seg${from_iseg_string}_dom${idom}_DOM01.nc"
 
     # Resolve patterns to actual files
     echo "Resolving file patterns for domain $idom..."
@@ -246,9 +246,9 @@ for idom in $(seq 1 ${DOMAINS_NESTS}); do
         files_missing=".TRUE."
     fi
 
-    if [[ "files_missing" == ".TRUE." ]]; then
-        echo "Skipping domain $idom"
-        continue
+    if [[ "$files_missing" == ".TRUE." ]]; then
+        echo "❌ Error: Missing required files for domain $idom. Aborting."
+        exit 2
     fi
 
     echo "Resolved files for domain $idom:"
@@ -285,7 +285,7 @@ for idom in $(seq 1 ${DOMAINS_NESTS}); do
         echo "Output file: $output_file"
     else
         echo "❌ Domain $idom: Remap and merge failed with exit code $exit_code"
-        echo "Continuing with next domain..."
+        exit $exit_code
     fi
     
     echo "Completed domain $idom"
