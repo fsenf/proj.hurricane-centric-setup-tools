@@ -45,12 +45,13 @@ fi
 # Merge the file without u,v with the ${vnormal_file} file containing vn
 echo "Merging vn into the IC file..."
 cdo -P 32 merge ${tmp_file} ${vnormal_file} ${icfile}.new
-
-# Replace original with new file
-# mv ${icfile}.new ${icfile}
+echo "Merged IC file created: ${icfile}.new"
 
 # Cleanup temporary files
-#rm -f ${tmp_file} ${uvedge_file} ${vnormal_file}
+rm -f ${tmp_file}
+rm -f ${uvedge_file}
+rm -f ${uvcenter_file}
+rm -f ${vnormal_file}
 
 echo "Completed: ${icfile} now contains vn instead of u,v"
 

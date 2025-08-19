@@ -52,7 +52,7 @@
 #SBATCH --distribution=block:block
 #SBATCH --mem=30G
 #SBATCH --time=02:00:00
-#SBATCH --output=../LOG/slurm-%x-%j.out
+#SBATCH --output=../LOG/slurm-remapmerge-%j.out
 #=============================================================================
 
 
@@ -285,7 +285,7 @@ for idom in $(seq 1 ${DOMAINS_NESTS}); do
         echo "Output file: $output_file"
     else
         echo "❌ Domain $idom: Remap and merge failed with exit code $exit_code"
-        echo "Continuing with next domain..."
+        exit $exit_code
     fi
     
     echo "Completed domain $idom"
