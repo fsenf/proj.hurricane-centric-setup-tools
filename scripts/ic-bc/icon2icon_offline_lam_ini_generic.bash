@@ -8,6 +8,9 @@
 #
 #=============================================================================
 
+set -eux
+ulimit -s unlimited
+ulimit -c 0
 
 #=============================================================================
 # Configuration and Argument Parsing
@@ -76,6 +79,10 @@ echo "Processing segment: $iseg"
 iseg_string=$(printf "%02d" $iseg)
 echo "Formatted segment string: $iseg_string"
 
+#=============================================================================
+# Environment variables
+#=============================================================================
+ncpus=${SLURM_CPUS_PER_TASK}
 
 cd $PROJECT_WORKING_DIR
 
@@ -97,11 +104,20 @@ echo "Found IC file: $INFILE"
 # Directory containing dwd_icon_tool binaries
 ICONTOOLS_DIR="$TOOLS_ICONTOOLS_DIR"
 
-# Set up input grid
-INGRID="$REFERENCE_INPUT_GRID"
 
 # Set up domain name and output grid
 DOMNAME="${PROJECT_NAME}/seg${iseg_string}_${PROJECT_WIDTH_CONFIG}"
+
+# Create directory for weights
+WORKDIR=`mktemp -d -p ${PROJECT_WORKING_DIR}`
+[ ! -d ${WORKDIR} ] && mkdir -p ${WORKDIR}
+
+# Set up input grid
+INGRID="${WORKDIR}/ingrid.nc"
+
+# select target variable from ingrid
+cdo -selname,cell_area ${REFERENCE_INPUT_GRID} ${INGRID}
+
 
 # Loop through domains as specified in TOML config
 for idom in $(seq 1 ${DOMAINS_NESTS}); do
@@ -121,283 +137,19 @@ for idom in $(seq 1 ${DOMAINS_NESTS}); do
         fi
         FULL_OUTNAME="${OUT_IC_DIR}/${OUTNAME}"
 
-        # Create directory for weights
-        WEIGHTDIR=`mktemp -d -p ${PROJECT_WORKING_DIR}`
-        NAMELIST_FILE=${WEIGHTDIR}/NAMELIST_ICONREMAP_INI
-
-        [ ! -d ${WEIGHTDIR} ] && mkdir -p ${WEIGHTDIR}
-
-        # Generate namelist and run remap for this domain
-        cat > ${NAMELIST_FILE} << REMAP_NML_EOF
-! REMAPPING NAMELIST FILE
-!
-&remap_nml
- in_grid_filename   = "${INGRID}"                           ! file containing grid information of input data
- in_filename        = "${INFILE}"                           ! input data file name
- in_type            = 2                                     ! type of input grid (2: triangular)
- out_grid_filename  = "${OUTGRID}"                          ! containing output grid
- out_filename       = "${FULL_OUTNAME}"                          ! output file name
- out_type           = 2                                     ! type of output grid (2: triangular)
- out_filetype       = 4                                     ! output filetype (4: NetCDF)
- lsynthetic_grid    = .FALSE.                               ! .TRUE. if output grid shall be created from scratch
- ncstorage_file     = "${WEIGHTDIR}/ncstorage_ini.tmp"
-/
-! DEFINITION FOR INPUT DATA FIELD
-&input_field_nml
-inputname = "rho"
-outputname = "rho"
-intp_method = 3
-/
-&input_field_nml
-inputname = "pres"
-outputname = "pres"
-intp_method = 3
-/
-&input_field_nml
-inputname = "qc"
-outputname = "qc"
-intp_method = 3
-/
-&input_field_nml
-inputname = "qi"
-outputname = "qi"
-intp_method = 3
-/
-&input_field_nml
-inputname = "qr"
-outputname = "qr"
-intp_method = 3
-/
-&input_field_nml
-inputname = "qv"
-outputname = "qv"
-intp_method = 3
-/
-&input_field_nml
-inputname = "qs"
-outputname = "qs"
-intp_method = 3
-/
-&input_field_nml
-inputname = "qg"
-outputname = "qg"
-intp_method = 3
-/
-&input_field_nml
-inputname = "qh"
-outputname = "qh"
-intp_method = 3
-/
-&input_field_nml
-inputname = "qnc"
-outputname = "qnc"
-intp_method = 3
-/
-&input_field_nml
-inputname = "qns"
-outputname = "qns"
-intp_method = 3
-/
-&input_field_nml
-inputname = "qnr"
-outputname = "qnr"
-intp_method = 3
-/
-&input_field_nml
-inputname = "qni"
-outputname = "qni"
-intp_method = 3
-/
-&input_field_nml
-inputname = "qng"
-outputname = "qng"
-intp_method = 3
-/
-&input_field_nml
-inputname = "qnh"
-outputname = "qnh"
-intp_method = 3
-/
-&input_field_nml
-inputname = "temp"
-outputname = "temp"
-intp_method = 3
-/
-&input_field_nml
-inputname = "theta_v"
-outputname = "theta_v"
-intp_method = 3
-/
-&input_field_nml
-inputname = "tke" 
-outputname = "tke"
-intp_method = 3
-/
-&input_field_nml
-inputname = "u"
-outputname = "u"
-intp_method = 3
-/
-&input_field_nml
-inputname = "v"
-outputname = "v"
-intp_method = 3
-/
-&input_field_nml
-inputname = "w"
-outputname = "w"
-intp_method = 3
-/
-&input_field_nml
-inputname = "c_t_lk"
-outputname = "c_t_lk"
-intp_method = 3
-/
-&input_field_nml
-inputname = "freshsnow"
-outputname = "freshsnow"
-intp_method = 3
-/
-&input_field_nml
-inputname = "fr_seaice"
-outputname = "fr_seaice"
-intp_method = 3
-/
-&input_field_nml
-inputname = "h_ice"
-outputname = "h_ice"
-intp_method = 3
-/
-&input_field_nml
-inputname = "h_ml_lk"
-outputname = "h_ml_lk"
-intp_method = 3
-/
-&input_field_nml
-inputname = "h_snow"
-outputname = "h_snow"
-intp_method = 3
-/
-&input_field_nml
-inputname = "hsnow_max"
-outputname = "hsnow_max"
-intp_method = 3
-/
-&input_field_nml
-inputname = "qv_s"
-outputname = "qv_s"
-intp_method = 3
-/
-&input_field_nml
-inputname = "rho_snow"
-outputname = "rho_snow"
-intp_method = 3
-/
-&input_field_nml
-inputname = "t_sk"
-outputname = "t_sk"
-intp_method = 3
-/
-&input_field_nml
-inputname = "snowfrac"
-outputname = "snowfrac"
-intp_method = 3
-/
-&input_field_nml
-inputname = "t_bot_lk"
-outputname = "t_bot_lk"
-intp_method = 3
-/
-&input_field_nml
-inputname = "t_g"
-outputname = "t_g"
-intp_method = 3
-/
-&input_field_nml
-inputname = "t_ice"
-outputname = "t_ice"
-intp_method = 3
-/
-&input_field_nml
-inputname = "t_mnw_lk"
-outputname = "t_mnw_lk"
-intp_method = 3
-/
-&input_field_nml
-inputname = "t_seasfc"
-outputname = "t_seasfc"
-intp_method = 3
-/
-&input_field_nml
-inputname = "t_snow"
-outputname = "t_snow"
-intp_method = 3
-/
-&input_field_nml
-inputname = "t_wml_lk"
-outputname = "t_wml_lk"
-intp_method = 3
-/
-&input_field_nml
-inputname = "w_i"
-outputname = "w_i"
-intp_method = 3
-/
-&input_field_nml
-inputname = "gz0"
-outputname = "gz0"
-intp_method = 3
-/
-&input_field_nml
-inputname = "t_so"
-outputname = "t_so"
-intp_method = 3
-loptional = .TRUE.
-/
-&input_field_nml
-inputname = "t_2m"
-outputname = "t_2m"
-intp_method = 3
-/
-&input_field_nml
-inputname = "w_so"
-outputname = "w_so"
-intp_method = 3
-/
-&input_field_nml
-inputname = "w_so_ice"
-outputname = "w_so_ice"
-intp_method = 3
-/
-&input_field_nml
-inputname = "w_snow"
-outputname = "w_snow"
-intp_method = 3
-/
-&input_field_nml
-inputname = "z_ifc"
-outputname = "z_ifc"
-intp_method = 2
-loptional=.TRUE.
-/
-&input_field_nml
-inputname = "z_mc"
-outputname = "z_mc"
-intp_method = 2
-loptional=.TRUE.
-/
-REMAP_NML_EOF
 
         #=============================================================================
         # Start remapping
         #=============================================================================
 
-        ${START} ${ICONTOOLS_DIR}/iconremap --remap_nml ${NAMELIST_FILE}
-        rm ${NAMELIST_FILE}
-        rm -rf ${WEIGHTDIR}
-    ) &
-    
+        echo "Starting remapping for domain $idom"
+        cdo -P $ncpus remapcon,${OUTGRID} -setgrid,${INGRID} -delname,vn ${INFILE} ${FULL_OUTNAME}
 
+        if [ $? -ne 0 ]; then
+            echo "Error: Remapping failed for domain $idom"
+            exit 1
+        fi
+    ) &
 done
 
 # Wait for all domain processing to complete

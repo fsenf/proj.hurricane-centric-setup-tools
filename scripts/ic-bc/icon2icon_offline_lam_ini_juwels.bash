@@ -23,16 +23,7 @@ set -eux
 ulimit -s unlimited
 ulimit -c 0
 
-#=============================================================================
-# OpenMP environment variables
-#=============================================================================
-export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
-export KMP_AFFINITY=verbose,granularity=fine,scatter
-export OMP_STACKSIZE=128M
-
 # Load python module
 module load GCC OpenMPI Python
-
-export START="srun -l --cpu_bind=verbose --distribution=block:cyclic --ntasks=8 --cpus-per-task=${OMP_NUM_THREADS}"
 
 ./icon2icon_offine_lam_ini_generic.bash $@

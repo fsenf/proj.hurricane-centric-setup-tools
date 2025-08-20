@@ -43,11 +43,6 @@ ulimit -s unlimited
 ulimit -c 0
 
 #=============================================================================
-# Parallel job control settings
-#=============================================================================
-Njob_parallel=7  # Maximum number of parallel background jobs
-
-#=============================================================================
 # OpenMP environment variables
 #=============================================================================
 export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
@@ -74,6 +69,6 @@ export START="srun -l --cpu_bind=verbose --distribution=block:cyclic --ntasks=8 
 
 # Load python and cdo modules
 module load python3
-module load cdo
+module load cdo nco
 
 ./icon2icon_offline_lam_lbc_generic.bash $@
