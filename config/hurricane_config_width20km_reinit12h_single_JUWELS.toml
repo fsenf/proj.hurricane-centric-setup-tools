@@ -1,14 +1,16 @@
 [tools]
 # Tool directories and executables
-icontools_dir = "???"
-extpar_input_dir = "???"
-extpar_dir = "???"
-icon_build_dir = "???"
+icontools_dir = "/p/project1/ifces2-scalexa/tools/dwd_icon_tools/icontools"
+extpar_input_dir = "/p/scratch/ifces2-scalexa/extpar-input-data"
+extpar_dir = "/p/project1/ifces2-scalexa/tools/extpar/"
+icon_build_dir = "/p/project1/ifces2-scalexa/roemmer2/icon-mpim/build-jwc-gcc"
 
 [project]
+system = "juwels"
+account = "ifces2-scalexa"
 name = "hurricane-paulette2020-segments"
 width_config = "width20km_reinit12h_single"
-working_dir = "???"
+working_dir = "/p/scratch/ifces2-scalexa/roemmer2/hcs"
 
 [reference]
 # Reference grids and datasets
