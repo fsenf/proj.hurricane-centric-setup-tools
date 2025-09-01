@@ -230,7 +230,7 @@ for iseg in $(seq $start_segment $end_segment); do
     echo "Experiment name: $expname"
 
     actual_postproc_script="${SCRIPT_DIR}/../runscripts/post.${expname}.run"
-    template_file="${SCRIPT_DIR}/../runscripts/post.TEMPLATE_for_segment_runscript"
+    template_file="${SCRIPT_DIR}/../runscripts/post.TEMPLATE_for_segment_runscript_${PROJECT_SYSTEM}"
 
     # Check if template file exists
     if [[ ! -f "$template_file" ]]; then

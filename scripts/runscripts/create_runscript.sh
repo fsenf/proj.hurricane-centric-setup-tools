@@ -78,7 +78,7 @@ read_toml_config "$config_file"
 # Format segment number with leading zero for consistent naming
 iseg_string=$(printf "%02d" $iseg)
 
-module load python3
+#module load python3
 
 # Generate start and end dates using print_timings.py
 start_date=$(python3 "${SCRIPT_DIR}/../../utilities/print_timings.py" "$config_file" "$iseg" "START")

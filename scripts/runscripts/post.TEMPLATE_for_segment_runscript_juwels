@@ -1,0 +1,9 @@
+#!/bin/bash
+#
+#SBATCH --job-name=post_run
+#SBATCH --partition=batch
+#SBATCH --nodes=1
+#SBATCH --time=00:15:00
+#SBATCH --account=ifces2-scalexa
+#SBATCH --output=LOG.slurm-post_run-%j.o
+#=============================================================================

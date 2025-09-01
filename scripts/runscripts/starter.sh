@@ -132,7 +132,7 @@ icon_run_dir=${TOOLS_ICON_BUILD_DIR}/run
 # Default SLURM parameters
 nodes=160
 ctime="08:00:00"
-account="bb1376"
+account="${PROJECT_ACCOUNT:-bb1376}"
 dependency=""
 
 # Override defaults with any provided SLURM options
@@ -241,7 +241,7 @@ for arg in "${exp_arguments[@]}"; do
 done
 
 # Prepare sbatch command - pass resolved script directory as first argument
-sbatch_cmd="sbatch  --purge-slurm-env --mem=0"
+sbatch_cmd="sbatch  --mem=0"
 if [[ -n "$dependency" ]]; then
     sbatch_cmd="$sbatch_cmd --dependency=$dependency"
 fi
