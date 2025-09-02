@@ -38,6 +38,6 @@
 #SBATCH --account=ifces2-scalexa          # Charge resources on this project account
 #SBATCH --output=../LOG/slurm-%x-%j.out
 
-module load StdEnv Python SciPy-Stack netcdf4-python
+module load StdEnv Python SciPy-Stack netcdf4-python Cartopy
 
 ./run_hurricane_testrun_chain_generic.sh $@

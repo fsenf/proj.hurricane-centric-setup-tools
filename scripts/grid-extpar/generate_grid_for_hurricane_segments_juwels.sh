@@ -38,7 +38,7 @@ ulimit -c 0
 # Environment Setup
 #=============================================================================
 
-module load Stages/2025 GCC OpenMPI Python
+module load Stages/2025 GCC OpenMPI Python netCDF-Fortran ecCodes
 
 # OpenMP environment variables
 export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}

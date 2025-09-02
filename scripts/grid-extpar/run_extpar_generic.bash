@@ -88,7 +88,7 @@ extpar_dir="$TOOLS_EXTPAR_DIR"
 out_dir=${grid_dir}
 
 # Set PYTHONPATH to point to ExtPar libraries and namelist.py, which is located in out_dir
-export PYTHONPATH=${extpar_dir}/python/lib:${out_dir}
+export PYTHONPATH=${extpar_dir}/python/lib:${out_dir}:$PYTHONPATH
 
 # Create and change into out_dir
 if [ ! -d ${out_dir} ] ; then

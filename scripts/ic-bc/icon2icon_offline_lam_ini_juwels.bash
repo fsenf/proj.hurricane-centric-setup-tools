@@ -24,6 +24,6 @@ ulimit -s unlimited
 ulimit -c 0
 
 # Load python module
-module load GCC OpenMPI Python
+module load GCC OpenMPI Python CDO
 
-./icon2icon_offine_lam_ini_generic.bash $@
+./icon2icon_offline_lam_ini_generic.bash $@
