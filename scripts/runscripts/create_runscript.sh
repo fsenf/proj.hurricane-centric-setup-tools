@@ -92,11 +92,14 @@ fi
 
 # Set default output filename if not specified
 if [[ -z "$output_file" ]]; then
-    output_file="exp.${expname}"
+    # Create auto-generated directory and set output path
+    autogen_dir="${SCRIPT_DIR}/auto-generated"
+    mkdir -p "$autogen_dir"
+    output_file="${autogen_dir}/exp.${expname}"
 fi
 
 # Path to template file
-template_file="${SCRIPT_DIR}/exp.TEMPLATE_for_segment_runscript"
+template_file="${SCRIPT_DIR}/templates/exp.TEMPLATE_for_segment_runscript"
 
 # initialize output file
 touch "$output_file"
