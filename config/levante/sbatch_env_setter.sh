@@ -71,6 +71,14 @@ case "$TYPE" in
         export SBATCH_TIME="08:00:00"
         ;;    
     
+    postproc|postprocessing)
+        export SBATCH_JOB_NAME="postproc"
+        export SBATCH_PARTITION="shared"
+        export SBATCH_NTASKS="1"
+        export SBATCH_TIME="00:05:00"
+        export SBATCH_MEM="2G"
+        ;;
+    
     default|*)
         export SBATCH_JOB_NAME="hurricane_job"
         export SBATCH_NODES="1"

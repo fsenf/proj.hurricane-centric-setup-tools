@@ -221,6 +221,22 @@ if [[ -n "$dependency" ]]; then
 fi
 
 #=============================================================================
+# Generate Platform-Specific Post-Processing Template
+#=============================================================================
+echo ""
+echo "Generating platform-specific post-processing template..."
+
+# Create the platform-specific template using dedicated script
+template_file="${SCRIPT_DIR}/../runscripts/auto-generated/post.TEMPLATE_for_segment_runscript"
+bash "${SCRIPT_DIR}/../../utilities/create_post_template.sh" "$template_file"
+
+if [[ ! -f "$template_file" ]]; then
+    echo "❌ ERROR: Failed to create platform-specific template"
+    exit 1
+fi
+
+
+#=============================================================================
 # Production Chain Loop
 #=============================================================================
 
@@ -256,14 +272,11 @@ for iseg in $(seq $start_segment $end_segment); do
     expname="${PROJECT_NAME}-${PROJECT_WIDTH_CONFIG}-segment${iseg_string}-${init_date}-exp111"
     echo "Experiment name: $expname"
 
-    actual_postproc_script="${SCRIPT_DIR}/../runscripts/post.${expname}.run"
-    template_file="${SCRIPT_DIR}/../runscripts/post.TEMPLATE_for_segment_runscript"
+    # Create auto-generated directory and set paths
+    autogen_dir="${SCRIPT_DIR}/../runscripts/auto-generated"
+    mkdir -p "$autogen_dir"
+    actual_postproc_script="${autogen_dir}/post.${expname}.run"
 
-    # Check if template file exists
-    if [[ ! -f "$template_file" ]]; then
-        echo "❌ ERROR: Template file not found: $template_file"
-        exit 1
-    fi
 
     # Create post-processing script from template
     cat "$template_file" > "$actual_postproc_script"
