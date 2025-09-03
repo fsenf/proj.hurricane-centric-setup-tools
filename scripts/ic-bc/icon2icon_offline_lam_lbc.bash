@@ -30,12 +30,40 @@ ulimit -s unlimited
 ulimit -c 0
 
 #=============================================================================
-# Configuration and Argument Parsing
+# Platform Detection and Module Loading
 #=============================================================================
 
 # Get script directory
 ORIGINAL_SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
 echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
+
+# Detect platform and load platform-specific modules
+PLATFORM=$("${ORIGINAL_SCRIPT_DIR}/../../utilities/detect_platform.sh")
+echo "Detected platform: ${PLATFORM}"
+echo "Hostname: $(hostname)"
+
+# Load platform-specific modules
+module_loader_path="${ORIGINAL_SCRIPT_DIR}/../../config/${PLATFORM}/module_loader.sh"
+if [[ -f "$module_loader_path" ]]; then
+    echo "Loading modules for platform: ${PLATFORM}"
+    source "$module_loader_path"
+else
+    echo "Warning: No module loader found for platform ${PLATFORM} at ${module_loader_path}"
+fi
+
+#=============================================================================
+# Environment Setup
+#=============================================================================
+
+# SLURM execution command setup
+START="srun -l --cpu_bind=verbose --distribution=block:cyclic --ntasks-per-node=8 --cpus-per-task=${SLURM_CPUS_PER_TASK:-${OMP_NUM_THREADS:-1}}"
+
+# Set up parallel execution if available
+export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK:-${OMP_NUM_THREADS:-1}}
+
+#=============================================================================
+# Configuration and Argument Parsing
+#=============================================================================
 
 # Load shared configuration handler
 source "${ORIGINAL_SCRIPT_DIR}/../../utilities/config_handler.sh"

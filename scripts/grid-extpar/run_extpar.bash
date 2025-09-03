@@ -1,10 +1,53 @@
+#!/bin/bash
+# filepath: /home/b/b380352/proj/2025-05_hurricane-centric-setup-tools/scripts/grid-extpar/run_extpar.bash
 #=============================================================================
-# Configuration and Argument Parsing
+# DESCRIPTION:
+#   External parameter generation script for hurricane segments. Generates
+#   topography, land use, soil, and other external parameters for ICON grids
+#   using the ExtPar preprocessing tool.
+#
+# USAGE:
+#   ./run_extpar.bash [segment_number] [-c|--config config_file]
+#
+# ARGUMENTS:
+#   segment_number  - Hurricane segment number to process
+#
+# OPTIONS:
+#   -c, --config    - Path to TOML configuration file (optional)
+#                     Default: ../../config/hurricane_config.toml
+#                     Relative paths are resolved from script directory
+#   -h, --help      - Show this help message
+#
+#=============================================================================
+
+ulimit -s unlimited
+ulimit -c 0
+
+#=============================================================================
+# Platform Detection and Module Loading
 #=============================================================================
 
 # Get script directory
 ORIGINAL_SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
 echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
+
+# Detect platform and load platform-specific modules
+PLATFORM=$("${ORIGINAL_SCRIPT_DIR}/../../utilities/detect_platform.sh")
+echo "Detected platform: ${PLATFORM}"
+echo "Hostname: $(hostname)"
+
+# Load platform-specific modules
+module_loader_path="${ORIGINAL_SCRIPT_DIR}/../../config/${PLATFORM}/module_loader.sh"
+if [[ -f "$module_loader_path" ]]; then
+    echo "Loading modules for platform: ${PLATFORM}"
+    source "$module_loader_path"
+else
+    echo "Warning: No module loader found for platform ${PLATFORM} at ${module_loader_path}"
+fi
+
+#=============================================================================
+# Configuration and Argument Parsing
+#=============================================================================
 
 # Load shared configuration handler
 source "${ORIGINAL_SCRIPT_DIR}/../../utilities/config_handler.sh"
