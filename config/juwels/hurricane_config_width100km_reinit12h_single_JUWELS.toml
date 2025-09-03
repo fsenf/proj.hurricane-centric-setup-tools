@@ -6,7 +6,9 @@ extpar_dir = "/p/project1/ifces2-scalexa/tools/extpar/"
 icon_build_dir = "/p/scratch/ifces2-scalexa/senf1/tmp/icon-build/build-jwc-gcc"
 
 [project]
-name = "hurricane-paulette2020-segments"
+system = "juwels"
+account = "ifces2-scalexa"
+name = "hurricane-centric_paulette2020"
 width_config = "width20km_reinit12h_single"
 working_dir = "/p/scratch/ifces2-scalexa/senf1/tmp"
 
@@ -28,11 +30,11 @@ track_file = "ifces2-atlanXL-20200907-exp021-DOM02_paulette_best-fit.nc"
 segment_reinit_hours = 12.0
 segment_length_added = 3.0
 nests = 1
-dom_width = [20.0]  # in km
+dom_width = [300.0] # in km
 
 [output]
 # Output directories
-grid_basedir = "/p/scratch/ifces2-scalexa/senf1/tmp/grids-extpar"
-icbc_basedir = "/p/scratch/ifces2-scalexa/senf1/tmp/bc-init"
+grid_basedir = "/p/scratch/ifces2-scalexa/senf1/data/icon/grids-extpar"
+icbc_basedir = "/p/scratch/ifces2-scalexa/senf1/data/icon/bc-init"
 
 # end of config
