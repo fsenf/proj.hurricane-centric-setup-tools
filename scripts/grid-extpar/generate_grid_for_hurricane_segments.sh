@@ -19,33 +19,6 @@
 #
 #=============================================================================
 
-#=============================================================================
-# Platform Detection and Configuration Loading
-#=============================================================================
-
-# Detect platform and load platform-specific configuration
-PLATFORM=${PLATFORM:-$($(dirname "${BASH_SOURCE[0]}")/../../utilities/detect_platform.sh)}
-
-# Load platform-specific modules
-source "$(dirname "${BASH_SOURCE[0]}")/../../config/${PLATFORM}/module_loader.sh"
-
-# Load platform-specific SBATCH settings for grid generation
-source "$(dirname "${BASH_SOURCE[0]}")/../../config/${PLATFORM}/sbatch_env_setter.sh" "grid_gen"
-
-# Generate dynamic SBATCH header (only when submitted via sbatch)
-if [[ -n "$SLURM_JOB_ID" || "$1" == "--generate-sbatch" ]]; then
-cat << EOF
-#SBATCH --job-name=${SBATCH_JOB_NAME}
-#SBATCH --partition=${SBATCH_PARTITION}
-#SBATCH --nodes=${SBATCH_NODES}
-#SBATCH --cpus-per-task=${SBATCH_CPUS_PER_TASK}
-#SBATCH --time=${SBATCH_TIME}
-#SBATCH --account=${SBATCH_ACCOUNT}
-#SBATCH --output=${SBATCH_OUTPUT}
-#SBATCH --exclusive=${SBATCH_EXCLUSIVE}
-#SBATCH --mem=${SBATCH_MEM}
-EOF
-fi
 
 #=============================================================================
 # Environment Setup
