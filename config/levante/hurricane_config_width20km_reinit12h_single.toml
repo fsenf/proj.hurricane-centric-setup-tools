@@ -15,8 +15,8 @@ working_dir = "/scratch/b/b380352/icontools"
 init_time = "20200907T000000Z"
 expname = "ifces2-atlanXL-20200907-exp021"
 input_grid = "/work/bb1376/data/icon/grids-extpar/atlanXL/atlanXL_R02B10_DOM02.nc"
-input_icbc_dir = "/scratch/b/b380352/icon_experiments/ifces2-atlanXL-20200907-exp021"
-input_icbc_subdir = ""
+input_icbc_dir = "/work/bb1376/data/icon/atlantic-cases/paulette/ifces2-atlanXL-20200907-exp021"
+input_icbc_subdir = "NESTING"
 
 [track]
 # Hurricane track data
@@ -32,7 +32,7 @@ dom_width = [20.0]  # in km
 
 [output]
 # Output directories
-grid_basedir = "/scratch/b/b380352/hurri-test/grids-extpar"
-icbc_basedir = "/scratch/b/b380352/hurri-test/bc-init"
+grid_basedir = "/scratch/b/b380352/hurri-test02/grids-extpar"
+icbc_basedir = "/scratch/b/b380352/hurri-test02/bc-init"
 
 # end of config
