@@ -41,8 +41,6 @@
 
 # Get script directory
 
-ORIGINAL_SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
-
 if [[ -z "$ORIGINAL_SCRIPT_DIR" ]]; then
     ORIGINAL_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 fi
