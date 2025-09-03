@@ -21,7 +21,6 @@ TYPE=${1:-default}
 export SBATCH_ACCOUNT="bb1376"
 export SBATCH_PARTITION="compute"
 export SBATCH_OUTPUT="../LOG/slurm-%x-%j.out"
-export SBATCH_EXCLUSIVE="true"
 export SBATCH_MEM="0"
 
 # Script-specific configurations
