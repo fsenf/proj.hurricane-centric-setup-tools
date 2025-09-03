@@ -35,6 +35,7 @@ resolve_unique_file() {
 experiment_dir=/work/bb1376/user/fabian/model/icon/icon-builds/icon-release-2024.07/experiments
 project_name="hurricane-paulette2020-segments"
 project_width_config="width200km_reinit12h"
+PROJECT_WORKING_DIR='~/scratch/icontools'
 
 i=${idom} # Domain number, can be 1, 2, or 3
 # Define patterns with wildcards instead of hardcoded dates
@@ -67,5 +68,10 @@ echo "Changing to IC-BC directory..."
 cd ../scripts/ic-bc || exit 1
 
 echo "Running remap and merge..."
-bash remap_and_merge_icfiles_for_warmstart.sh "${ic_seg_file}" "${ic_bg_file}" "${from_grid}" "${to_grid}" "${output_file}"
+bash remap_and_merge_icfiles_for_warmstart.sh "${ic_seg_file}" \
+    "${ic_bg_file}" \
+    "${from_grid}" \ 
+    "${to_grid}" \
+    "${output_file}" \
+    "${PROJECT_WORKING_DIR}"
 

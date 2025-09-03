@@ -3,6 +3,7 @@
 
 gridfile=$1
 icfile=$2
+work_dir=$3
 
 # remove_uv_flag="True"
 remove_uv_flag="False"
@@ -10,7 +11,6 @@ remove_uv_flag="False"
 
 script_dir=`readlink -f $(dirname $0)`
 
-work_dir=$SCRATCH/icontools
 cd ${work_dir}
 
 # Create temporary file for intermediate result
@@ -19,9 +19,6 @@ uvedge_file=$(mktemp -p ${work_dir} uvedge.XXXXXX)
 uvcenter_file=${uvedge_file/'uvedge'/'uvcenter'}
 vnormal_file=${uvedge_file/'uvedge'/'vnormal'}
 
-# Load CDO module
-module load cdo
-module load python3
 
 # Convert u and v edge components to vn normal component
 echo "Extracting u,v components from ${icfile}..."

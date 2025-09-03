@@ -279,7 +279,8 @@ for idom in $(seq 1 ${DOMAINS_NESTS}); do
         "${ic_bg_file}" \
         "${from_grid}" \
         "${to_grid}" \
-        "${output_file}"
+        "${output_file}" \
+        "${PROJECT_WORKING_DIR}"
 
     exit_code=$?
 
