@@ -59,7 +59,7 @@ cat << EOF >> "$output_template"
 #SBATCH --cpus-per-task=${SBATCH_CPUS_PER_TASK}
 #SBATCH --time=${SBATCH_TIME}
 #SBATCH --account=${SBATCH_ACCOUNT}
-#SBATCH --output=${SBATCH_OUTPUT}
+#SBATCH --output=LOG.slurm-post_run-%j.o
 #SBATCH --mem=${SBATCH_MEM}
 EOF
 
