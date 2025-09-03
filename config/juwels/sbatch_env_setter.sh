@@ -22,13 +22,15 @@ export SBATCH_ACCOUNT="ifces2-scalexa"
 export SBATCH_PARTITION="batch"
 export SBATCH_OUTPUT="../LOG/slurm-%x-%j.out"
 export SBATCH_MEM="0"
+export SBATCH_CPUS_PER_TASK="1"
+
 
 # Script-specific configurations
 case "$TYPE" in
     grid_gen|generate_grid)
         export SBATCH_JOB_NAME="grid_gen"
         export SBATCH_NODES="1"
-        export SBATCH_CPUS_PER_TASK="8"
+        export SBATCH_CPUS_PER_TASK="48"
         export SBATCH_TIME="04:00:00"
         ;;
     
@@ -36,6 +38,20 @@ case "$TYPE" in
         export SBATCH_JOB_NAME="extpar"
         export SBATCH_NODES="1"
         export SBATCH_CPUS_PER_TASK="8"
+        export SBATCH_TIME="02:00:00"
+        ;;
+
+    lbc|icon2icon_lbc)
+        export SBATCH_JOB_NAME="icon2icon_lbc"
+        export SBATCH_NODES="1"
+        export SBATCH_CPUS_PER_TASK="4"
+        export SBATCH_TIME="04:00:00"
+        ;;
+    
+    ini|icon2icon_ini)
+        export SBATCH_JOB_NAME="icon2icon_ini"
+        export SBATCH_NODES="1"
+        export SBATCH_CPUS_PER_TASK="16"
         export SBATCH_TIME="06:00:00"
         ;;
     
@@ -43,43 +59,26 @@ case "$TYPE" in
         export SBATCH_JOB_NAME="testrun_chain"
         export SBATCH_MEM="2G"
         export SBATCH_TIME="00:05:00"
-        export SBATCH_EXCLUSIVE="false"
         ;;
-    
-    production|production_chain)
-        export SBATCH_JOB_NAME="production_chain"
-        export SBATCH_NODES="64"
-        export SBATCH_TIME="08:00:00"
-        ;;
-    
-    lbc|icon2icon_lbc)
-        export SBATCH_JOB_NAME="ifs2icon_lbc"
-        export SBATCH_NODES="1"
-        export SBATCH_CPUS_PER_TASK="4"
-        export SBATCH_TIME="04:00:00"
-        ;;
-    
+
     remapmerge|remap_and_merge)
         export SBATCH_JOB_NAME="remapmerge"
-        export SBATCH_PARTITION="batch"
         export SBATCH_NODES="1"
         export SBATCH_CPUS_PER_TASK="16"
         export SBATCH_TIME="03:00:00"
         export SBATCH_MEM="30G"
         ;;
-    
-    ini|icon2icon_ini)
-        export SBATCH_JOB_NAME="ifs2icon_ini"
-        export SBATCH_NODES="1"
-        export SBATCH_CPUS_PER_TASK="4"
-        export SBATCH_TIME="06:00:00"
+
+    production|production_chain)
+        export SBATCH_JOB_NAME="production_chain"
+        export SBATCH_NODES="172"
+        export SBATCH_TIME="08:00:00"
         ;;
     
+   
     postproc|postprocessing)
         export SBATCH_JOB_NAME="postproc"
-        export SBATCH_PARTITION="batch"
         export SBATCH_NODES="1"
-        export SBATCH_CPUS_PER_TASK="4"
         export SBATCH_TIME="00:05:00"
         export SBATCH_MEM="2G"
         ;;
