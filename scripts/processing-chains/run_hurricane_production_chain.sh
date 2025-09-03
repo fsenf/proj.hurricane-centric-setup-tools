@@ -35,19 +35,44 @@
 #   June 2025
 #=============================================================================
 
-
 #=============================================================================
-# Configuration and Argument Parsing
+# Platform Detection and Module Loading
 #=============================================================================
 
+# Get script directory
+
+ORIGINAL_SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
 
 if [[ -z "$ORIGINAL_SCRIPT_DIR" ]]; then
     ORIGINAL_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 fi
 
 SCRIPT_DIR=${ORIGINAL_SCRIPT_DIR}
-
 echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
+
+# Detect platform and load platform-specific modules
+PLATFORM=$("${SCRIPT_DIR}/../../utilities/detect_platform.sh")
+echo "Detected platform: ${PLATFORM}"
+echo "Hostname: $(hostname)"
+
+# Load platform-specific modules
+module_loader_path="${SCRIPT_DIR}/../../config/${PLATFORM}/module_loader.sh"
+if [[ -f "$module_loader_path" ]]; then
+    echo "Loading modules for platform: ${PLATFORM}"
+    source "$module_loader_path"
+else
+    echo "Warning: No module loader found for platform ${PLATFORM} at ${module_loader_path}"
+fi
+
+# Define the submission wrapper for platform independence
+sbatch_wrapper="${SCRIPT_DIR}/../../utilities/submit.sh"
+
+#=============================================================================
+# Configuration and Argument Parsing
+#=============================================================================
+
+# Load SLURM environment variables
+source "$SCRIPT_DIR/../../config/${PLATFORM}/sbatch_env_setter.sh" "production"
 
 # Load shared configuration handler
 source "${SCRIPT_DIR}/../../utilities/config_handler.sh"
@@ -75,8 +100,9 @@ iseg=""
 slurm_options=()
 
 # Default SLURM parameters
-nodes=64
-ctime="08:00:00"
+nodes="$SBATCH_NODES"
+ctime="$SBATCH_TIME"
+account="$SBATCH_ACCOUNT"
 dependency=""
 initial=false
 
@@ -181,7 +207,7 @@ starter_dependency=""
 if [[ "$initial" != "true" ]]; then
 
     # Prepare sbatch command for merge job with optional dependency
-    merge_sbatch_cmd="sbatch --parsable"
+    merge_sbatch_cmd="$sbatch_wrapper"
     if [[ -n "$dependency" ]]; then
         merge_sbatch_cmd="$merge_sbatch_cmd --dependency=$dependency"
     fi
@@ -235,9 +261,9 @@ echo "Submitting production run to queue..."
 
 # Submit the production job using starter.sh with appropriate dependency
 if [[ -n "$starter_dependency" ]]; then
-    bash starter.sh $starter_dependency --nodes=$nodes --time=$ctime $production_runscript
+    bash starter.sh $starter_dependency --nodes=$nodes --time=$ctime --account=$account $production_runscript
 else
-    bash starter.sh --nodes=$nodes --time=$ctime $production_runscript
+    bash starter.sh --nodes=$nodes --time=$ctime --account=$account $production_runscript
 fi
 
 exit 0

@@ -36,12 +36,40 @@
 set -e
 
 #=============================================================================
-# Configuration and Argument Parsing
+# Platform Detection and Module Loading
 #=============================================================================
 
 # Get script directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-echo "Script directory: ${SCRIPT_DIR}"
+
+ORIGINAL_SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
+
+if [[ -z "$ORIGINAL_SCRIPT_DIR" ]]; then
+    ORIGINAL_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+fi
+
+SCRIPT_DIR=${ORIGINAL_SCRIPT_DIR}
+echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
+
+# Detect platform and load platform-specific modules
+PLATFORM=$("${SCRIPT_DIR}/../../utilities/detect_platform.sh")
+echo "Detected platform: ${PLATFORM}"
+echo "Hostname: $(hostname)"
+
+# Load platform-specific modules
+module_loader_path="${SCRIPT_DIR}/../../config/${PLATFORM}/module_loader.sh"
+if [[ -f "$module_loader_path" ]]; then
+    echo "Loading modules for platform: ${PLATFORM}"
+    source "$module_loader_path"
+else
+    echo "Warning: No module loader found for platform ${PLATFORM} at ${module_loader_path}"
+fi
+
+#=============================================================================
+# Configuration and Argument Parsing
+#=============================================================================
+
+# Load SLURM environment variables
+source "$SCRIPT_DIR/../../config/${PLATFORM}/sbatch_env_setter.sh" "production"
 
 # Load shared configuration handler
 source "${SCRIPT_DIR}/../../utilities/config_handler.sh"
@@ -71,9 +99,9 @@ start_segment=""
 end_segment=""
 slurm_options=()
 
-# Default SLURM parameters (similar to starter.sh)
-nodes=64
-ctime="08:00:00"
+# Default SLURM parameters
+nodes="$SBATCH_NODES"
+ctime="$SBATCH_TIME"
 dependency=""
 initial=false
 
@@ -195,7 +223,6 @@ fi
 #=============================================================================
 # Production Chain Loop
 #=============================================================================
-module load python3
 
 # Get ICON run directory from config
 icon_run_dir=${TOOLS_ICON_BUILD_DIR}/run

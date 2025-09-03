@@ -42,22 +42,9 @@
 #   
 #   Filename format: ${YYYYMMDDTHHMMZ}_DOM0${domain}_warmini.nc
 #=============================================================================
-# Levante cpu batch job parameters
-#
-#SBATCH --account=bb1376
-#SBATCH --job-name=remap-and-merge
-#SBATCH --partition=shared
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=16
-#SBATCH --distribution=block:block
-#SBATCH --mem=30G
-#SBATCH --time=02:00:00
-#SBATCH --output=../LOG/slurm-remapmerge-%j.out
-#=============================================================================
-
 
 #=============================================================================
-# Configuration and Argument Parsing
+# Platform Detection and Module Loading
 #=============================================================================
 
 # Get script directory
@@ -69,8 +56,25 @@ if [[ -z "$ORIGINAL_SCRIPT_DIR" ]]; then
 fi
 
 SCRIPT_DIR=${ORIGINAL_SCRIPT_DIR}
-
 echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
+
+# Detect platform and load platform-specific modules
+PLATFORM=$("${SCRIPT_DIR}/../../utilities/detect_platform.sh")
+echo "Detected platform: ${PLATFORM}"
+echo "Hostname: $(hostname)"
+
+# Load platform-specific modules
+module_loader_path="${SCRIPT_DIR}/../../config/${PLATFORM}/module_loader.sh"
+if [[ -f "$module_loader_path" ]]; then
+    echo "Loading modules for platform: ${PLATFORM}"
+    source "$module_loader_path"
+else
+    echo "Warning: No module loader found for platform ${PLATFORM} at ${module_loader_path}"
+fi
+
+#=============================================================================
+# Configuration and Argument Parsing
+#=============================================================================
 
 # Load shared configuration handler
 source "${SCRIPT_DIR}/../../utilities/config_handler.sh"
@@ -144,7 +148,6 @@ to_iseg_string=$(printf "%02d" $to_iseg)
 from_iseg_string=$(printf "%02d" $from_iseg)
 
 # Calculate segment start time for naming
-module load python3
 segment_start_time=$(python3 "${SCRIPT_DIR}/../../utilities/print_timings.py" "$CONFIG_FILE" "$to_iseg" "INIT_DATE")
 
 echo "Processing from segment $from_iseg (${from_iseg_string}) to segment $to_iseg (${to_iseg_string})"

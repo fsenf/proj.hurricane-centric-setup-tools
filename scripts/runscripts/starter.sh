@@ -24,7 +24,7 @@
 #=============================================================================
 
 set -e
-unset SLURM_JOB_PARTITION SBATCH_PARTITION
+unset SLURM_JOB_PARTITION SBATCH_PARTITION SBATCH_OUTPUT SBATCH_JOB_NAME  SBATCH_CPUS_PER_TASK
 
 #=============================================================================
 # Configuration and Argument Parsing
@@ -252,8 +252,6 @@ fi
 
 echo "Submitting job with command:"
 echo "$sbatch_cmd"
-
-env
 
 # Execute sbatch command
 eval "$sbatch_cmd"
