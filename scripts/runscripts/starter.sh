@@ -240,8 +240,14 @@ for arg in "${exp_arguments[@]}"; do
     exp_args_string="$exp_args_string $arg"
 done
 
+# Check if --purge-slurm-env is supported
+purge_env_option=""
+if sbatch --purge-slurm-env --help &>/dev/null; then
+    purge_env_option="--purge-slurm-env"
+fi
+
 # Prepare sbatch command - pass resolved script directory as first argument
-sbatch_cmd="sbatch  --purge-slurm-env --mem=0 --nodes=$nodes --time=$ctime --account=$account"
+sbatch_cmd="sbatch $purge_env_option --mem=0 --nodes=$nodes --time=$ctime --account=$account"
 if [[ -n "$dependency" ]]; then
     sbatch_cmd="$sbatch_cmd --dependency=$dependency"
 fi
