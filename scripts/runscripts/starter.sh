@@ -176,13 +176,13 @@ expscript_path=""
 # Look for experiment script in current directory first
 if [[ -f "./${expscript_name}" ]]; then
     expscript_path="$(readlink -f ./${expscript_name})"
-elif [[ -f "${SCRIPT_DIR}/${expscript_name}" ]]; then
-    expscript_path="$(readlink -f ${SCRIPT_DIR}/${expscript_name})"
+elif [[ -f "auto-generated/${expscript_name}" ]]; then
+    expscript_path="$(readlink -f auto-generated/${expscript_name})"
 else
     echo "Error: Experiment script not found: ${expscript_name}"
     echo "Searched in:"
     echo "  Current directory: ./${expscript_name}"
-    echo "  Scripts directory: ${SCRIPT_DIR}/${expscript_name}"
+    echo "  Auto-generated directory: auto-generated/${expscript_name}"
     exit 1
 fi
 
