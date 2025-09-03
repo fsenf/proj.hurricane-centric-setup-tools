@@ -50,6 +50,15 @@ case "$TYPE" in
         export SBATCH_TIME="04:00:00"
         ;;
     
+    remapmerge|remap_and_merge)
+        export SBATCH_JOB_NAME="remapmerge"
+        export SBATCH_PARTITION="shared"
+        export SBATCH_NTASKS="1"
+        export SBATCH_CPUS_PER_TASK="16"
+        export SBATCH_TIME="02:00:00"
+        export SBATCH_MEM="30G"
+        ;;
+    
     ini|icon2icon_ini)
         export SBATCH_JOB_NAME="icon2icon_ini"
         export SBATCH_NODES="1"

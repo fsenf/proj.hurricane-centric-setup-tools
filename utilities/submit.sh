@@ -58,6 +58,9 @@ detect_script_type() {
         *lbc*|*icon2icon*lbc*)
             echo "lbc"
             ;;
+        *remap*merge*|remap_and_merge*)
+            echo "remapmerge"
+            ;;
         *ini*|*icon2icon*ini*)
             echo "ini"
             ;;
