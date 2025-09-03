@@ -95,7 +95,7 @@ while [[ $# -gt 0 ]]; do
             parsable=""
             shift
             ;;
-        --nodes=*|--time=*|--partition=*|--account=*|--output=*|--job-name=*|--mem=*|--exclusive=*|--cpus-per-task=*)
+        --nodes=*|--ntasks=*|--time=*|--partition=*|--account=*|--output=*|--job-name=*|--mem=*|--exclusive=*|--cpus-per-task=*)
             # Override SBATCH settings from command line
             sbatch_args+=("$1")
             shift
@@ -124,13 +124,19 @@ sbatch_cmd=(
     ${parsable:+"$parsable"}
     "--job-name=$SBATCH_JOB_NAME"
     "--partition=$SBATCH_PARTITION"
-    "--nodes=$SBATCH_NODES"
     "--cpus-per-task=$SBATCH_CPUS_PER_TASK"
     "--time=$SBATCH_TIME"
     "--account=$SBATCH_ACCOUNT"
     "--output=$SBATCH_OUTPUT"
     "--mem=$SBATCH_MEM"
 )
+
+# Add either --ntasks or --nodes depending on what's configured
+if [[ -n "${SBATCH_NTASKS:-}" ]]; then
+    sbatch_cmd+=("--ntasks=$SBATCH_NTASKS")
+elif [[ -n "${SBATCH_NODES:-}" ]]; then
+    sbatch_cmd+=("--nodes=$SBATCH_NODES")
+fi
 
 # Add any additional sbatch arguments (including dependency)
 sbatch_cmd+=("${sbatch_args[@]}")

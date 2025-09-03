@@ -24,7 +24,7 @@
 #=============================================================================
 
 set -e
-set -x
+unset SLURM_JOB_PARTITION SBATCH_PARTITION
 
 #=============================================================================
 # Configuration and Argument Parsing
@@ -241,7 +241,7 @@ for arg in "${exp_arguments[@]}"; do
 done
 
 # Prepare sbatch command - pass resolved script directory as first argument
-sbatch_cmd="sbatch  --purge-slurm-env --mem=0"
+sbatch_cmd="sbatch  --purge-slurm-env --mem=0 --nodes=$nodes --time=$ctime --account=$account"
 if [[ -n "$dependency" ]]; then
     sbatch_cmd="$sbatch_cmd --dependency=$dependency"
 fi
@@ -252,6 +252,8 @@ fi
 
 echo "Submitting job with command:"
 echo "$sbatch_cmd"
+
+env
 
 # Execute sbatch command
 eval "$sbatch_cmd"

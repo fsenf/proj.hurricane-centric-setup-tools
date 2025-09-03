@@ -33,9 +33,8 @@
 #   June 2025
 #=============================================================================
 
-
 #=============================================================================
-# Configuration and Argument Parsing
+# Platform Detection and Module Loading
 #=============================================================================
 
 # Get script directory
@@ -47,8 +46,27 @@ if [[ -z "$ORIGINAL_SCRIPT_DIR" ]]; then
 fi
 
 SCRIPT_DIR=${ORIGINAL_SCRIPT_DIR}
-
 echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
+
+# Detect platform and load platform-specific modules
+PLATFORM=$("${SCRIPT_DIR}/../../utilities/detect_platform.sh")
+echo "Detected platform: ${PLATFORM}"
+echo "Hostname: $(hostname)"
+
+# Load platform-specific modules
+module_loader_path="${SCRIPT_DIR}/../../config/${PLATFORM}/module_loader.sh"
+if [[ -f "$module_loader_path" ]]; then
+    echo "Loading modules for platform: ${PLATFORM}"
+    source "$module_loader_path"
+else
+    echo "Warning: No module loader found for platform ${PLATFORM} at ${module_loader_path}"
+fi
+
+#=============================================================================
+# Configuration and Argument Parsing
+#=============================================================================
+
+
 
 # Get script directory
 
@@ -79,6 +97,7 @@ slurm_options=()
 
 # Default SLURM parameters
 nodes=20
+account="$SBATCH_ACCOUNT"
 
 for arg in "${REMAINING_ARGS[@]}"; do
     case $arg in
@@ -236,6 +255,6 @@ echo -e "\nRunscript detected: $test_runscript"
 echo "Submitting test run to queue..."
 
 # Run the job using starter.sh with specified parameters
-bash starter.sh --nodes=$nodes --time=01:00:00 $test_runscript
+bash starter.sh --nodes=$nodes --time=01:00:00 --account=$account $test_runscript
 
 exit 0
