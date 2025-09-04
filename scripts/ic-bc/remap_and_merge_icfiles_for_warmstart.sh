@@ -15,7 +15,6 @@ work_dir=$6
 
 script_dir=`readlink -f $(dirname $0)`
 
-work_dir=$SCRATCH/icontools
 cd ${work_dir}
 
 # Create temporary file for intermediate result
