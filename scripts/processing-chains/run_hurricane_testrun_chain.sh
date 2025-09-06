@@ -10,7 +10,7 @@
 #   4. Boundary condition files (BC)
 #
 # USAGE:
-#   ./run_hurricane_testrun_chain.sh [segment_number] [-c|--config config_file] [--nodes N]
+#   ./run_hurricane_testrun_chain.sh [segment_number] [-c|--config config_file] [--nodes N] [--account ACCOUNT]
 #
 # ARGUMENTS:
 #   segment_number  - The hurricane segment number to check
@@ -18,6 +18,7 @@
 # OPTIONS:
 #   -c, --config    - Path to TOML configuration file (required)
 #   --nodes=N       - Number of compute nodes (default: 20)
+#   --account=ACCOUNT - SLURM account name (default: $SBATCH_ACCOUNT)
 #   -h, --help      - Show this help message
 #
 # EXIT CODES:
@@ -79,7 +80,7 @@ CONFIG_ARG=$(parse_config_argument "$@")
 # Handle configuration loading
 if [[ -z "$CONFIG_ARG" ]]; then
     echo "Error: Config file is required"
-    echo "Usage: $0 [segment_number] -c|--config config_file [--nodes N]"
+    echo "Usage: $0 [segment_number] -c|--config config_file [--nodes N] [--account ACCOUNT]"
     exit 1
 fi
 
@@ -102,7 +103,7 @@ account="$SBATCH_ACCOUNT"
 for arg in "${REMAINING_ARGS[@]}"; do
     case $arg in
         -h|--help)
-            echo "Usage: $0 [segment_number] -c|--config config_file [--nodes N]"
+            echo "Usage: $0 [segment_number] -c|--config config_file [--nodes N] [--account ACCOUNT]"
             echo ""
             echo "Arguments:"
             echo "  segment_number    Hurricane segment number to check"
@@ -111,13 +112,19 @@ for arg in "${REMAINING_ARGS[@]}"; do
             echo ""
             echo "SLURM Options:"
             echo "  --nodes=N         Number of compute nodes (default: 20)"
+            echo "  --account=ACCOUNT SLURM account name (default: \$SBATCH_ACCOUNT)"
             echo ""
             echo "Examples:"
             echo "  $0 5 -c ../../config/hurricane_config.toml"
             echo "  $0 5 -c ../../config/hurricane_config_width100km_reinit12h.toml --nodes=30"
+            echo "  $0 5 -c ../../config/hurricane_config.toml --account=myproject"
             exit 0
             ;;
         --nodes=*)
+            # SLURM option
+            slurm_options+=("$arg")
+            ;;
+        --account=*)
             # SLURM option
             slurm_options+=("$arg")
             ;;
@@ -142,7 +149,7 @@ done
 #------------------------------------------------------------------------------
 if [[ -z "$iseg" ]]; then
     echo "Error: segment_number is required"
-    echo "Usage: $0 [segment_number] -c|--config config_file [--nodes N]"
+    echo "Usage: $0 [segment_number] -c|--config config_file [--nodes N] [--account ACCOUNT]"
     exit 1
 fi
 
@@ -157,6 +164,10 @@ for option in "${slurm_options[@]}"; do
         --nodes=*)
             nodes="${option#*=}"
             echo "Using custom node count: $nodes"
+            ;;
+        --account=*)
+            account="${option#*=}"
+            echo "Using custom account: $account"
             ;;
     esac
 done
