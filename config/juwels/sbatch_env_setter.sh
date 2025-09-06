@@ -55,7 +55,7 @@ case "$TYPE" in
         export SBATCH_TIME="06:00:00"
         ;;
     
-    testrun|testrun_chain)
+    testchain)
         export SBATCH_JOB_NAME="testrun_chain"
         export SBATCH_MEM="2G"
         export SBATCH_TIME="00:05:00"
@@ -69,8 +69,14 @@ case "$TYPE" in
         export SBATCH_MEM="30G"
         ;;
 
-    production|production_chain)
-        export SBATCH_JOB_NAME="production_chain"
+    testrun)
+        export SBATCH_JOB_NAME="testrun"
+        export SBATCH_NODES="64"
+        export SBATCH_TIME="01:00:00"
+        ;;
+
+    production|productionrun)
+        export SBATCH_JOB_NAME="production"
         export SBATCH_NODES="172"
         export SBATCH_TIME="08:00:00"
         ;;

@@ -68,7 +68,9 @@ fi
 
 
 
-# Get script directory
+
+# Load SLURM environment variables
+source "$SCRIPT_DIR/../../config/${PLATFORM}/sbatch_env_setter.sh" "testrun"
 
 # Load shared configuration handler
 source "${SCRIPT_DIR}/../../utilities/config_handler.sh"
@@ -96,7 +98,8 @@ iseg=""
 slurm_options=()
 
 # Default SLURM parameters
-nodes=20
+nodes="$SBATCH_NODES"
+time="$SBATCH_TIME"
 account="$SBATCH_ACCOUNT"
 
 for arg in "${REMAINING_ARGS[@]}"; do

@@ -50,7 +50,7 @@ detect_script_type() {
             echo "extpar"
             ;;
         *testrun*|test*)
-            echo "testrun"
+            echo "testchain"
             ;;
         *production*|*starter*)
             echo "production"
