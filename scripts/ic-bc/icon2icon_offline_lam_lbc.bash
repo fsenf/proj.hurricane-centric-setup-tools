@@ -171,7 +171,7 @@ GEOFILE="${GEODIR}/lam_input_geo_DOM02_ML.nc"
 #=============================================================================
 
 # Create temporary namelist file for iconsub
-TEMP_NAMELIST_SUB=$(mktemp --suffix=_NAMELIST_ICONSUB_LBC)
+TEMP_NAMELIST_SUB=$(mktemp --tmpdir=${PROJECT_WORKING_DIR} --suffix=_NAMELIST_ICONSUB_LBC)
 
 cat > ${TEMP_NAMELIST_SUB} << EOF_1
 &iconsub_nml
@@ -248,16 +248,16 @@ for datafilename in "${DATAFILELIST[@]}" ; do
         ${remap_cmd} -delname,vn ${datafilename} ${novn_output_file}
         
         
-        if [ $? -ne 0 ]; then
-            echo "Error: Remapping failed for file: $datafile"
-            exit 1
-        fi
-
         #=============================================================================
         # Final variable merging
         #=============================================================================
 
         cdo merge ${novn_output_file} ${z_ifc_output_file} ${FULL_OUTNAME}
+
+	if [ $? -ne 0 ]; then
+            echo "Error: Remapping failed for file: $datafile"
+            exit 1
+        fi
 
         # Clean up temporary files for this iteration
         rm ${novn_output_file}
