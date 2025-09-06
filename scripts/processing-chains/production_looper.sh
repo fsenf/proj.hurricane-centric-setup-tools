@@ -229,13 +229,8 @@ echo "Generating platform-specific post-processing template..."
 # Create the platform-specific template using dedicated script
 template_file="${SCRIPT_DIR}/../runscripts/auto-generated/post.TEMPLATE_for_segment_runscript"
 bash "${SCRIPT_DIR}/../../utilities/create_post_template.sh" "$template_file"
-
-if [[ ! -f "$template_file" ]]; then
-    echo "❌ ERROR: Failed to create platform-specific template"
-    exit 1
-fi
-
-
+echo "cd ${SCRIPT_DIR}" >> "$template_file"
+ 
 #=============================================================================
 # Production Chain Loop
 #=============================================================================
@@ -280,7 +275,6 @@ for iseg in $(seq $start_segment $end_segment); do
 
     # Create post-processing script from template
     cat "$template_file" > "$actual_postproc_script"
-    echo "cd ${SCRIPT_DIR}" >> "$actual_postproc_script"
     chmod +x "$actual_postproc_script"
     echo "Post-processing script created: $actual_postproc_script"
 
