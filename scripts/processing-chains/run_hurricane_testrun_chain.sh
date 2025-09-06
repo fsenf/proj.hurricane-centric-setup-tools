@@ -269,6 +269,6 @@ echo -e "\nRunscript detected: $test_runscript"
 echo "Submitting test run to queue..."
 
 # Run the job using starter.sh with specified parameters
-bash starter.sh --nodes=$nodes --time=01:00:00 --account=$account $test_runscript
+bash starter.sh --nodes=$nodes --time=$itme --account=$account $test_runscript
 
 exit 0
