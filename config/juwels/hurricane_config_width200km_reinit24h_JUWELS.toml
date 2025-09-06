@@ -4,14 +4,12 @@ icontools_dir = "/p/project1/ifces2-scalexa/tools/dwd_icon_tools/icontools"
 extpar_input_dir = "/p/scratch/ifces2-scalexa/extpar-input-data"
 extpar_dir = "/p/project1/ifces2-scalexa/tools/extpar/"
 icon_build_dir = "/p/scratch/ifces2-scalexa/senf1/tmp/icon-build/icon-2025.04-02-imode7-feature_intel"
-#"/p/scratch/ifces2-scalexa/senf1/tmp/icon-build/build-jwc-intel/"
-#"/p/scratch/ifces2-scalexa/senf1/tmp/icon-build/build-jwc-gcc"
 
 [project]
 system = "juwels"
 account = "ifces2-scalexa"
 name = "hurricane-centric_paulette2020"
-width_config = "width100km_reinit24h"
+width_config = "width200km_reinit24h"
 working_dir = "/p/scratch/ifces2-scalexa/senf1/tmp"
 
 [reference]
@@ -32,8 +30,7 @@ track_file = "ifces2-atlanXL-20200907-exp021-DOM02_paulette_best-fit.nc"
 segment_reinit_hours = 24.0
 segment_length_added = 3.0
 nests = 3
-# dom_width = [60.0, 40.0, 20.0]  # in km
-dom_width = [300.0, 200.0, 100.0] # in km
+dom_width = [500.0, 350.0, 200.0] # in km
 
 [output]
 # Output directories
