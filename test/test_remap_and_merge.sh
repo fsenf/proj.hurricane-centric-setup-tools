@@ -70,7 +70,7 @@ cd ../scripts/ic-bc || exit 1
 echo "Running remap and merge..."
 bash remap_and_merge_icfiles_for_warmstart.sh "${ic_seg_file}" \
     "${ic_bg_file}" \
-    "${from_grid}" \ 
+    "${from_grid}" \
     "${to_grid}" \
     "${output_file}" \
     "${PROJECT_WORKING_DIR}"
