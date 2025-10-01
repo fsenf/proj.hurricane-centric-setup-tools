@@ -44,6 +44,9 @@
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 echo "Script directory: ${SCRIPT_DIR}"
 
+# Define the submission wrapper for platform independence
+sbatch_wrapper="${SCRIPT_DIR}/../../utilities/submit.sh"
+
 # Load shared configuration handler
 source "${SCRIPT_DIR}/../../utilities/config_handler.sh"
 
@@ -155,9 +158,9 @@ pp_path=".."
 echo "Submitting grid generation job..."
 cd ${pp_path}/grid-extpar
 if [[ -n "$CONFIG_OPTION" ]]; then
-    grid_job=$(sbatch --parsable $ADDED_ARG ./generate_grid_for_hurricane_segments.sh $iseg $CONFIG_OPTION)
+    grid_job=$($sbatch_wrapper ./generate_grid_for_hurricane_segments.sh $ADDED_ARG $iseg $CONFIG_OPTION)
 else
-    grid_job=$(sbatch --parsable $ADDED_ARG ./generate_grid_for_hurricane_segments.sh $iseg)
+    grid_job=$($sbatch_wrapper ./generate_grid_for_hurricane_segments.sh $ADDED_ARG $iseg)
 fi
 printf "... Grid job submitted with ID: $grid_job\n\n"
 
@@ -166,9 +169,9 @@ printf "... Grid job submitted with ID: $grid_job\n\n"
 #-----------------------------------------------------------------------------
 echo "Submitting extpar job..."
 if [[ -n "$CONFIG_OPTION" ]]; then
-    extpar_job=$(sbatch --parsable --dependency=afterok:$grid_job ./run_extpar_levante.bash $iseg $CONFIG_OPTION)
+    extpar_job=$($sbatch_wrapper ./run_extpar.bash --dependency=afterok:$grid_job $iseg $CONFIG_OPTION)
 else
-    extpar_job=$(sbatch --parsable --dependency=afterok:$grid_job ./run_extpar_levante.bash $iseg)
+    extpar_job=$($sbatch_wrapper ./run_extpar.bash --dependency=afterok:$grid_job $iseg)
 fi
 printf "... Extpar job submitted with ID: $extpar_job\n\n"
 
@@ -178,9 +181,9 @@ printf "... Extpar job submitted with ID: $extpar_job\n\n"
 echo "Submitting IC job..."
 cd ${pp_path}/ic-bc
 if [[ -n "$CONFIG_OPTION" ]]; then
-    ic_job=$(sbatch --parsable --dependency=afterok:$grid_job ./icon2icon_offline_lam_ini.bash $iseg $CONFIG_OPTION)
+    ic_job=$($sbatch_wrapper ./icon2icon_offline_lam_ini.bash --dependency=afterok:$grid_job $iseg $CONFIG_OPTION)
 else
-    ic_job=$(sbatch --parsable --dependency=afterok:$grid_job ./icon2icon_offline_lam_ini.bash $iseg)
+    ic_job=$($sbatch_wrapper ./icon2icon_offline_lam_ini.bash --dependency=afterok:$grid_job $iseg)
 fi
 printf "... IC job submitted with ID: $ic_job\n\n"
 
@@ -189,9 +192,9 @@ printf "... IC job submitted with ID: $ic_job\n\n"
 #-----------------------------------------------------------------------------
 echo "Submitting BC job..."
 if [[ -n "$CONFIG_OPTION" ]]; then
-    bc_job=$(sbatch --parsable --dependency=afterany:$ic_job ./icon2icon_offline_lam_lbc.bash $iseg $CONFIG_OPTION)
+    bc_job=$($sbatch_wrapper ./icon2icon_offline_lam_lbc.bash --dependency=afterany:$ic_job $iseg $CONFIG_OPTION)
 else
-    bc_job=$(sbatch --parsable --dependency=afterany:$ic_job ./icon2icon_offline_lam_lbc.bash $iseg)
+    bc_job=$($sbatch_wrapper ./icon2icon_offline_lam_lbc.bash --dependency=afterany:$ic_job $iseg)
 fi
 printf "... BC job submitted with ID: $bc_job\n\n"
 
@@ -204,9 +207,9 @@ echo "Grid: $grid_job | Extpar: $extpar_job | IC: $ic_job | BC: $bc_job\n\n"
 echo "Submitting final testrun job..."
 cd ${pp_path}/processing-chains
 if [[ -n "$CONFIG_OPTION" ]]; then
-    testrun_job=$(sbatch --parsable --dependency=afterany:$bc_job ./run_hurricane_testrun_chain.sh $iseg $CONFIG_OPTION)
+    testrun_job=$($sbatch_wrapper ./run_hurricane_testrun_chain.sh --dependency=afterany:$bc_job $iseg $CONFIG_OPTION)
 else
-    testrun_job=$(sbatch --parsable --dependency=afterany:$bc_job ./run_hurricane_testrun_chain.sh $iseg)
+    testrun_job=$($sbatch_wrapper ./run_hurricane_testrun_chain.sh --dependency=afterany:$bc_job $iseg)
 fi
 printf "... Testrun job submitted with ID: $testrun_job\n\n"
 echo "All preprocessing and testrun jobs submitted successfully!"

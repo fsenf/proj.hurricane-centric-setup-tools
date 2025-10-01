@@ -1,39 +1,53 @@
-#!/usr/bin/bash
+#!/bin/bash
+# filepath: /home/b/b380352/proj/2025-05_hurricane-centric-setup-tools/scripts/grid-extpar/run_extpar.bash
 #=============================================================================
 # DESCRIPTION:
-#   External parameter processing for hurricane segments using ICON ExtPar tools.
-#   Processes topography, land use, soil properties, and other surface parameters
-#   for hurricane-centric grids.
+#   External parameter generation script for hurricane segments. Generates
+#   topography, land use, soil, and other external parameters for ICON grids
+#   using the ExtPar preprocessing tool.
 #
 # USAGE:
-#   ./run_extpar_levante.bash [segment_number] [-c|--config config_file]
+#   ./run_extpar.bash [segment_number] [-c|--config config_file]
+#
+# ARGUMENTS:
+#   segment_number  - Hurricane segment number to process
+#
+# OPTIONS:
+#   -c, --config    - Path to TOML configuration file (optional)
+#                     Default: ../../config/hurricane_config.toml
+#                     Relative paths are resolved from script directory
+#   -h, --help      - Show this help message
 #
 #=============================================================================
 
-# Levante cpu batch job parameters
-#
-#SBATCH --account=bb1376
-#SBATCH --job-name=extpar
-#SBATCH --partition=shared
-#SBATCH --ntasks=1
-#SBATCH --cpus-per-task=8
-#SBATCH --distribution=block:block
-#SBATCH --mem=20G
-#SBATCH --time=01:00:00
-#SBATCH --output=../LOG/slurm-%x-%j.out
-#=============================================================================
-
-set -eux
 ulimit -s unlimited
 ulimit -c 0
 
 #=============================================================================
-# Configuration and Argument Parsing
+# Platform Detection and Module Loading
 #=============================================================================
 
 # Get script directory
 ORIGINAL_SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
 echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
+
+# Detect platform and load platform-specific modules
+PLATFORM=$("${ORIGINAL_SCRIPT_DIR}/../../utilities/detect_platform.sh")
+echo "Detected platform: ${PLATFORM}"
+echo "Hostname: $(hostname)"
+
+# Load platform-specific modules
+module_loader_path="${ORIGINAL_SCRIPT_DIR}/../../config/${PLATFORM}/module_loader.sh"
+if [[ -f "$module_loader_path" ]]; then
+    echo "Loading modules for platform: ${PLATFORM}"
+    source "$module_loader_path"
+else
+    echo "Warning: No module loader found for platform ${PLATFORM} at ${module_loader_path}"
+fi
+
+#=============================================================================
+# Configuration and Argument Parsing
+#=============================================================================
 
 # Load shared configuration handler
 source "${ORIGINAL_SCRIPT_DIR}/../../utilities/config_handler.sh"
@@ -94,35 +108,8 @@ echo "Processing segment: $iseg"
 iseg_string=$(printf "%02d" $iseg)
 echo "Formatted segment string: $iseg_string"
 
-#=============================================================================
-# OpenMP environment variables
-#=============================================================================
-export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
-export KMP_AFFINITY=verbose,granularity=fine,scatter
-export OMP_STACKSIZE=128M
-
-# Environment variables for the experiment and the target system
-export OMPI_MCA_pml="ucx"
-export OMPI_MCA_btl=self
-export OMPI_MCA_osc="pt2pt"
-export UCX_IB_ADDR_TYPE=ib_global
-export OMPI_MCA_coll="^ml,hcoll"
-export OMPI_MCA_coll_hcoll_enable="0"
-export HCOLL_ENABLE_MCAST_ALL="0"
-export HCOLL_MAIN_IB=mlx5_0:1
-export UCX_NET_DEVICES=mlx5_0:1
-export UCX_TLS=mm,knem,cma,dc_mlx5,dc_x,self
-export UCX_UNIFIED_MODE=y
-export HDF5_USE_FILE_LOCKING=FALSE
-export OMPI_MCA_io="romio321"
-export UCX_HANDLE_ERRORS=bt
-
 
 cd $PROJECT_WORKING_DIR
-
-
-module purge
-module load python3 
 
 # Set variables from TOML config instead of sourcing extpar_config.sh
 DOMNAME="${PROJECT_NAME}/seg${iseg_string}_${PROJECT_WIDTH_CONFIG}"
@@ -144,7 +131,7 @@ extpar_dir="$TOOLS_EXTPAR_DIR"
 out_dir=${grid_dir}
 
 # Set PYTHONPATH to point to ExtPar libraries and namelist.py, which is located in out_dir
-export PYTHONPATH=${extpar_dir}/python/lib:${out_dir}
+export PYTHONPATH=${extpar_dir}/python/lib:${out_dir}:${PYTHONPATH}
 
 # Create and change into out_dir
 if [ ! -d ${out_dir} ] ; then
@@ -152,7 +139,7 @@ if [ ! -d ${out_dir} ] ; then
 fi
 cd ${out_dir}
 
-##### Create dictionaries/namelists for python scripts 
+##### Create dictionaries/namelists for python scripts
 
     cat <<NAMELIST_PYTHON > namelist.py
 
@@ -184,7 +171,7 @@ input_ndvi = {
         }
 
 input_emiss = {
-        'iemiss_type': 1, 
+        'iemiss_type': 1,
         'raw_data_emiss_path':  '${extpar_input_dir}/emiss',
         'raw_data_emiss_filename': 'CAMEL_bbe_full_2010-2015.nc',
         'emiss_buffer_file': 'emiss_buffer.nc',
@@ -201,13 +188,13 @@ input_tclim = {
 
 NAMELIST_PYTHON
 
-##### Input files and namelist for AOT 
+##### Input files and namelist for AOT
 cat > INPUT_AOT << EOF
 &aerosol_raw_data
   raw_data_aot_path='${extpar_input_dir}/aerosols',
   raw_data_aot_filename='aod_MACC_2003-2012.nc'
   iaot_type=3
-/  
+/
 &aerosol_io_extpar
   aot_buffer_file='aot_buffer.nc',
 /
@@ -236,15 +223,15 @@ EOF
 cat > INPUT_OROSMOOTH << EOF
 &orography_smoothing
   lfilter_oro=.FALSE.
-  ! lfilter_oro=.TRUE., 
-  numfilt_oro= 1, 
-  ilow_pass_oro = 1, 
-  lxso_first=F, 
-  numfilt_xso= 1, 
-  ilow_pass_xso= 0, 
-  ifill_valley= 1, 
-  eps_filter= 10.0, 
-  rfill_valley=  0.0, 
+  ! lfilter_oro=.TRUE.,
+  numfilt_oro= 1,
+  ilow_pass_oro = 1,
+  lxso_first=F,
+  numfilt_xso= 1,
+  ilow_pass_xso= 0,
+  ifill_valley= 1,
+  eps_filter= 10.0,
+  rfill_valley=  0.0,
   rxso_mask=   0.0
 /
 EOF
@@ -301,7 +288,7 @@ cat > INPUT_SOIL << EOF
 /
 EOF
 
-##### Loop over all gridfiles for which external parameters should be produced 
+##### Loop over all gridfiles for which external parameters should be produced
 for icon_grid_file in ${icon_grid_files[@]}
 do
 
@@ -324,7 +311,7 @@ EOF
 
     # OUTPUT
     netcdf_output_filename="extpar_${icon_grid_file%.*}_tiles.nc"
-    
+
     ### CONSISTENCY CHECK ### ---> not checked!!
     cat > INPUT_CHECK << EOF
 &extpar_consistency_check_io
@@ -359,6 +346,3 @@ EOF
 
 done
 exit
-
-
-

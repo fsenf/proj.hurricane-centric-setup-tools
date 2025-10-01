@@ -1,9 +1,0 @@
-#!/bin/bash
-#
-#SBATCH --job-name=post_run
-#SBATCH --partition=shared
-#SBATCH --mem=2G
-#SBATCH --time=00:05:00
-#SBATCH --account=bb1376
-#SBATCH --output=LOG.slurm-post_run-%j.o
-#=============================================================================

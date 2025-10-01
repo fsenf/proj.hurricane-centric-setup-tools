@@ -41,9 +41,10 @@ cd scripts/processing-chains
 
 ## Documentation
 
-- **[Getting Started Guide](docs/getting_started.md)** - Installation, setup, and first steps
-- **[Detailed Workflows](docs/detailed_workflows.md)** - Complete workflow documentation  
-- **[Configuration Reference](docs/configuration_reference.md)** - TOML configuration options
+- **[Getting Started Guide](docs/getting_started.md)** - Installation, setup, and first steps with automatic platform detection
+- **[Platform Configuration](docs/platform_configuration.md)** - Multi-platform setup and universal job submission
+- **[Configuration Reference](docs/configuration_reference.md)** - Platform-aware TOML configuration options  
+- **[Detailed Workflows](docs/detailed_workflows.md)** - Complete platform-aware workflow documentation
 - **[Preparing New Hurricane Cases](docs/preparing_new_hurricane_cases.md)** - Advanced: Setup for different hurricanes
 - **[Grid Generation](docs/generate_grid_for_hurricane_segments.md)** - Grid setup workflow
 - **[ExtPar Processing](docs/run_extpar_levante.md)** - External parameter processing

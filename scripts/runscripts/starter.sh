@@ -24,7 +24,7 @@
 #=============================================================================
 
 set -e
-set -x
+unset SLURM_JOB_PARTITION SBATCH_PARTITION SBATCH_OUTPUT SBATCH_JOB_NAME  SBATCH_CPUS_PER_TASK
 
 #=============================================================================
 # Configuration and Argument Parsing
@@ -176,13 +176,13 @@ expscript_path=""
 # Look for experiment script in current directory first
 if [[ -f "./${expscript_name}" ]]; then
     expscript_path="$(readlink -f ./${expscript_name})"
-elif [[ -f "${SCRIPT_DIR}/${expscript_name}" ]]; then
-    expscript_path="$(readlink -f ${SCRIPT_DIR}/${expscript_name})"
+elif [[ -f "auto-generated/${expscript_name}" ]]; then
+    expscript_path="$(readlink -f auto-generated/${expscript_name})"
 else
     echo "Error: Experiment script not found: ${expscript_name}"
     echo "Searched in:"
     echo "  Current directory: ./${expscript_name}"
-    echo "  Scripts directory: ${SCRIPT_DIR}/${expscript_name}"
+    echo "  Auto-generated directory: auto-generated/${expscript_name}"
     exit 1
 fi
 
@@ -240,8 +240,14 @@ for arg in "${exp_arguments[@]}"; do
     exp_args_string="$exp_args_string $arg"
 done
 
+# Check if --purge-slurm-env is supported
+purge_env_option=""
+if sbatch --purge-slurm-env --help &>/dev/null; then
+    purge_env_option="--purge-slurm-env"
+fi
+
 # Prepare sbatch command - pass resolved script directory as first argument
-sbatch_cmd="sbatch  --purge-slurm-env --mem=0"
+sbatch_cmd="sbatch $purge_env_option --mem=0 --nodes=$nodes --time=$ctime --account=$account"
 if [[ -n "$dependency" ]]; then
     sbatch_cmd="$sbatch_cmd --dependency=$dependency"
 fi

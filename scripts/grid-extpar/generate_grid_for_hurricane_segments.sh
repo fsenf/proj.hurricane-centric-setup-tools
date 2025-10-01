@@ -18,30 +18,45 @@
 #   -h, --help      - Show this help message
 #
 #=============================================================================
-#
-# Levante cpu batch job parameters
-#
-#SBATCH --account=bb1376
-#SBATCH --job-name=gridgen
-#SBATCH --partition=compute
-#SBATCH --nodes=1
-#SBATCH --cpus-per-task=128
-#SBATCH --exclusive
-#SBATCH --time=02:30:00
-#SBATCH --output=../LOG/slurm-%x-%j.out
-#=============================================================================
 
-set -eux
 ulimit -s unlimited
 ulimit -c 0
 
 #=============================================================================
-# Configuration and Argument Parsing
+# Platform Detection and Module Loading
 #=============================================================================
 
 # Get script directory
 ORIGINAL_SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
 echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
+
+# Detect platform and load platform-specific modules
+PLATFORM=$("${ORIGINAL_SCRIPT_DIR}/../../utilities/detect_platform.sh")
+echo "Detected platform: ${PLATFORM}"
+echo "Hostname: $(hostname)"
+
+# Load platform-specific modules
+module_loader_path="${ORIGINAL_SCRIPT_DIR}/../../config/${PLATFORM}/module_loader.sh"
+if [[ -f "$module_loader_path" ]]; then
+    echo "Loading modules for platform: ${PLATFORM}"
+    source "$module_loader_path"
+else
+    echo "Warning: No module loader found for platform ${PLATFORM} at ${module_loader_path}"
+fi
+
+#=============================================================================
+# Environment Setup
+#=============================================================================
+
+# SLURM execution command setup
+START="srun -l --cpu_bind=verbose --distribution=block:cyclic --ntasks-per-node=1 --cpus-per-task=${SLURM_CPUS_PER_TASK:-${OMP_NUM_THREADS:-1}}"
+
+# Set up parallel execution if available
+export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK:-${OMP_NUM_THREADS:-1}}
+
+#=============================================================================
+# Configuration and Argument Parsing
+#=============================================================================
 
 # Load shared configuration handler
 source "${ORIGINAL_SCRIPT_DIR}/../../utilities/config_handler.sh"
@@ -107,35 +122,7 @@ echo "Processing segment: $iseg"
 iseg_string=$(printf "%02d" $iseg)
 echo "Formatted segment string: $iseg_string"
 
-#=============================================================================
-# Environment Setup
-#=============================================================================
-
-# OpenMP environment variables
-export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK}
-export KMP_AFFINITY=verbose,granularity=fine,scatter
-export OMP_STACKSIZE=128M
-
-# Environment variables for the experiment and the target system
-export OMPI_MCA_pml="ucx"
-export OMPI_MCA_btl=self
-export OMPI_MCA_osc="pt2pt"
-export UCX_IB_ADDR_TYPE=ib_global
-export OMPI_MCA_coll="^ml,hcoll"
-export OMPI_MCA_coll_hcoll_enable="0"
-export HCOLL_ENABLE_MCAST_ALL="0"
-export HCOLL_MAIN_IB=mlx5_0:1
-export UCX_NET_DEVICES=mlx5_0:1
-export UCX_TLS=mm,knem,cma,dc_mlx5,dc_x,self
-export UCX_UNIFIED_MODE=y
-export HDF5_USE_FILE_LOCKING=FALSE
-export OMPI_MCA_io="romio321"
-export UCX_HANDLE_ERRORS=bt
-
-export START="srun -l --cpu_bind=verbose --distribution=block:cyclic --ntasks-per-node=1 --cpus-per-task=${OMP_NUM_THREADS}"
-
 cd $PROJECT_WORKING_DIR
-module load python3
 
 #=============================================================================
 # Grid Generation

@@ -18,7 +18,6 @@
 #   -h, --help      - Show this help message
 #=============================================================================
 
-set -e
 
 # Get script directory
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -78,7 +77,6 @@ read_toml_config "$config_file"
 # Format segment number with leading zero for consistent naming
 iseg_string=$(printf "%02d" $iseg)
 
-module load python3
 
 # Generate start and end dates using print_timings.py
 start_date=$(python3 "${SCRIPT_DIR}/../../utilities/print_timings.py" "$config_file" "$iseg" "START")
@@ -94,11 +92,14 @@ fi
 
 # Set default output filename if not specified
 if [[ -z "$output_file" ]]; then
-    output_file="exp.${expname}"
+    # Create auto-generated directory and set output path
+    autogen_dir="${SCRIPT_DIR}/auto-generated"
+    mkdir -p "$autogen_dir"
+    output_file="${autogen_dir}/exp.${expname}"
 fi
 
 # Path to template file
-template_file="${SCRIPT_DIR}/exp.TEMPLATE_for_segment_runscript"
+template_file="${SCRIPT_DIR}/templates/exp.TEMPLATE_for_segment_runscript"
 
 # initialize output file
 touch "$output_file"

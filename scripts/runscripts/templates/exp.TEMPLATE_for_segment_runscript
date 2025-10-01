@@ -80,7 +80,7 @@ icon_output_interval="PT01H"
 regrid_output_interval="PT01H"
 
 # restart=.TRUE.
-restart_hours=3
+restart_hours=6
 dt_restart=`expr ${restart_hours} \* 3600`
 dt_checkpoint=`expr ${restart_hours} \* 3600 `
 
@@ -193,7 +193,7 @@ cat > ${atmo_namelist} << EOF
  p_test_run     = .false.
  l_test_openmp  = .false.
  l_log_checks   = .false.
- num_io_procs                 = 36
+ num_io_procs                 = 6
  num_prefetch_proc            = 1
 /
 &grid_nml

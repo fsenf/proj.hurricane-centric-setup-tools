@@ -10,7 +10,7 @@
 #   4. Boundary condition files (BC)
 #
 # USAGE:
-#   ./run_hurricane_testrun_chain.sh [segment_number] [-c|--config config_file] [--nodes N]
+#   ./run_hurricane_testrun_chain.sh [segment_number] [-c|--config config_file] [--nodes N] [--account ACCOUNT]
 #
 # ARGUMENTS:
 #   segment_number  - The hurricane segment number to check
@@ -18,6 +18,7 @@
 # OPTIONS:
 #   -c, --config    - Path to TOML configuration file (required)
 #   --nodes=N       - Number of compute nodes (default: 20)
+#   --account=ACCOUNT - SLURM account name (default: $SBATCH_ACCOUNT)
 #   -h, --help      - Show this help message
 #
 # EXIT CODES:
@@ -32,16 +33,9 @@
 # DATE:
 #   June 2025
 #=============================================================================
-#SBATCH --job-name=testrun_chain  # Specify job name
-#SBATCH --partition=shared        # Specify partition name
-#SBATCH --mem=2G                  # Specify amount of memory needed
-#SBATCH --time=00:05:00           # Set a limit on the total run time
-#SBATCH --account=bb1376          # Charge resources on this project account
-#SBATCH --output=../LOG/slurm-%x-%j.out
-
 
 #=============================================================================
-# Configuration and Argument Parsing
+# Platform Detection and Module Loading
 #=============================================================================
 
 # Get script directory
@@ -53,10 +47,31 @@ if [[ -z "$ORIGINAL_SCRIPT_DIR" ]]; then
 fi
 
 SCRIPT_DIR=${ORIGINAL_SCRIPT_DIR}
-
 echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
 
-# Get script directory
+# Detect platform and load platform-specific modules
+PLATFORM=$("${SCRIPT_DIR}/../../utilities/detect_platform.sh")
+echo "Detected platform: ${PLATFORM}"
+echo "Hostname: $(hostname)"
+
+# Load platform-specific modules
+module_loader_path="${SCRIPT_DIR}/../../config/${PLATFORM}/module_loader.sh"
+if [[ -f "$module_loader_path" ]]; then
+    echo "Loading modules for platform: ${PLATFORM}"
+    source "$module_loader_path"
+else
+    echo "Warning: No module loader found for platform ${PLATFORM} at ${module_loader_path}"
+fi
+
+#=============================================================================
+# Configuration and Argument Parsing
+#=============================================================================
+
+
+
+
+# Load SLURM environment variables
+source "$SCRIPT_DIR/../../config/${PLATFORM}/sbatch_env_setter.sh" "testrun"
 
 # Load shared configuration handler
 source "${SCRIPT_DIR}/../../utilities/config_handler.sh"
@@ -67,7 +82,7 @@ CONFIG_ARG=$(parse_config_argument "$@")
 # Handle configuration loading
 if [[ -z "$CONFIG_ARG" ]]; then
     echo "Error: Config file is required"
-    echo "Usage: $0 [segment_number] -c|--config config_file [--nodes N]"
+    echo "Usage: $0 [segment_number] -c|--config config_file [--nodes N] [--account ACCOUNT]"
     exit 1
 fi
 
@@ -84,12 +99,14 @@ iseg=""
 slurm_options=()
 
 # Default SLURM parameters
-nodes=20
+nodes="$SBATCH_NODES"
+time="$SBATCH_TIME"
+account="$SBATCH_ACCOUNT"
 
 for arg in "${REMAINING_ARGS[@]}"; do
     case $arg in
         -h|--help)
-            echo "Usage: $0 [segment_number] -c|--config config_file [--nodes N]"
+            echo "Usage: $0 [segment_number] -c|--config config_file [--nodes N] [--account ACCOUNT]"
             echo ""
             echo "Arguments:"
             echo "  segment_number    Hurricane segment number to check"
@@ -98,13 +115,19 @@ for arg in "${REMAINING_ARGS[@]}"; do
             echo ""
             echo "SLURM Options:"
             echo "  --nodes=N         Number of compute nodes (default: 20)"
+            echo "  --account=ACCOUNT SLURM account name (default: \$SBATCH_ACCOUNT)"
             echo ""
             echo "Examples:"
             echo "  $0 5 -c ../../config/hurricane_config.toml"
             echo "  $0 5 -c ../../config/hurricane_config_width100km_reinit12h.toml --nodes=30"
+            echo "  $0 5 -c ../../config/hurricane_config.toml --account=myproject"
             exit 0
             ;;
         --nodes=*)
+            # SLURM option
+            slurm_options+=("$arg")
+            ;;
+        --account=*)
             # SLURM option
             slurm_options+=("$arg")
             ;;
@@ -129,7 +152,7 @@ done
 #------------------------------------------------------------------------------
 if [[ -z "$iseg" ]]; then
     echo "Error: segment_number is required"
-    echo "Usage: $0 [segment_number] -c|--config config_file [--nodes N]"
+    echo "Usage: $0 [segment_number] -c|--config config_file [--nodes N] [--account ACCOUNT]"
     exit 1
 fi
 
@@ -144,6 +167,10 @@ for option in "${slurm_options[@]}"; do
         --nodes=*)
             nodes="${option#*=}"
             echo "Using custom node count: $nodes"
+            ;;
+        --account=*)
+            account="${option#*=}"
+            echo "Using custom account: $account"
             ;;
     esac
 done
@@ -174,7 +201,7 @@ echo "Using configuration with ${reinit_hours_int}h reinit and ${nnests} nests, 
 #=============================================================================
 # Run check for all file types
 #=============================================================================
-module load python3
+
 
 echo -e "\nRunning file validation check..."
 check_output=$(python "${SCRIPT_DIR}/../../utilities/check_preprocessing_files.py" "$CONFIG_FILE" "$iseg" all)
@@ -242,6 +269,6 @@ echo -e "\nRunscript detected: $test_runscript"
 echo "Submitting test run to queue..."
 
 # Run the job using starter.sh with specified parameters
-bash starter.sh --nodes=$nodes --time=01:00:00 $test_runscript
+bash starter.sh --nodes=$nodes --time=$time --account=$account $test_runscript
 
 exit 0

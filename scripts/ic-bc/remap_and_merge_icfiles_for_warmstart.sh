@@ -11,14 +11,10 @@ from_gridfile=$3
 to_gridfile=$4
 
 output_file=$5
-
-# Load CDO module
-module load cdo
-module load python3
+work_dir=$6
 
 script_dir=`readlink -f $(dirname $0)`
 
-work_dir=$SCRATCH/icontools
 cd ${work_dir}
 
 # Create temporary file for intermediate result
@@ -48,7 +44,7 @@ echo "Merged: ${intermediate_merged_file}\n\n"
 
 # Replace u,v components with vn normal component
 echo "Replacing u,v with vn in ${target_ic_final}..."
-bash ${script_dir}/replace_uv_with_vn_in_icfile.sh "${to_gridfile}" "${intermediate_merged_file}"
+bash ${script_dir}/replace_uv_with_vn_in_icfile.sh "${to_gridfile}" "${intermediate_merged_file}" "${work_dir}"
 
 # Copy final result to experiment directory
 cp -b "${intermediate_merged_file}.new" "${output_file}"

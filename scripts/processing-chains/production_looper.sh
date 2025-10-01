@@ -36,12 +36,40 @@
 set -e
 
 #=============================================================================
-# Configuration and Argument Parsing
+# Platform Detection and Module Loading
 #=============================================================================
 
 # Get script directory
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-echo "Script directory: ${SCRIPT_DIR}"
+
+ORIGINAL_SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
+
+if [[ -z "$ORIGINAL_SCRIPT_DIR" ]]; then
+    ORIGINAL_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+fi
+
+SCRIPT_DIR=${ORIGINAL_SCRIPT_DIR}
+echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
+
+# Detect platform and load platform-specific modules
+PLATFORM=$("${SCRIPT_DIR}/../../utilities/detect_platform.sh")
+echo "Detected platform: ${PLATFORM}"
+echo "Hostname: $(hostname)"
+
+# Load platform-specific modules
+module_loader_path="${SCRIPT_DIR}/../../config/${PLATFORM}/module_loader.sh"
+if [[ -f "$module_loader_path" ]]; then
+    echo "Loading modules for platform: ${PLATFORM}"
+    source "$module_loader_path"
+else
+    echo "Warning: No module loader found for platform ${PLATFORM} at ${module_loader_path}"
+fi
+
+#=============================================================================
+# Configuration and Argument Parsing
+#=============================================================================
+
+# Load SLURM environment variables
+source "$SCRIPT_DIR/../../config/${PLATFORM}/sbatch_env_setter.sh" "production"
 
 # Load shared configuration handler
 source "${SCRIPT_DIR}/../../utilities/config_handler.sh"
@@ -71,9 +99,9 @@ start_segment=""
 end_segment=""
 slurm_options=()
 
-# Default SLURM parameters (similar to starter.sh)
-nodes=64
-ctime="08:00:00"
+# Default SLURM parameters
+nodes="$SBATCH_NODES"
+ctime="$SBATCH_TIME"
 dependency=""
 initial=false
 
@@ -193,9 +221,19 @@ if [[ -n "$dependency" ]]; then
 fi
 
 #=============================================================================
+# Generate Platform-Specific Post-Processing Template
+#=============================================================================
+echo ""
+echo "Generating platform-specific post-processing template..."
+
+# Create the platform-specific template using dedicated script
+template_file="${SCRIPT_DIR}/../runscripts/auto-generated/post.TEMPLATE_for_segment_runscript"
+bash "${SCRIPT_DIR}/../../utilities/create_post_template.sh" "$template_file"
+echo "cd ${SCRIPT_DIR}" >> "$template_file"
+ 
+#=============================================================================
 # Production Chain Loop
 #=============================================================================
-module load python3
 
 # Get ICON run directory from config
 icon_run_dir=${TOOLS_ICON_BUILD_DIR}/run
@@ -229,18 +267,14 @@ for iseg in $(seq $start_segment $end_segment); do
     expname="${PROJECT_NAME}-${PROJECT_WIDTH_CONFIG}-segment${iseg_string}-${init_date}-exp111"
     echo "Experiment name: $expname"
 
-    actual_postproc_script="${SCRIPT_DIR}/../runscripts/post.${expname}.run"
-    template_file="${SCRIPT_DIR}/../runscripts/post.TEMPLATE_for_segment_runscript"
+    # Create auto-generated directory and set paths
+    autogen_dir="${SCRIPT_DIR}/../runscripts/auto-generated"
+    mkdir -p "$autogen_dir"
+    actual_postproc_script="${autogen_dir}/post.${expname}.run"
 
-    # Check if template file exists
-    if [[ ! -f "$template_file" ]]; then
-        echo "❌ ERROR: Template file not found: $template_file"
-        exit 1
-    fi
 
     # Create post-processing script from template
     cat "$template_file" > "$actual_postproc_script"
-    echo "cd ${SCRIPT_DIR}" >> "$actual_postproc_script"
     chmod +x "$actual_postproc_script"
     echo "Post-processing script created: $actual_postproc_script"
 
