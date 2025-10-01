@@ -80,7 +80,7 @@ icon_output_interval="PT01H"
 regrid_output_interval="PT01H"
 
 # restart=.TRUE.
-restart_hours=3
+restart_hours=6
 dt_restart=`expr ${restart_hours} \* 3600`
 dt_checkpoint=`expr ${restart_hours} \* 3600 `
 
