@@ -75,7 +75,12 @@ TYPE=$(detect_script_type "$SCRIPT")
 # Detect platform and load SBATCH configuration
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PLATFORM=${PLATFORM:-$($SCRIPT_DIR/detect_platform.sh)}
-source "$SCRIPT_DIR/../config/${PLATFORM}/sbatch_env_setter.sh" "$TYPE"
+CONFIG_FILE="$SCRIPT_DIR/../config/${PLATFORM}/sbatch_env_setter.sh"
+if [[ ! -f "$CONFIG_FILE" ]]; then
+    echo "Error: Platform-specific configuration file '$CONFIG_FILE' not found" >&2
+    exit 1
+fi
+source "$CONFIG_FILE" "$TYPE"
 
 # Parse sbatch options and script arguments
 sbatch_args=()
