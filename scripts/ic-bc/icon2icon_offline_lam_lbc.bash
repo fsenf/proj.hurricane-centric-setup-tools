@@ -254,7 +254,7 @@ for datafilename in "${DATAFILELIST[@]}" ; do
 
         cdo merge ${novn_output_file} ${z_ifc_output_file} ${FULL_OUTNAME}
 
-	if [ $? -ne 0 ]; then
+        if [ $? -ne 0 ]; then
             echo "Error: Remapping failed for file: $datafile"
             exit 1
         fi
