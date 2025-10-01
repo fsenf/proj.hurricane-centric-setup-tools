@@ -1,5 +1,5 @@
 #!/bin/bash
-# filepath: /home/b/b380352/proj/2025-05_hurricane-centric-setup-tools/utilities/detect_platform.sh
+# filepath: <project-root>/utilities/detect_platform.sh
 #=============================================================================
 # DESCRIPTION:
 #   Platform detection script based on hostname patterns
