@@ -4,9 +4,38 @@ This document provides a comprehensive reference for all TOML configuration opti
 
 ## Overview
 
-### Configuration File Format
+### Platform-Aware Configuration System
 
-The system uses TOML (Tom's Obvious Minimal Language) configuration files. The main configuration file is `config/hurricane_config.toml`.
+The system uses a **platform-aware configuration architecture** that automatically detects your computing platform and loads appropriate configurations.
+
+#### Configuration Hierarchy
+```
+config/
+├── generic/           # Generic/fallback configurations
+│   └── hurricane_config.toml
+├── levante/          # DKRZ Levante-specific configurations
+│   ├── hurricane_config_*.toml
+│   ├── module_loader.sh
+│   └── sbatch_env_setter.sh
+├── juwels/           # JSC JUWELS-specific configurations
+│   ├── hurricane_config_*.toml
+│   ├── module_loader.sh
+│   └── sbatch_env_setter.sh
+└── [platform]/       # Additional platform configurations
+```
+
+#### Platform Detection
+The system automatically detects your platform using hostname patterns:
+- **Levante**: `*.levante.dkrz.de` hostnames → uses `config/levante/`
+- **JUWELS**: `*juwels*` hostnames → uses `config/juwels/`
+- **Generic**: All other systems → uses `config/generic/`
+
+#### Configuration Selection
+Scripts automatically load the appropriate platform configuration:
+```bash
+# Platform detection happens automatically
+./generate_grid_for_hurricane_segments.sh 1 -c config/levante/hurricane_config.toml
+```
 
 ### Configuration Sections
 
@@ -187,6 +216,8 @@ icbc_basedir = "/work/bb1376/data/icon/bc-init"
 
 ## Configuration Examples
 
+### Levante Configuration (`config/levante/hurricane_config.toml`)
+
 ```toml
 [tools]
 icontools_dir = "/work/bb1376/tools/dwd_icon_tools/icontools"
@@ -221,7 +252,119 @@ grid_basedir = "/work/bb1376/data/icon/grids-extpar"
 icbc_basedir = "/work/bb1376/data/icon/bc-init"
 ```
 
+### JUWELS Configuration (`config/juwels/hurricane_config.toml`)
+
+```toml
+[tools]
+icontools_dir = "/p/project/your-project/tools/icontools"
+extpar_input_dir = "/p/largedata/extpar-input-data"
+extpar_dir = "/p/project/your-project/tools/extpar"
+icon_build_dir = "/p/project/your-project/icon-build/"
+
+[project]
+name = "hurricane-segments-juwels"
+width_config = "width20km_reinit12h"
+working_dir = "/p/scratch/your-project/icontools"
+
+# Reference and track sections remain similar
+[reference]
+init_time = "20200907T000000Z"
+expname = "ifces2-atlanXL-20200907-exp021"
+input_grid = "/p/project/your-project/grids/reference_grid.nc"
+input_icbc_dir = "/p/largedata/icbc-data/"
+input_icbc_subdir = "NESTING"
+
+[track]
+track_dir = "/p/project/your-project/tracks/"
+track_file = "hurricane_track.nc"
+
+[domains]
+segment_reinit_hours = 12.0
+segment_length_added = 3.0
+nests = 3
+dom_width = [60.0, 40.0, 20.0]
+
+[output]
+grid_basedir = "/p/project/your-project/grids"
+icbc_basedir = "/p/project/your-project/icbc"
+```
+
+### Generic Configuration (`config/generic/hurricane_config.toml`)
+
+```toml
+[tools]
+icontools_dir = "/path/to/your/icontools"
+extpar_input_dir = "/path/to/extpar-input-data"
+extpar_dir = "/path/to/extpar"
+icon_build_dir = "/path/to/icon-build/"
+
+[project]
+name = "hurricane-segments"
+width_config = "width20km_reinit12h"
+working_dir = "/path/to/working/dir"
+
+[reference]
+init_time = "20200907T000000Z"
+expname = "your-reference-experiment"
+input_grid = "/path/to/reference/grid.nc"
+input_icbc_dir = "/path/to/icbc/data/"
+input_icbc_subdir = "NESTING"
+
+[track]
+track_dir = "/path/to/track/data/"
+track_file = "hurricane_track.nc"
+
+[domains]
+segment_reinit_hours = 12.0
+segment_length_added = 3.0
+nests = 3
+dom_width = [60.0, 40.0, 20.0]
+
+[output]
+grid_basedir = "/path/to/output/grids"
+icbc_basedir = "/path/to/output/icbc"
+```
+
+## Platform-Specific Configurations
+
+### Platform Detection
+
+The system automatically detects your computing platform and loads appropriate configurations using `utilities/detect_platform.sh`:
+
+```bash
+# Platform detection logic
+if [[ "$HOSTNAME" == *.levante.dkrz.de ]]; then
+    PLATFORM="levante"
+elif [[ "$HOSTNAME" == *juwels* ]]; then
+    PLATFORM="juwels"
+else
+    PLATFORM="generic"
+fi
+```
+
+The detected platform is available as the `$PLATFORM` environment variable.
+
+### Platform-Specific Files
+
+Each platform has specific configuration files:
+
+**Levante Platform** (`config/levante/`):
+- Configuration files with Levante-specific paths and settings
+- Module loading script for Levante environment
+
+**JUWELS Platform** (`config/juwels/`):
+- Configuration files with JUWELS-specific paths and settings
+- Module loading script for JUWELS environment
+
+**Generic Platform** (`config/generic/`):
+- Template configuration files with placeholder paths
+- Generic module loading script for customization
+
+
+
 ## Environment Variables
+
+### Configuration Variables
 
 When configuration is loaded, TOML sections and keys are converted to uppercase environment variables with section prefixes:
 
@@ -258,6 +401,19 @@ DOMAINS_DOM_WIDTH="60.0 40.0 20.0"
 OUTPUT_GRID_BASEDIR="/work/bb1376/data/icon/grids-extpar"
 OUTPUT_ICBC_BASEDIR="/work/bb1376/data/icon/bc-init"
 ```
+
+### Platform Variables
+
+Additional environment variables set by the platform detection system:
+
+```bash
+# Platform detection
+PLATFORM="levante"                  # Detected platform (levante, juwels, generic)
+```
+
+
+
+
 
 ## Configuration Validation
 
@@ -363,4 +519,9 @@ python ../utilities/check_preprocessing_files.py ../config/hurricane_config.toml
    - Validate hurricane position data quality
 
 
-For additional help, see the [Getting Started](getting_started.md) guide, [Preparing New Hurricane Cases](preparing_new_hurricane_cases.md) for advanced setups, or [Detailed Workflows](detailed_workflows.md) documentation.
+## See Also
+
+- **[Platform Configuration](platform_configuration.md)** - Platform-specific setup and job submission system
+- **[Getting Started](getting_started.md)** - Initial setup and installation guide  
+- **[Preparing New Hurricane Cases](preparing_new_hurricane_cases.md)** - Advanced hurricane case setup
+- **[Detailed Workflows](detailed_workflows.md)** - Complete workflow documentation and examples

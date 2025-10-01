@@ -7,11 +7,15 @@ Welcome to the comprehensive documentation for the Hurricane-Centric Setup Tools
 ### **� Documentation Categories**
 
 **Quick Start & Learning**:
-- Start with [Getting Started](getting_started.md) using provided Hurricane Paulette 2020 data
-- Reference [Configuration Reference](configuration_reference.md) for parameter details
+- Start with [Getting Started](getting_started.md) using provided Hurricane Paulette 2020 data with automatic platform detection
+- Reference [Configuration Reference](configuration_reference.md) for platform-aware parameter details
+
+**Platform & Configuration**:
+- [Platform Configuration](platform_configuration.md) for multi-platform setup and job submission
+- [Configuration Reference](configuration_reference.md) for complete TOML parameter documentation
 
 **Production Workflows**:
-- Use [Detailed Workflows](detailed_workflows.md) for operational processing chains
+- Use [Detailed Workflows](detailed_workflows.md) for platform-aware operational processing chains
 - Follow [Preparing New Hurricane Cases](preparing_new_hurricane_cases.md) for different hurricanes
 
 **Technical Deep Dives**:
