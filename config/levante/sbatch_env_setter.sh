@@ -1,5 +1,5 @@
 #!/bin/bash
-# filepath: /home/b/b380352/proj/2025-05_hurricane-centric-setup-tools/config/levante/sbatch_env_setter.sh
+# filepath: config/levante/sbatch_env_setter.sh
 #=============================================================================
 # DESCRIPTION:
 #   SBATCH environment variable setter for Levante platform
