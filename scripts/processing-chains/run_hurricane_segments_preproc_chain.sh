@@ -192,9 +192,9 @@ printf "... IC job submitted with ID: $ic_job\n\n"
 #-----------------------------------------------------------------------------
 echo "Submitting BC job..."
 if [[ -n "$CONFIG_OPTION" ]]; then
-    bc_job=$($sbatch_wrapper ./icon2icon_offline_lam_lbc.bash --dependency=afterany:$ic_job $iseg $CONFIG_OPTION)
+    bc_job=$($sbatch_wrapper ./icon2icon_offline_lam_lbc.bash --dependency=afterany:$grid_job $iseg $CONFIG_OPTION)
 else
-    bc_job=$($sbatch_wrapper ./icon2icon_offline_lam_lbc.bash --dependency=afterany:$ic_job $iseg)
+    bc_job=$($sbatch_wrapper ./icon2icon_offline_lam_lbc.bash --dependency=afterany:$grid_job $iseg)
 fi
 printf "... BC job submitted with ID: $bc_job\n\n"
 
@@ -207,9 +207,9 @@ echo "Grid: $grid_job | Extpar: $extpar_job | IC: $ic_job | BC: $bc_job\n\n"
 echo "Submitting final testrun job..."
 cd ${pp_path}/processing-chains
 if [[ -n "$CONFIG_OPTION" ]]; then
-    testrun_job=$($sbatch_wrapper ./run_hurricane_testrun_chain.sh --dependency=afterany:$bc_job $iseg $CONFIG_OPTION)
+    testrun_job=$($sbatch_wrapper ./run_hurricane_testrun_chain.sh --dependency=afterany:$extpar_job:$ic_job:$bc_job $iseg $CONFIG_OPTION)
 else
-    testrun_job=$($sbatch_wrapper ./run_hurricane_testrun_chain.sh --dependency=afterany:$bc_job $iseg)
+    testrun_job=$($sbatch_wrapper ./run_hurricane_testrun_chain.sh --dependency=afterany:$extpar_job:$ic_job:$bc_job $iseg)
 fi
 printf "... Testrun job submitted with ID: $testrun_job\n\n"
 echo "All preprocessing and testrun jobs submitted successfully!"
