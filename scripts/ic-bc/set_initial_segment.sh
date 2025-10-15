@@ -244,8 +244,8 @@ for idom in $(seq 1 ${DOMAINS_NESTS}); do
         continue
     fi
     
-    # Target filename follows the pattern: YYYYMMDDTHHMMZ_DOM0X_warmini.nc
-    TARGET_FILE="${ICBC_DIR}/${TIMESTAMP}_DOM0${idom}_warmini.nc"
+    # Target filename follows the pattern: YYYYMMDDTHHMMZ_DOM0X_${exp_suffix}_warmini.nc
+    TARGET_FILE="${ICBC_DIR}/${TIMESTAMP}_DOM0${idom}_${RUN_PRODUCTION_EXP}_warmini.nc"
     
     echo "Copying domain $idom:"
     echo "  From: $(basename $SOURCE_FILE)"
@@ -293,7 +293,7 @@ fi
 echo ""
 echo "Created files:"
 for idom in $(seq 1 ${DOMAINS_NESTS}); do
-    TARGET_FILE="${ICBC_DIR}/${TIMESTAMP}_DOM0${idom}_warmini.nc"
+    TARGET_FILE="${ICBC_DIR}/${TIMESTAMP}_DOM0${idom}_${RUN_PRODUCTION_EXP}_warmini.nc"
     if [ -f "$TARGET_FILE" ]; then
         echo "  ✓ $(basename $TARGET_FILE)"
     fi

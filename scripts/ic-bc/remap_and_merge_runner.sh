@@ -262,7 +262,7 @@ for idom in $(seq 1 ${DOMAINS_NESTS}); do
 
     # Use output directory from config
     output_dir="${OUTPUT_ICBC_BASEDIR}/${project_name}/seg${to_iseg_string}_${project_width_config}"
-    output_file="${output_dir}/${segment_start_time}_DOM0${idom}_warmini.nc"
+    output_file="${output_dir}/${segment_start_time}_DOM0${idom}_${RUN_PRODUCTION_EXP}_warmini.nc"
 
     echo "Output will be saved to: $output_file"
 

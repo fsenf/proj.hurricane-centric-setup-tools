@@ -12,6 +12,7 @@ test_mode='.TRUE.'  #  via optional flag -t
 
 project_name="hurricane-paulette2020-segments" # from toml config
 project_width_config="width100km_reinit12h" # from toml config
+exp_suffix="exp111"
 
 grids_base_folder="/work/bb1376/data/icon/grids-extpar" # from toml config
 icbc_base_folder="/work/bb1376/data/icon/bc-init" # from toml config
@@ -24,7 +25,6 @@ end_date="2020-09-08T12:00:00Z" # via `python print_timings.py <config_file> <is
 # This is the definition of hurricane-paulette2020-segments-seg2_dom1_DOM01
 reg_lon_def="-47.08,0.01,-40.23" # from `python extract_region bounds.py ${grid_1}.nc`
 reg_lat_def="14.41,0.01,20.91"   # comes with the above command
-
 
 
 
@@ -66,7 +66,7 @@ if [ "${reinit_mode}" = "cold" ]; then
   init_suffix="ini"
   init_mode=7
 else
-  init_suffix="warmini"
+  init_suffix=${exp_suffix}_"warmini"
   init_mode=1
 fi
 

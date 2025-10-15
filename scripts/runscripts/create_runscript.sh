@@ -85,10 +85,12 @@ end_date=$(python3 "${SCRIPT_DIR}/../../utilities/print_timings.py" "$config_fil
 init_date=$(python3 "${SCRIPT_DIR}/../../utilities/print_timings.py" "$config_file" "$iseg" "INIT_DATE")
 
 if [[ $test_mode == ".TRUE." ]]; then
-    expname="${PROJECT_NAME}-${PROJECT_WIDTH_CONFIG}-segment${iseg_string}-${init_date}-${RUN_TEST_EXP}"
+    exp_suffix="${RUN_TEST_EXP}"
 else
-    expname="${PROJECT_NAME}-${PROJECT_WIDTH_CONFIG}-segment${iseg_string}-${init_date}-${RUN_PRODUCTION_EXP}"
+    exp_suffix="${RUN_PRODUCTION_EXP}"
 fi
+
+expname="${PROJECT_NAME}-${PROJECT_WIDTH_CONFIG}-segment${iseg_string}-${init_date}-${exp_suffix}"
 
 # Set default output filename if not specified
 if [[ -z "$output_file" ]]; then
@@ -111,6 +113,7 @@ iseg="${iseg}"
 
 project_name="${PROJECT_NAME}"
 project_width_config="${PROJECT_WIDTH_CONFIG}"
+exp_suffix="${exp_suffix}"
 
 grids_base_folder="${OUTPUT_GRID_BASEDIR}"
 icbc_base_folder="${OUTPUT_ICBC_BASEDIR}"
