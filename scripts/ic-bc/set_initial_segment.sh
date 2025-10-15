@@ -162,7 +162,7 @@ fi
 # Pattern matching the experiment directory like in remap_and_merge_runner.sh
 TOOLS_ICON_BUILD_DIR="${TOOLS_ICON_BUILD_DIR}"
 EXPERIMENT_BASE_DIR="${TOOLS_ICON_BUILD_DIR}/experiments"
-EXPERIMENT_PATTERN="${EXPERIMENT_BASE_DIR}/${PROJECT_NAME}-${PROJECT_WIDTH_CONFIG}-segment${iseg_string}-????????T????Z-exp110"
+EXPERIMENT_PATTERN="${EXPERIMENT_BASE_DIR}/${PROJECT_NAME}-${PROJECT_WIDTH_CONFIG}-segment${iseg_string}-????????T????Z-${RUN_TEST_EXP}"
 
 echo "Looking for experiment directory with pattern: $EXPERIMENT_PATTERN"
 EXPERIMENT_DIRS=($EXPERIMENT_PATTERN)

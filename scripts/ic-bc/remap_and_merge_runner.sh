@@ -211,11 +211,11 @@ for idom in $(seq 1 ${DOMAINS_NESTS}); do
     # Define patterns with wildcards instead of hardcoded dates
     # ic_bg_pattern="${experiment_dir}/${project_name}-${project_width_config}-segment${to_iseg_string}-????????-exp108/IC_vertically_interpolated_DOM0${idom}.nc"
     
-    ic_bg_dir="${experiment_dir}/${project_name}-${project_width_config}-segment${to_iseg_string}-????????T????Z-exp110"
+    ic_bg_dir="${experiment_dir}/${project_name}-${project_width_config}-segment${to_iseg_string}-????????T????Z-${RUN_TEST_EXP}"
     ic_bg_pattern="${ic_bg_dir}/lam_input_IC_DOM0${idom}_ML_????????T??????Z.nc"
     to_grid_pattern="${ic_bg_dir}/${project_name}-seg${to_iseg_string}_dom${idom}_DOM01.nc"
     
-    ic_seg_dir="${experiment_dir}/${project_name}-${project_width_config}-segment${from_iseg_string}-????????T????Z-exp111"
+    ic_seg_dir="${experiment_dir}/${project_name}-${project_width_config}-segment${from_iseg_string}-????????T????Z-${RUN_PRODUCTION_EXP}"
     ic_seg_pattern="${ic_seg_dir}/lam_input_IC_DOM0${idom}_ML_????????T??????Z.nc"
     from_grid_pattern="${ic_seg_dir}/${project_name}-seg${from_iseg_string}_dom${idom}_DOM01.nc"
 

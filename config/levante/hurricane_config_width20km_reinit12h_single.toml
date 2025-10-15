@@ -35,4 +35,9 @@ dom_width = [20.0]  # in km
 grid_basedir = "/scratch/b/b380352/hurri-test02/grids-extpar"
 icbc_basedir = "/scratch/b/b380352/hurri-test02/bc-init"
 
+[run]
+# Experiment naming and templates
+template = "exp.TEMPLATE_for_segment_runscript"
+test_exp = "exp110"
+production_exp = "exp111"
 # end of config

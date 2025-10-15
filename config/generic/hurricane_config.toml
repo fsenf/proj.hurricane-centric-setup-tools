@@ -36,4 +36,10 @@ dom_width = [60.0, 40.0, 20.0]  # in km
 grid_basedir = "/work/bb1376/data/icon/grids-extpar"
 icbc_basedir = "/work/bb1376/data/icon/bc-init"
 
+[run]
+# Experiment naming and templates
+template = "exp.TEMPLATE_for_segment_runscript"
+test_exp = "exp110"
+production_exp = "exp111"
+
 # end of config

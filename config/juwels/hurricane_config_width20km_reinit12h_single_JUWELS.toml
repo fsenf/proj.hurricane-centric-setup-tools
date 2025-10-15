@@ -35,4 +35,10 @@ dom_width = [20.0]  # in km
 grid_basedir = "/p/scratch/ifces2-scalexa/senf1/tmp/grids-extpar"
 icbc_basedir = "/p/scratch/ifces2-scalexa/senf1/tmp/bc-init"
 
+[run]
+# Experiment naming and templates
+template = "exp.TEMPLATE_for_segment_runscript"
+test_exp = "exp110"
+production_exp = "exp111"
+
 # end of config
