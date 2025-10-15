@@ -51,6 +51,7 @@ else
     echo "Warning: No module loader found for platform ${PLATFORM} at ${module_loader_path}"
 fi
 
+
 #=============================================================================
 # Environment Setup
 #=============================================================================
@@ -135,6 +136,8 @@ cd $PROJECT_WORKING_DIR
 
 # Find BC files using Python utility
 DATAFILELIST=($(python "${ORIGINAL_SCRIPT_DIR}/../../utilities/find_icbc_file.py" "$CONFIG_FILE" "$iseg" "BC"))
+GEOFILE=$(python "${ORIGINAL_SCRIPT_DIR}/../../utilities/find_icbc_file.py" "$CONFIG_FILE" "$iseg" "IC")
+
 if [ $? -ne 0 ] || [ ${#DATAFILELIST[@]} -eq 0 ]; then
     echo "Error: No BC files found for segment $iseg"
     exit 1
@@ -160,10 +163,6 @@ fi
 
 # Name of boundary grid
 BOUNDGRID=${OUTGRID%.*}'_lbc.nc'
-
-# Geometry file from reference dataset
-GEODIR="${REFERENCE_INPUT_ICBC_DIR}/${REFERENCE_INPUT_ICBC_SUBDIR}"
-GEOFILE="${GEODIR}/lam_input_geo_DOM02_ML.nc"
 
 #=============================================================================
 # PART I: Create auxiliary grid file which contains only the cells of the 
