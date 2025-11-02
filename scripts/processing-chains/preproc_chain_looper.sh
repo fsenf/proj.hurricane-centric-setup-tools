@@ -5,7 +5,7 @@
 #   Loops over multiple hurricane segments and submits preprocessing chains.
 #
 # USAGE:
-#   ./preproc_chain_looper.sh start_segment end_segment -c|--config config_file
+#   ./preproc_chain_looper.sh start_segment end_segment -c|--config config_file [--debug]
 #
 # ARGUMENTS:
 #   start_segment  - First segment number to process
@@ -14,11 +14,12 @@
 # OPTIONS:
 #   -c, --config   - Path to TOML configuration file (required)
 #                    Relative paths are resolved from script directory
+#   --debug        - Enable debug mode with verbose output
 #   -h, --help     - Show this help message
 #
 # EXAMPLES:
 #   ./preproc_chain_looper.sh 1 8 -c ../../config/hurricane_config.toml
-#   ./preproc_chain_looper.sh 3 7 -c ../../config/hurricane_config.toml
+#   ./preproc_chain_looper.sh 3 7 -c ../../config/hurricane_config.toml --debug
 #
 # AUTHOR:
 #   GitHub Copilot
@@ -40,7 +41,7 @@ CONFIG_ARG=$(parse_config_argument "$@")
 # Handle config path resolution without loading
 if [[ -z "$CONFIG_ARG" ]]; then
     echo "Error: Config file is required"
-    echo "Usage: $0 start_segment end_segment -c|--config config_file"
+    echo "Usage: $0 start_segment end_segment -c|--config config_file [--debug]"
     exit 1
 fi
 
@@ -53,11 +54,12 @@ REMAINING_ARGS=($(remove_config_args "$@"))
 # Parse arguments
 start_segment=""
 end_segment=""
+debug=false
 
 for arg in "${REMAINING_ARGS[@]}"; do
     case $arg in
         -h|--help)
-            echo "Usage: $0 start_segment end_segment -c|--config config_file"
+            echo "Usage: $0 start_segment end_segment -c|--config config_file [--debug]"
             echo ""
             echo "Arguments:"
             echo "  start_segment     First segment number to process"
@@ -65,11 +67,17 @@ for arg in "${REMAINING_ARGS[@]}"; do
             echo ""
             echo "Options:"
             show_config_help
+            echo "  --debug           Enable debug mode with verbose output"
             echo ""
             echo "Examples:"
             echo "  $0 1 8 -c ../../config/hurricane_config.toml"
-            echo "  $0 3 7 -c ../../config/hurricane_config.toml"
+            echo "  $0 3 7 -c ../../config/hurricane_config.toml --debug"
             exit 0
+            ;;
+        --debug)
+            debug=true
+            set -x
+            echo "Debug mode enabled"
             ;;
         -*)
             echo "Error: Unknown option $arg"
@@ -83,7 +91,7 @@ for arg in "${REMAINING_ARGS[@]}"; do
                 end_segment="$arg"
             else
                 echo "Error: Too many positional arguments"
-                echo "Usage: $0 start_segment end_segment -c|--config config_file"
+                echo "Usage: $0 start_segment end_segment -c|--config config_file [--debug]"
                 exit 1
             fi
             ;;
@@ -93,7 +101,7 @@ done
 # Validate inputs
 if [[ -z "$start_segment" ]] || [[ -z "$end_segment" ]]; then
     echo "Error: Both start_segment and end_segment are required"
-    echo "Usage: $0 start_segment end_segment -c|--config config_file"
+    echo "Usage: $0 start_segment end_segment -c|--config config_file [--debug]"
     exit 1
 fi
 
@@ -113,6 +121,13 @@ if [ "$start_segment" -gt "$end_segment" ]; then
 fi
 
 echo "Processing segments: $start_segment to $end_segment"
+
+# Prepare debug option for child scripts
+DEBUG_OPTION=""
+if [[ "$debug" == "true" ]]; then
+    DEBUG_OPTION="--debug"
+fi
+
 echo "============================================================================="
 
 # Arrays to store job IDs
@@ -127,7 +142,7 @@ for ((iseg = start_segment; iseg <= end_segment; iseg++)); do
     echo "Submitting preprocessing chain for segment $iseg..."
     
     # Submit the preprocessing chain for this segment
-    chain_output=$(bash ./run_hurricane_segments_preproc_chain.sh "$iseg" -c "$CONFIG_FILE_ABS" 2>&1)
+    chain_output=$(bash ./run_hurricane_segments_preproc_chain.sh "$iseg" -c "$CONFIG_FILE_ABS" $DEBUG_OPTION 2>&1)
     
     if [ $? -ne 0 ]; then
         echo "Error: Failed to submit preprocessing chain for segment $iseg"

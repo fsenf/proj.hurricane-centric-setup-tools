@@ -1,5 +1,5 @@
 #!/bin/bash
-# filepath: /home/b/b380352/proj/2025-05_hurricane-centric-setup-tools/scripts/grid-extpar/run_extpar.bash
+# filepath: scripts/grid-extpar/run_extpar.bash
 #=============================================================================
 # DESCRIPTION:
 #   External parameter generation script for hurricane segments. Generates
@@ -15,11 +15,11 @@
 # OPTIONS:
 #   -c, --config    - Path to TOML configuration file (optional)
 #                     Default: ../../config/hurricane_config.toml
-#                     Relative paths are resolved from script directory
 #   -h, --help      - Show this help message
 #
 #=============================================================================
 
+set -eu
 ulimit -s unlimited
 ulimit -c 0
 
@@ -29,21 +29,11 @@ ulimit -c 0
 
 # Get script directory
 ORIGINAL_SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
-echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
+export ORIGINAL_SCRIPT_DIR
 
-# Detect platform and load platform-specific modules
-PLATFORM=$("${ORIGINAL_SCRIPT_DIR}/../../utilities/detect_platform.sh")
-echo "Detected platform: ${PLATFORM}"
-echo "Hostname: $(hostname)"
-
-# Load platform-specific modules
-module_loader_path="${ORIGINAL_SCRIPT_DIR}/../../config/${PLATFORM}/module_loader.sh"
-if [[ -f "$module_loader_path" ]]; then
-    echo "Loading modules for platform: ${PLATFORM}"
-    source "$module_loader_path"
-else
-    echo "Warning: No module loader found for platform ${PLATFORM} at ${module_loader_path}"
-fi
+# Source common platform detection and module loading
+source "${ORIGINAL_SCRIPT_DIR}/../../utilities/common_inits.sh"
+setup_platform_environment "extpar"
 
 #=============================================================================
 # Configuration and Argument Parsing
@@ -63,10 +53,17 @@ handle_config "$ORIGINAL_SCRIPT_DIR" \
 # Remove config arguments and parse remaining arguments
 REMAINING_ARGS=($(remove_config_args "$@"))
 
+# Initialize debug mode
+debug=false
+
 # Parse segment number
 iseg=""
 for arg in "${REMAINING_ARGS[@]}"; do
     case $arg in
+        --debug)
+            debug=true
+            echo "Debug mode enabled"
+            ;;
         -h|--help)
             echo "Usage: $0 [segment_number] [options]"
             echo ""
@@ -104,6 +101,11 @@ fi
 
 echo "Processing segment: $iseg"
 
+# Enable debug mode if requested
+if [[ "$debug" == "true" ]]; then
+    set -x
+fi
+
 # Format segment number with leading zero for consistent naming
 iseg_string=$(printf "%02d" $iseg)
 echo "Formatted segment string: $iseg_string"
@@ -131,7 +133,7 @@ extpar_dir="$TOOLS_EXTPAR_DIR"
 out_dir=${grid_dir}
 
 # Set PYTHONPATH to point to ExtPar libraries and namelist.py, which is located in out_dir
-export PYTHONPATH=${extpar_dir}/python/lib:${out_dir}:${PYTHONPATH}
+export PYTHONPATH=${extpar_dir}/python/lib:${out_dir}
 
 # Create and change into out_dir
 if [ ! -d ${out_dir} ] ; then
@@ -140,8 +142,7 @@ fi
 cd ${out_dir}
 
 ##### Create dictionaries/namelists for python scripts
-
-    cat <<NAMELIST_PYTHON > namelist.py
+cat <<NAMELIST_PYTHON > namelist.py
 
 input_era = {
         'iera_type': 1,
@@ -345,4 +346,8 @@ EOF
     ${extpar_dir}/bin/extpar_consistency_check.exe
 
 done
+
+echo "============================"
+echo "Script run successfully:  OK"
+echo "============================"
 exit
