@@ -1,14 +1,24 @@
 #!/bin/bash
+# filepath: scripts/ic-bc/icon2icon_offline_lam_ini.bash
 #=============================================================================
 # DESCRIPTION:
 #   Initial condition processing for hurricane segments using ICON tools.
+#   Converts global model data to nested hurricane-centric grid format.
 #
 # USAGE:
 #   ./icon2icon_offline_lam_ini.bash [segment_number] [-c|--config config_file]
 #
+# ARGUMENTS:
+#   segment_number  - Hurricane segment number to process
+#
+# OPTIONS:
+#   -c, --config    - Path to TOML configuration file (optional)
+#                     Default: ../../config/hurricane_config.toml
+#   -h, --help      - Show this help message
+#
 #=============================================================================
 
-set -eux
+set -eu
 ulimit -s unlimited
 ulimit -c 0
 
@@ -18,21 +28,11 @@ ulimit -c 0
 
 # Get script directory
 ORIGINAL_SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
-echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
+export ORIGINAL_SCRIPT_DIR
 
-# Detect platform and load platform-specific modules
-PLATFORM=$("${ORIGINAL_SCRIPT_DIR}/../../utilities/detect_platform.sh")
-echo "Detected platform: ${PLATFORM}"
-echo "Hostname: $(hostname)"
-
-# Load platform-specific modules
-module_loader_path="${ORIGINAL_SCRIPT_DIR}/../../config/${PLATFORM}/module_loader.sh"
-if [[ -f "$module_loader_path" ]]; then
-    echo "Loading modules for platform: ${PLATFORM}"
-    source "$module_loader_path"
-else
-    echo "Warning: No module loader found for platform ${PLATFORM} at ${module_loader_path}"
-fi
+# Source common platform detection and module loading
+source "${ORIGINAL_SCRIPT_DIR}/../../utilities/common_inits.sh"
+setup_platform_environment "ic"
 
 
 #=============================================================================
@@ -53,10 +53,17 @@ handle_config "$ORIGINAL_SCRIPT_DIR" \
 # Remove config arguments and parse remaining arguments
 REMAINING_ARGS=($(remove_config_args "$@"))
 
+# Initialize debug mode
+debug=false
+
 # Parse segment number
 iseg=""
 for arg in "${REMAINING_ARGS[@]}"; do
     case $arg in
+        --debug)
+            debug=true
+            echo "Debug mode enabled"
+            ;;
         -h|--help)
             echo "Usage: $0 [segment_number] [options]"
             echo ""
@@ -94,6 +101,11 @@ fi
 
 echo "Processing segment: $iseg"
 
+# Enable debug mode if requested
+if [[ "$debug" == "true" ]]; then
+    set -x
+fi
+
 # Format segment number with leading zero for consistent naming
 iseg_string=$(printf "%02d" $iseg)
 echo "Formatted segment string: $iseg_string"
@@ -101,7 +113,7 @@ echo "Formatted segment string: $iseg_string"
 #=============================================================================
 # Environment variables
 #=============================================================================
-ncpus=${SLURM_CPUS_PER_TASK}
+ncpus=${SBATCH_CPUS_PER_TASK}
 
 cd $PROJECT_WORKING_DIR
 
@@ -177,7 +189,10 @@ wait
 echo "All domains processed successfully"
 
 #-----------------------------------------------------------------------------
-exit
+echo "============================"
+echo "Script run successfully:  OK"
+echo "============================"
+exit 0
 #-----------------------------------------------------------------------------
 
 
