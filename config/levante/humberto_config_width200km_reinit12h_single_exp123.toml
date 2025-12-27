@@ -39,7 +39,7 @@ icbc_basedir = "/work/bb1376/data/icon/bc-init"
 [run]
 # Experiment naming and templates
 template = "exp.TEMPLATE_for_segment_runscript_largeICE"
-test_exp = "exp123"
+test_exp = "exp110"
 production_exp = "exp123"
 
 # end of config
