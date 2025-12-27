@@ -15,6 +15,7 @@ work_dir=$6
 
 script_dir=`readlink -f $(dirname $0)`
 
+mkdir -p ${work_dir}
 cd ${work_dir}
 
 # Create temporary file for intermediate result
