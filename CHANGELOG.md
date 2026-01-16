@@ -2,6 +2,37 @@
 
 All notable changes to the Hurricane-Centric Setup Tools project will be documented in this file.
 
+## [v2026.01] - 2026-01-16
+
+### Added
+- **Common Initialization System**: Centralized `utilities/common_inits.sh` script that standardizes platform environment setup and makes all sbatch variables available across all scripts
+- **Comprehensive Microphysics Templates**: Added 10 new runscript templates for microphysics perturbation studies:
+  - Terminal velocity perturbations (fast/slow variants for GRAUPEL, ICE, SNOW)
+  - Rime density variations (dense/soft RIMED configurations)
+  - Ice crystal size variations (large/small ICE parameters)
+  - CCN concentration perturbations (high/low CCN scenarios)
+- **Hurricane Humberto Experiment Configurations**: New configuration files for perturbation experiments (exp120-exp129) on Levante platform
+- **Extended JUWELS Configurations**: Additional experimental configurations for CCN and rime density perturbations (exp112-exp113)
+- **Template Overview Documentation**: Comprehensive documentation for all available runscript templates
+- **Enhanced Module Loading**: Added purge functionality for cleaner module environments on Levante
+
+### Changed
+- **Grid Generation Workflow**: Enhanced `generate_grid_for_hurricane_segments.sh` with automatic working directory creation and improved error handling
+- **Dependency Management**: Improved preprocessing chain dependency handling for more robust workflow execution
+- **Script Standardization**: All workflow scripts now use common initialization patterns with enhanced debug capabilities
+
+### Fixed
+- **Levante sbatch Variables**: Resolved critical bug where sbatch environment variables were not properly available in Levante job submissions
+- **Working Directory Creation**: Fixed automatic creation of working directories in grid generation processes
+- **IC/LBC File Handling**: Corrected configuration file references from LBC to IC files for proper initial condition processing
+- **Humberto Experiment References**: Fixed test experiment references for Humberto perturbation experiments
+- **Debug Functionality**: Enhanced error handling and debug output across all processing scripts
+
+### Infrastructure
+- **Cross-Platform Compatibility**: Maintained compatibility for both JUWELS and Levante HPC systems
+- **Enhanced Error Handling**: Improved robustness across grid generation, IC/BC processing, and production chains
+- **Workflow Reliability**: Consolidated multiple experimental enhancements for more reliable hurricane simulation workflows
+
 ## [v2025.10] - 2025-10-01
 
 ### Added

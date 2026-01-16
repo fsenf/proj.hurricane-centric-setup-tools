@@ -122,6 +122,7 @@ fi
 iseg_string=$(printf "%02d" $iseg)
 echo "Formatted segment string: $iseg_string"
 
+mkdir -p ${PROJECT_WORKING_DIR}
 cd $PROJECT_WORKING_DIR
 
 #=============================================================================
