@@ -35,6 +35,7 @@ source "${ORIGINAL_SCRIPT_DIR}/../../utilities/common_inits.sh"
 setup_platform_environment "bc"
 
 
+
 #=============================================================================
 # Environment Setup
 #=============================================================================
