@@ -48,29 +48,17 @@
 #=============================================================================
 
 # Get script directory
-
 ORIGINAL_SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
 
 if [[ -z "$ORIGINAL_SCRIPT_DIR" ]]; then
     ORIGINAL_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 fi
 
-SCRIPT_DIR=${ORIGINAL_SCRIPT_DIR}
-echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
+export ORIGINAL_SCRIPT_DIR
 
-# Detect platform and load platform-specific modules
-PLATFORM=$("${SCRIPT_DIR}/../../utilities/detect_platform.sh")
-echo "Detected platform: ${PLATFORM}"
-echo "Hostname: $(hostname)"
-
-# Load platform-specific modules
-module_loader_path="${SCRIPT_DIR}/../../config/${PLATFORM}/module_loader.sh"
-if [[ -f "$module_loader_path" ]]; then
-    echo "Loading modules for platform: ${PLATFORM}"
-    source "$module_loader_path"
-else
-    echo "Warning: No module loader found for platform ${PLATFORM} at ${module_loader_path}"
-fi
+# Source common platform detection and module loading
+source "${ORIGINAL_SCRIPT_DIR}/../../utilities/common_inits.sh"
+setup_platform_environment "remap"
 
 #=============================================================================
 # Configuration and Argument Parsing
@@ -211,11 +199,11 @@ for idom in $(seq 1 ${DOMAINS_NESTS}); do
     # Define patterns with wildcards instead of hardcoded dates
     # ic_bg_pattern="${experiment_dir}/${project_name}-${project_width_config}-segment${to_iseg_string}-????????-exp108/IC_vertically_interpolated_DOM0${idom}.nc"
     
-    ic_bg_dir="${experiment_dir}/${project_name}-${project_width_config}-segment${to_iseg_string}-????????T????Z-exp110"
+    ic_bg_dir="${experiment_dir}/${project_name}-${project_width_config}-segment${to_iseg_string}-????????T????Z-${RUN_TEST_EXP}"
     ic_bg_pattern="${ic_bg_dir}/lam_input_IC_DOM0${idom}_ML_????????T??????Z.nc"
     to_grid_pattern="${ic_bg_dir}/${project_name}-seg${to_iseg_string}_dom${idom}_DOM01.nc"
     
-    ic_seg_dir="${experiment_dir}/${project_name}-${project_width_config}-segment${from_iseg_string}-????????T????Z-exp111"
+    ic_seg_dir="${experiment_dir}/${project_name}-${project_width_config}-segment${from_iseg_string}-????????T????Z-${RUN_PRODUCTION_EXP}"
     ic_seg_pattern="${ic_seg_dir}/lam_input_IC_DOM0${idom}_ML_????????T??????Z.nc"
     from_grid_pattern="${ic_seg_dir}/${project_name}-seg${from_iseg_string}_dom${idom}_DOM01.nc"
 
@@ -262,7 +250,7 @@ for idom in $(seq 1 ${DOMAINS_NESTS}); do
 
     # Use output directory from config
     output_dir="${OUTPUT_ICBC_BASEDIR}/${project_name}/seg${to_iseg_string}_${project_width_config}"
-    output_file="${output_dir}/${segment_start_time}_DOM0${idom}_warmini.nc"
+    output_file="${output_dir}/${segment_start_time}_DOM0${idom}_${RUN_PRODUCTION_EXP}_warmini.nc"
 
     echo "Output will be saved to: $output_file"
 

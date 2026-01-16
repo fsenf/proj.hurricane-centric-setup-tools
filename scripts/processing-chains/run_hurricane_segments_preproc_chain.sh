@@ -66,6 +66,9 @@ fi
 # Remove config arguments and parse remaining arguments
 REMAINING_ARGS=($(remove_config_args "$@"))
 
+# Initialize debug mode
+debug=false
+
 # Parse remaining arguments
 iseg=""
 ADDED_ARG=""
@@ -73,6 +76,10 @@ arg_count=0
 
 for arg in "${REMAINING_ARGS[@]}"; do
     case $arg in
+        --debug)
+            debug=true
+            echo "Debug mode enabled - will be passed to child scripts"
+            ;;
         -h|--help)
             echo "Usage: $0 [segment_number] [sbatch_options] [options]"
             echo ""
@@ -152,15 +159,21 @@ fi
 
 pp_path=".."
 
+# Prepare debug option for child scripts
+DEBUG_OPTION=""
+if [[ "$debug" == "true" ]]; then
+    DEBUG_OPTION="--debug"
+fi
+
 #-----------------------------------------------------------------------------
 # PART I: Create Grid
 #-----------------------------------------------------------------------------
 echo "Submitting grid generation job..."
 cd ${pp_path}/grid-extpar
 if [[ -n "$CONFIG_OPTION" ]]; then
-    grid_job=$($sbatch_wrapper ./generate_grid_for_hurricane_segments.sh $ADDED_ARG $iseg $CONFIG_OPTION)
+    grid_job=$($sbatch_wrapper ./generate_grid_for_hurricane_segments.sh $ADDED_ARG $iseg $CONFIG_OPTION $DEBUG_OPTION)
 else
-    grid_job=$($sbatch_wrapper ./generate_grid_for_hurricane_segments.sh $ADDED_ARG $iseg)
+    grid_job=$($sbatch_wrapper ./generate_grid_for_hurricane_segments.sh $ADDED_ARG $iseg $DEBUG_OPTION)
 fi
 printf "... Grid job submitted with ID: $grid_job\n\n"
 
@@ -169,9 +182,9 @@ printf "... Grid job submitted with ID: $grid_job\n\n"
 #-----------------------------------------------------------------------------
 echo "Submitting extpar job..."
 if [[ -n "$CONFIG_OPTION" ]]; then
-    extpar_job=$($sbatch_wrapper ./run_extpar.bash --dependency=afterok:$grid_job $iseg $CONFIG_OPTION)
+    extpar_job=$($sbatch_wrapper ./run_extpar.bash --dependency=afterok:$grid_job $iseg $CONFIG_OPTION $DEBUG_OPTION)
 else
-    extpar_job=$($sbatch_wrapper ./run_extpar.bash --dependency=afterok:$grid_job $iseg)
+    extpar_job=$($sbatch_wrapper ./run_extpar.bash --dependency=afterok:$grid_job $iseg $DEBUG_OPTION)
 fi
 printf "... Extpar job submitted with ID: $extpar_job\n\n"
 
@@ -181,9 +194,9 @@ printf "... Extpar job submitted with ID: $extpar_job\n\n"
 echo "Submitting IC job..."
 cd ${pp_path}/ic-bc
 if [[ -n "$CONFIG_OPTION" ]]; then
-    ic_job=$($sbatch_wrapper ./icon2icon_offline_lam_ini.bash --dependency=afterok:$grid_job $iseg $CONFIG_OPTION)
+    ic_job=$($sbatch_wrapper ./icon2icon_offline_lam_ini.bash --dependency=afterok:$grid_job $iseg $CONFIG_OPTION $DEBUG_OPTION)
 else
-    ic_job=$($sbatch_wrapper ./icon2icon_offline_lam_ini.bash --dependency=afterok:$grid_job $iseg)
+    ic_job=$($sbatch_wrapper ./icon2icon_offline_lam_ini.bash --dependency=afterok:$grid_job $iseg $DEBUG_OPTION)
 fi
 printf "... IC job submitted with ID: $ic_job\n\n"
 
@@ -192,9 +205,9 @@ printf "... IC job submitted with ID: $ic_job\n\n"
 #-----------------------------------------------------------------------------
 echo "Submitting BC job..."
 if [[ -n "$CONFIG_OPTION" ]]; then
-    bc_job=$($sbatch_wrapper ./icon2icon_offline_lam_lbc.bash --dependency=afterany:$grid_job $iseg $CONFIG_OPTION)
+    bc_job=$($sbatch_wrapper ./icon2icon_offline_lam_lbc.bash --dependency=afterany:$grid_job $iseg $CONFIG_OPTION $DEBUG_OPTION)
 else
-    bc_job=$($sbatch_wrapper ./icon2icon_offline_lam_lbc.bash --dependency=afterany:$grid_job $iseg)
+    bc_job=$($sbatch_wrapper ./icon2icon_offline_lam_lbc.bash --dependency=afterany:$grid_job $iseg $DEBUG_OPTION)
 fi
 printf "... BC job submitted with ID: $bc_job\n\n"
 

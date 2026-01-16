@@ -296,6 +296,10 @@ cat > ${atmo_namelist} << EOF
  vmr_cfc11                   =                    240.e-12
  vmr_cfc12                   =                    532.e-12
 /
+&twomom_mcrph_nml
+ccn_type                     =                          7         ! aerosol scenario for cloud nucleation (CCN)
+avel_g                       =                         70.0      ! pre-factor for graupel terminal velocity
+/
 
 ! sleve_nml: vertical level specification -------------------------------------
 &sleve_nml

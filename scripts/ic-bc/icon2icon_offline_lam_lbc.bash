@@ -1,5 +1,5 @@
 #!/bin/bash
-# filepath: /home/b/b380352/proj/2025-05_hurricane-centric-setup-tools/scripts/ic-bc/icon2icon_offline_lam_lbc.bash
+# filepath: scripts/ic-bc/icon2icon_offline_lam_lbc.bash
 #=============================================================================
 # DESCRIPTION:
 #   Boundary condition processing for hurricane segments using ICON tools.
@@ -14,18 +14,11 @@
 # OPTIONS:
 #   -c, --config    - Path to TOML configuration file (optional)
 #                     Default: ../../config/hurricane_config.toml
-#                     Relative paths are resolved from script directory
 #   -h, --help      - Show this help message
-#
-# DEPENDENCIES:
-#   - ../../utilities/config_handler.sh
-#   - ../../utilities/toml_reader.sh
-#   - ../../utilities/find_icbc_file.py
-#   - ../../config/hurricane_config.toml
 #
 #=============================================================================
 
-set -eux
+set -eu
 ulimit -s unlimited
 ulimit -c 0
 
@@ -35,21 +28,12 @@ ulimit -c 0
 
 # Get script directory
 ORIGINAL_SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
-echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
+export ORIGINAL_SCRIPT_DIR
 
-# Detect platform and load platform-specific modules
-PLATFORM=$("${ORIGINAL_SCRIPT_DIR}/../../utilities/detect_platform.sh")
-echo "Detected platform: ${PLATFORM}"
-echo "Hostname: $(hostname)"
+# Source common platform detection and module loading
+source "${ORIGINAL_SCRIPT_DIR}/../../utilities/common_inits.sh"
+setup_platform_environment "bc"
 
-# Load platform-specific modules
-module_loader_path="${ORIGINAL_SCRIPT_DIR}/../../config/${PLATFORM}/module_loader.sh"
-if [[ -f "$module_loader_path" ]]; then
-    echo "Loading modules for platform: ${PLATFORM}"
-    source "$module_loader_path"
-else
-    echo "Warning: No module loader found for platform ${PLATFORM} at ${module_loader_path}"
-fi
 
 
 #=============================================================================
@@ -57,10 +41,8 @@ fi
 #=============================================================================
 
 # SLURM execution command setup
-START="srun -l --cpu_bind=verbose --distribution=block:cyclic --ntasks-per-node=8 --cpus-per-task=${SLURM_CPUS_PER_TASK:-${OMP_NUM_THREADS:-1}}"
-
-# Set up parallel execution if available
-export OMP_NUM_THREADS=${SLURM_CPUS_PER_TASK:-${OMP_NUM_THREADS:-1}}
+export OMP_NUM_THREADS=${SBATCH_CPUS_PER_TASK}
+START="srun -l --cpu_bind=verbose --distribution=block:cyclic --ntasks-per-node=8 --cpus-per-task=${OMP_NUM_THREADS}"
 
 #=============================================================================
 # Configuration and Argument Parsing
@@ -80,10 +62,17 @@ handle_config "$ORIGINAL_SCRIPT_DIR" \
 # Remove config arguments and parse remaining arguments
 REMAINING_ARGS=($(remove_config_args "$@"))
 
+# Initialize debug mode
+debug=false
+
 # Parse segment number
 iseg=""
 for arg in "${REMAINING_ARGS[@]}"; do
     case $arg in
+        --debug)
+            debug=true
+            echo "Debug mode enabled"
+            ;;
         -h|--help)
             echo "Usage: $0 [segment_number] [options]"
             echo ""
@@ -121,6 +110,11 @@ fi
 
 echo "Processing segment: $iseg"
 
+# Enable debug mode if requested
+if [[ "$debug" == "true" ]]; then
+    set -x
+fi
+
 # Format segment number with leading zero for consistent naming
 iseg_string=$(printf "%02d" $iseg)
 echo "Formatted segment string: $iseg_string"
@@ -130,7 +124,7 @@ echo "Formatted segment string: $iseg_string"
 #=============================================================================
 Njob_parallel=2  # Maximum number of parallel background jobs
 
-ncpus=${SLURM_CPUS_PER_TASK}
+ncpus=${SBATCH_CPUS_PER_TASK}
 cd $PROJECT_WORKING_DIR
 
 
@@ -291,5 +285,8 @@ rm -f ${z_ifc_output_file}
 
 
 #-----------------------------------------------------------------------------
-exit
+echo "============================"
+echo "Script run successfully:  OK"
+echo "============================"
+exit 0
 #-----------------------------------------------------------------------------

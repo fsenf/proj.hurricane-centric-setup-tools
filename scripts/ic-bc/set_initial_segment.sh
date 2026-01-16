@@ -34,29 +34,17 @@ ulimit -c 0
 #=============================================================================
 
 # Get script directory
-
 ORIGINAL_SCRIPT_DIR="${SLURM_SUBMIT_DIR}"
 
 if [[ -z "$ORIGINAL_SCRIPT_DIR" ]]; then
     ORIGINAL_SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 fi
 
-SCRIPT_DIR=${ORIGINAL_SCRIPT_DIR}
-echo "Script directory: ${ORIGINAL_SCRIPT_DIR}"
+export ORIGINAL_SCRIPT_DIR
 
-# Detect platform and load platform-specific modules
-PLATFORM=$("${SCRIPT_DIR}/../../utilities/detect_platform.sh")
-echo "Detected platform: ${PLATFORM}"
-echo "Hostname: $(hostname)"
-
-# Load platform-specific modules
-module_loader_path="${SCRIPT_DIR}/../../config/${PLATFORM}/module_loader.sh"
-if [[ -f "$module_loader_path" ]]; then
-    echo "Loading modules for platform: ${PLATFORM}"
-    source "$module_loader_path"
-else
-    echo "Warning: No module loader found for platform ${PLATFORM} at ${module_loader_path}"
-fi
+# Source common platform detection and module loading
+source "${ORIGINAL_SCRIPT_DIR}/../../utilities/common_inits.sh"
+setup_platform_environment "init_segment"
 
 #=============================================================================
 # Configuration and Argument Parsing
@@ -162,7 +150,7 @@ fi
 # Pattern matching the experiment directory like in remap_and_merge_runner.sh
 TOOLS_ICON_BUILD_DIR="${TOOLS_ICON_BUILD_DIR}"
 EXPERIMENT_BASE_DIR="${TOOLS_ICON_BUILD_DIR}/experiments"
-EXPERIMENT_PATTERN="${EXPERIMENT_BASE_DIR}/${PROJECT_NAME}-${PROJECT_WIDTH_CONFIG}-segment${iseg_string}-????????T????Z-exp110"
+EXPERIMENT_PATTERN="${EXPERIMENT_BASE_DIR}/${PROJECT_NAME}-${PROJECT_WIDTH_CONFIG}-segment${iseg_string}-????????T????Z-${RUN_TEST_EXP}"
 
 echo "Looking for experiment directory with pattern: $EXPERIMENT_PATTERN"
 EXPERIMENT_DIRS=($EXPERIMENT_PATTERN)
@@ -244,8 +232,8 @@ for idom in $(seq 1 ${DOMAINS_NESTS}); do
         continue
     fi
     
-    # Target filename follows the pattern: YYYYMMDDTHHMMZ_DOM0X_warmini.nc
-    TARGET_FILE="${ICBC_DIR}/${TIMESTAMP}_DOM0${idom}_warmini.nc"
+    # Target filename follows the pattern: YYYYMMDDTHHMMZ_DOM0X_${exp_suffix}_warmini.nc
+    TARGET_FILE="${ICBC_DIR}/${TIMESTAMP}_DOM0${idom}_${RUN_PRODUCTION_EXP}_warmini.nc"
     
     echo "Copying domain $idom:"
     echo "  From: $(basename $SOURCE_FILE)"
@@ -293,7 +281,7 @@ fi
 echo ""
 echo "Created files:"
 for idom in $(seq 1 ${DOMAINS_NESTS}); do
-    TARGET_FILE="${ICBC_DIR}/${TIMESTAMP}_DOM0${idom}_warmini.nc"
+    TARGET_FILE="${ICBC_DIR}/${TIMESTAMP}_DOM0${idom}_${RUN_PRODUCTION_EXP}_warmini.nc"
     if [ -f "$TARGET_FILE" ]; then
         echo "  ✓ $(basename $TARGET_FILE)"
     fi

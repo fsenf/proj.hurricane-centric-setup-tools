@@ -27,7 +27,7 @@ export SBATCH_CPUS_PER_TASK="1"
 
 # Script-specific configurations
 case "$TYPE" in
-    grid_gen|generate_grid)
+    grid|grid_gen|generate_grid)
         export SBATCH_JOB_NAME="grid_gen"
         export SBATCH_NODES="1"
         export SBATCH_CPUS_PER_TASK="128"
